@@ -15,3 +15,5 @@ jobs:
         working-directory: backend
       - run: pytest -q
         working-directory: backend
+        env:
+          PYTHONPATH: .
