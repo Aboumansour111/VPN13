@@ -1,0 +1,3 @@
+MahdiVPN is licensed under the GNU General Public License v3.0 or later (GPL-3.0-or-later).
+
+The VPN engine dependency sing_box and sing-box core are GPL-3.0-or-later. When distributing binaries, comply with GPL source-code, license, copyright and attribution requirements. Full license text: https://www.gnu.org/licenses/gpl-3.0.txt
