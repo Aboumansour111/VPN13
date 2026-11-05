@@ -116,3 +116,43 @@ def delete_server(server_id:int,_:str=Depends(admin),s:Session=Depends(db)):
     x=s.get(Server,server_id)
     if not x: raise HTTPException(404,"سرور پیدا نشد")
     s.delete(x);s.commit()
+
+# Client accounts protect node credentials from anonymous API access.
+class ClientUser(Base):
+    __tablename__ = "client_users"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    username: Mapped[str] = mapped_column(String(80), unique=True, index=True)
+    password_hash: Mapped[str] = mapped_column(String(255))
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+Base.metadata.create_all(engine)
+client_oauth = OAuth2PasswordBearer(tokenUrl="/api/client/login")
+class ClientRegister(BaseModel):
+    username: str = Field(min_length=3,max_length=80,pattern=r"^[a-zA-Z0-9_.-]+$")
+    password: str = Field(min_length=10,max_length=128)
+def client_identity(token: str=Depends(client_oauth),s:Session=Depends(db)):
+    try: data=jwt.decode(token,settings.secret_key,algorithms=["HS256"])
+    except JWTError: raise HTTPException(401,"توکن نامعتبر است")
+    sub=data.get("sub","")
+    if not sub.startswith("client:"): raise HTTPException(403,"ورود کاربر لازم است")
+    try: user=s.get(ClientUser,int(sub.split(":",1)[1]))
+    except ValueError: user=None
+    if not user or not user.active: raise HTTPException(403,"حساب کاربری غیرفعال است")
+    return user
+def client_token(user:ClientUser):
+    exp=datetime.now(timezone.utc)+timedelta(minutes=settings.access_token_minutes)
+    return jwt.encode({"sub":f"client:{user.id}","exp":exp},settings.secret_key,algorithm="HS256")
+@app.post("/api/client/register",status_code=201)
+def client_register(body:ClientRegister,s:Session=Depends(db)):
+    if s.scalar(select(ClientUser).where(ClientUser.username==body.username)): raise HTTPException(409,"نام کاربری قبلاً ثبت شده")
+    u=ClientUser(username=body.username,password_hash=pwd.hash(body.password));s.add(u);s.commit();s.refresh(u)
+    return {"access_token":client_token(u),"token_type":"bearer","expires_in":settings.access_token_minutes*60}
+@app.post("/api/client/login")
+def client_login(body:Login,s:Session=Depends(db)):
+    u=s.scalar(select(ClientUser).where(ClientUser.username==body.username))
+    if not u or not u.active or not pwd.verify(body.password,u.password_hash): raise HTTPException(401,"نام کاربری یا رمز اشتباه است")
+    return {"access_token":client_token(u),"token_type":"bearer","expires_in":settings.access_token_minutes*60}
+@app.get("/api/client/servers/{server_id}/profile")
+def client_profile(server_id:int,_:ClientUser=Depends(client_identity),s:Session=Depends(db)):
+    x=s.get(Server,server_id)
+    if not x or not x.active: raise HTTPException(404,"سرور پیدا نشد")
+    return {"id":x.id,"name":x.name,"config":x.config}
