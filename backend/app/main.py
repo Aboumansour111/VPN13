@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional
-import hmac, json, warnings
+import hmac, json, warnings, hashlib
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
@@ -46,7 +46,7 @@ def db():
 class Login(BaseModel):
  username:str=Field(min_length=1,max_length=80);password:str=Field(min_length=1,max_length=128)
 class ClientAccess(BaseModel):
-    code:str=Field(min_length=4,max_length=128)
+    code:str=Field(min_length=6,max_length=128)
 class ServerIn(BaseModel):
  name:str=Field(min_length=1,max_length=100);config:str=Field(min_length=1,max_length=20000);description:Optional[str]=Field(default=None,max_length=500);active:bool=True;sort_order:int=Field(default=0,ge=0,le=100000)
  @field_validator("config")
@@ -64,7 +64,9 @@ class ServerIn(BaseModel):
 class ServerOut(BaseModel):id:int;name:str;description:Optional[str];active:bool;sort_order:int
 class ServerAdminOut(ServerOut):config:str
 def token_for(subject:str,role:str):
- return jwt.encode({"sub":subject,"role":role,"exp":datetime.now(timezone.utc)+timedelta(minutes=settings.access_token_minutes)},settings.secret_key,algorithm="HS256")
+ payload={"sub":subject,"role":role,"exp":datetime.now(timezone.utc)+timedelta(minutes=settings.access_token_minutes)}
+ if role=="client":payload["code_version"]=hashlib.sha256(settings.client_access_code.encode("utf-8")).hexdigest()
+ return jwt.encode(payload,settings.secret_key,algorithm="HS256")
 def claims(token:str):
  try:return jwt.decode(token,settings.secret_key,algorithms=["HS256"])
  except JWTError:raise HTTPException(401,"توکن نامعتبر یا منقضی است",headers={"WWW-Authenticate":"Bearer"})
@@ -74,7 +76,7 @@ def admin(token:str=Depends(admin_oauth)):
  return d["sub"]
 def client_user(token:str=Depends(client_oauth)):
  d=claims(token)
- if d.get("role")!="client" or d.get("sub")!="shared":raise HTTPException(403,"کد دسترسی معتبر نیست")
+ if d.get("role")!="client" or d.get("sub")!="shared" or d.get("code_version")!=hashlib.sha256(settings.client_access_code.encode("utf-8")).hexdigest():raise HTTPException(403,"کد دسترسی معتبر نیست یا تغییر کرده است")
  return True
 @app.get("/health")
 def health():return {"status":"ok"}
@@ -86,7 +88,7 @@ def admin_login(body:Login):
 @app.post("/api/client/access")
 def client_access(body:ClientAccess):
  if settings.client_access_code=="CHANGE_ME_ACCESS_CODE":raise HTTPException(503,"کد دسترسی مشترک در تنظیمات سرور تعیین نشده است")
- if not hmac.compare_digest(body.code,settings.client_access_code):raise HTTPException(401,"کد دسترسی اشتباه است")
+ if not hmac.compare_digest(body.code.encode('utf-8'),settings.client_access_code.encode('utf-8')):raise HTTPException(401,"کد دسترسی اشتباه است")
  return {"access_token":token_for("shared","client"),"token_type":"bearer","expires_in":settings.access_token_minutes*60}
 @app.get("/api/servers",response_model=list[ServerOut])
 def public_servers(s:Session=Depends(db)):return list(s.scalars(select(Server).where(Server.active.is_(True)).order_by(Server.sort_order,Server.id)))
