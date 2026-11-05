@@ -5,7 +5,6 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
-from passlib.context import CryptContext
 from pydantic import BaseModel, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import create_engine, String, Text, Boolean, Integer, DateTime, select
@@ -17,6 +16,7 @@ class Settings(BaseSettings):
     secret_key:str="CHANGE_ME_TO_A_LONG_RANDOM_SECRET"
     admin_username:str="admin"
     admin_password:str="CHANGE_ME_NOW"
+    client_access_code:str="CHANGE_ME_ACCESS_CODE"
     access_token_minutes:int=60
     cors_origins:str=""
 settings=Settings()
@@ -24,7 +24,6 @@ if settings.secret_key.startswith("CHANGE_ME") or settings.admin_password=="CHAN
     raise RuntimeError("Set SECRET_KEY and ADMIN_PASSWORD in backend/.env before starting.")
 engine=create_engine(settings.database_url,connect_args={"check_same_thread":False} if settings.database_url.startswith("sqlite") else {},pool_pre_ping=True)
 SessionLocal=sessionmaker(bind=engine,autoflush=False,expire_on_commit=False)
-pwd=CryptContext(schemes=["bcrypt"],deprecated="auto")
 admin_oauth=OAuth2PasswordBearer(tokenUrl="/api/admin/login")
 client_oauth=OAuth2PasswordBearer(tokenUrl="/api/client/login")
 class Base(DeclarativeBase):pass
@@ -36,13 +35,6 @@ class Server(Base):
     description:Mapped[Optional[str]]=mapped_column(String(500),default=None)
     active:Mapped[bool]=mapped_column(Boolean,default=True)
     sort_order:Mapped[int]=mapped_column(Integer,default=0)
-    created_at:Mapped[datetime]=mapped_column(DateTime,default=lambda:datetime.now(timezone.utc))
-class ClientUser(Base):
-    __tablename__="client_users"
-    id:Mapped[int]=mapped_column(Integer,primary_key=True)
-    username:Mapped[str]=mapped_column(String(80),unique=True,index=True)
-    password_hash:Mapped[str]=mapped_column(String(255))
-    active:Mapped[bool]=mapped_column(Boolean,default=True)
     created_at:Mapped[datetime]=mapped_column(DateTime,default=lambda:datetime.now(timezone.utc))
 Base.metadata.create_all(engine)
 app=FastAPI(title="MahdiVPN API",version="0.2.0")
@@ -81,29 +73,21 @@ def admin(token:str=Depends(admin_oauth)):
  d=claims(token)
  if d.get("role")!="admin" or d.get("sub")!=settings.admin_username:raise HTTPException(403,"دسترسی مدیر لازم است")
  return d["sub"]
-def client_user(token:str=Depends(client_oauth),s:Session=Depends(db)):
+def client_user(token:str=Depends(client_oauth)):
  d=claims(token)
- if d.get("role")!="client":raise HTTPException(403,"ورود کاربر لازم است")
- try:u=s.get(ClientUser,int(d["sub"]))
- except (ValueError,KeyError):u=None
- if not u or not u.active:raise HTTPException(403,"حساب کاربری غیرفعال است")
- return u
+ if d.get("role")!="client" or d.get("sub")!="shared":raise HTTPException(403,"کد دسترسی معتبر نیست")
+ return True
 @app.get("/health")
 def health():return {"status":"ok"}
 @app.post("/api/admin/login")
 def admin_login(body:Login):
  if body.username!=settings.admin_username or not hmac.compare_digest(body.password,settings.admin_password):raise HTTPException(401,"نام کاربری یا رمز عبور اشتباه است")
  return {"access_token":token_for(body.username,"admin"),"token_type":"bearer","expires_in":settings.access_token_minutes*60}
-@app.post("/api/client/register",status_code=201)
-def register(body:Register,s:Session=Depends(db)):
- if s.scalar(select(ClientUser).where(ClientUser.username==body.username)):raise HTTPException(409,"این نام کاربری قبلاً ثبت شده است")
- u=ClientUser(username=body.username,password_hash=pwd.hash(body.password));s.add(u);s.commit();s.refresh(u)
- return {"access_token":token_for(str(u.id),"client"),"token_type":"bearer","expires_in":settings.access_token_minutes*60}
-@app.post("/api/client/login")
-def client_login(body:Login,s:Session=Depends(db)):
- u=s.scalar(select(ClientUser).where(ClientUser.username==body.username))
- if not u or not u.active or not pwd.verify(body.password,u.password_hash):raise HTTPException(401,"نام کاربری یا رمز عبور اشتباه است")
- return {"access_token":token_for(str(u.id),"client"),"token_type":"bearer","expires_in":settings.access_token_minutes*60}
+@app.post("/api/client/access")
+def client_access(body:ClientAccess):
+ if settings.client_access_code=="CHANGE_ME_ACCESS_CODE":raise HTTPException(503,"کد دسترسی مشترک در تنظیمات سرور تعیین نشده است")
+ if not hmac.compare_digest(body.code,settings.client_access_code):raise HTTPException(401,"کد دسترسی اشتباه است")
+ return {"access_token":token_for("shared","client"),"token_type":"bearer","expires_in":settings.access_token_minutes*60}
 @app.get("/api/servers",response_model=list[ServerOut])
 def public_servers(s:Session=Depends(db)):return list(s.scalars(select(Server).where(Server.active.is_(True)).order_by(Server.sort_order,Server.id)))
 @app.get("/api/servers/{server_id}",response_model=ServerOut)
@@ -112,7 +96,7 @@ def public_server(server_id:int,s:Session=Depends(db)):
  if not x or not x.active:raise HTTPException(404,"سرور پیدا نشد")
  return x
 @app.get("/api/client/servers/{server_id}/profile")
-def client_profile(server_id:int,_:ClientUser=Depends(client_user),s:Session=Depends(db)):
+def client_profile(server_id:int,_:bool=Depends(client_user),s:Session=Depends(db)):
  x=s.get(Server,server_id)
  if not x or not x.active:raise HTTPException(404,"سرور پیدا نشد")
  return {"id":x.id,"name":x.name,"config":x.config}
