@@ -14,7 +14,7 @@ py -3 -m venv .venv
 pip install -r requirements.txt
 Copy-Item .env.example .env
 ```
-در فایل `.env` حتماً SECRET_KEY تصادفی، ADMIN_PASSWORD قوی و CLIENT_ACCESS_CODE دلخواه (حداقل ۴ نویسه؛ عددی، حروفی یا ترکیبی) قرار دهید. همین یک کد را به تمام کاربران می‌دهید؛ هیچ ثبت‌نام یا حساب جداگانه‌ای وجود ندارد. برای تغییر کد، مقدار CLIENT_ACCESS_CODE را عوض و Backend را راه‌اندازی مجدد کنید. سپس:
+در فایل `.env` حتماً SECRET_KEY تصادفی، ADMIN_PASSWORD قوی و CLIENT_ACCESS_CODE دلخواه (حداقل ۶ نویسه؛ عددی، حروفی یا ترکیبی) قرار دهید. همین یک کد را به تمام کاربران می‌دهید؛ هیچ ثبت‌نام یا حساب جداگانه‌ای وجود ندارد. برای تغییر کد، مقدار CLIENT_ACCESS_CODE را عوض و Backend را راه‌اندازی مجدد کنید. سپس:
 ```powershell
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
