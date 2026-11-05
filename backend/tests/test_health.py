@@ -26,6 +26,9 @@ def test_shared_access_code_authenticates_all_clients(monkeypatch):
     token=accepted.json()["access_token"]
     profile=client.get("/api/client/servers/999/profile", headers={"Authorization":f"Bearer {token}"})
     assert profile.status_code==404
+    monkeypatch.setattr(settings, "client_access_code", "New-Code-2026")
+    revoked=client.get("/api/client/servers/999/profile", headers={"Authorization":f"Bearer {token}"})
+    assert revoked.status_code==403
 def test_admin_routes_require_bearer_token():
     response=client.get("/api/admin/servers")
     assert response.status_code==401
