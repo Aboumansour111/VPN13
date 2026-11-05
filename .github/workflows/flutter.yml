@@ -1,0 +1,24 @@
+name: Flutter checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  flutter:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: [client, admin]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+          cache-key: ${{ runner.os }}-flutter-${{ matrix.app }}
+      - run: flutter pub get
+        working-directory: ${{ matrix.app }}
+      - run: flutter analyze
+        working-directory: ${{ matrix.app }}
+      - run: flutter test
+        working-directory: ${{ matrix.app }}
