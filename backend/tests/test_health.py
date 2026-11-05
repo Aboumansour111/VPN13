@@ -43,5 +43,16 @@ def test_admin_login_rejects_non_ascii_password_without_server_error(monkeypatch
 def test_admin_routes_require_bearer_token():
     response=client.get("/api/admin/servers")
     assert response.status_code==401
+
+def test_admin_login_token_authorizes_admin_routes(monkeypatch):
+    monkeypatch.setattr(settings, "secret_key", "test-only-secret-key-with-at-least-32-bytes")
+    monkeypatch.setattr(settings, "admin_username", "admin")
+    monkeypatch.setattr(settings, "admin_password", "Valid-Admin-Password")
+    login = client.post("/api/admin/login", json={"username": "admin", "password": "Valid-Admin-Password"})
+    assert login.status_code == 200
+    token = login.json()["access_token"]
+    response = client.get("/api/admin/servers", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+
 def test_health_survives_api_start():
     assert client.get("/health").json()["status"]=="ok"
