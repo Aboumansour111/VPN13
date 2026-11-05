@@ -12,7 +12,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session, sess
 
 class Settings(BaseSettings):
     model_config=SettingsConfigDict(env_file=".env",extra="ignore")
-    database_url:str="sqlite:///./mahdvpn.db"
+    database_url:str="sqlite:///./vpn13.db"
     secret_key:str="CHANGE_ME_TO_A_LONG_RANDOM_SECRET"
     admin_username:str="admin"
     admin_password:str="CHANGE_ME_NOW"
@@ -37,7 +37,7 @@ class Server(Base):
     sort_order:Mapped[int]=mapped_column(Integer,default=0)
     created_at:Mapped[datetime]=mapped_column(DateTime,default=lambda:datetime.now(timezone.utc))
 Base.metadata.create_all(engine)
-app=FastAPI(title="MahdiVPN API",version="0.2.0")
+app=FastAPI(title="VPN13 API",version="0.2.0")
 app.add_middleware(CORSMiddleware,allow_origins=[x.strip() for x in settings.cors_origins.split(",") if x.strip()],allow_methods=["GET","POST","PUT","DELETE"],allow_headers=["Authorization","Content-Type"])
 def db():
  s=SessionLocal()
