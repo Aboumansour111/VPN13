@@ -1,4 +1,4 @@
-# MahdiVPN Backend
+# VPN13 Backend
 
 Install: `pip install -r requirements.txt`; configure .env; run `uvicorn app.main:app`.
 
