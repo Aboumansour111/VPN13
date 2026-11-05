@@ -83,7 +83,7 @@ def health():return {"status":"ok"}
 @app.post("/api/admin/login")
 def admin_login(body:Login):
  if settings.secret_key.startswith("CHANGE_ME") or settings.admin_password=="CHANGE_ME_NOW":raise HTTPException(503,"تنظیمات امنیتی مدیر کامل نشده است")
- if body.username!=settings.admin_username or not hmac.compare_digest(body.password,settings.admin_password):raise HTTPException(401,"نام کاربری یا رمز عبور اشتباه است")
+ if body.username!=settings.admin_username or not hmac.compare_digest(body.password.encode("utf-8"),settings.admin_password.encode("utf-8")):raise HTTPException(401,"نام کاربری یا رمز عبور اشتباه است")
  return {"access_token":token_for(body.username,"admin"),"token_type":"bearer","expires_in":settings.access_token_minutes*60}
 @app.post("/api/client/access")
 def client_access(body:ClientAccess):
