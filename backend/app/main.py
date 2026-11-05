@@ -3,7 +3,7 @@ from typing import Optional
 import hmac, json, warnings, hashlib
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
 from pydantic import BaseModel, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -24,7 +24,7 @@ if settings.secret_key.startswith("CHANGE_ME") or settings.admin_password=="CHAN
     warnings.warn("Set SECRET_KEY and ADMIN_PASSWORD in backend/.env before production use.", RuntimeWarning)
 engine=create_engine(settings.database_url,connect_args={"check_same_thread":False} if settings.database_url.startswith("sqlite") else {},pool_pre_ping=True)
 SessionLocal=sessionmaker(bind=engine,autoflush=False,expire_on_commit=False)
-admin_oauth=OAuth2PasswordBearer(tokenUrl="/api/admin/login")
+admin_bearer=HTTPBearer()
 client_oauth=OAuth2PasswordBearer(tokenUrl="/api/client/access")
 class Base(DeclarativeBase):pass
 class Server(Base):
@@ -70,8 +70,8 @@ def token_for(subject:str,role:str):
 def claims(token:str):
  try:return jwt.decode(token,settings.secret_key,algorithms=["HS256"])
  except JWTError:raise HTTPException(401,"توکن نامعتبر یا منقضی است",headers={"WWW-Authenticate":"Bearer"})
-def admin(token:str=Depends(admin_oauth)):
- d=claims(token)
+def admin(credentials:HTTPAuthorizationCredentials=Depends(admin_bearer)):
+ d=claims(credentials.credentials)
  if d.get("role")!="admin" or d.get("sub")!=settings.admin_username:raise HTTPException(403,"دسترسی مدیر لازم است")
  return d["sub"]
 def client_user(token:str=Depends(client_oauth)):
