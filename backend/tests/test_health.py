@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
-from app.main import app
+from app.main import app, settings
+import pytest
 client=TestClient(app)
 def test_health():
     response=client.get("/health")
@@ -14,6 +15,17 @@ def test_public_server_list_does_not_include_configs():
 def test_private_profile_requires_client_token():
     response=client.get("/api/client/servers/1/profile")
     assert response.status_code==401
+
+def test_shared_access_code_authenticates_all_clients(monkeypatch):
+    monkeypatch.setattr(settings, "client_access_code", "Vpn-2026-Shared")
+    denied=client.post("/api/client/access", json={"code":"wrong-code"})
+    assert denied.status_code==401
+    accepted=client.post("/api/client/access", json={"code":"Vpn-2026-Shared"})
+    assert accepted.status_code==200
+    assert accepted.json()["access_token"]
+    token=accepted.json()["access_token"]
+    profile=client.get("/api/client/servers/999/profile", headers={"Authorization":f"Bearer {token}"})
+    assert profile.status_code==404
 def test_admin_routes_require_bearer_token():
     response=client.get("/api/admin/servers")
     assert response.status_code==401
