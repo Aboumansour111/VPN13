@@ -1,7 +1,7 @@
 # راه‌اندازی MahdiVPN روی لپ‌تاپ
 
 ## پیش‌نیاز
-- Flutter stable + Android Studio/SDK و Android licenses
+- Flutter 3.44 یا جدیدتر (Dart 3.12+) + Android Studio/SDK و Android licenses
 - Python 3.11 یا جدیدتر
 - PostgreSQL (پیشنهاد برای سرور) یا SQLite برای آزمایش
 - آدرس HTTPS عمومی برای Backend در استفاده واقعی
