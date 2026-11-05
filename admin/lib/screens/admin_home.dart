@@ -287,7 +287,7 @@ class _AdminHomeState extends State<AdminHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('MahdiVPN Admin'),
+        title: const Text('VPN13 | مدیریت سرورها'),
         actions: [
           if (token != null)
             IconButton(
