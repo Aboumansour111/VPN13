@@ -50,6 +50,7 @@ def test_admin_login_token_authorizes_admin_routes(monkeypatch):
     monkeypatch.setattr(settings, "admin_password", "Valid-Admin-Password")
     login = client.post("/api/admin/login", json={"username": "admin", "password": "Valid-Admin-Password"})
     assert login.status_code == 200
+    assert login.json()["expires_in"] == settings.admin_token_days * 86400
     token = login.json()["access_token"]
     response = client.get("/api/admin/servers", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
