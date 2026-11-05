@@ -87,7 +87,8 @@ def admin_login(body:Login):
  return {"access_token":token_for(body.username,"admin"),"token_type":"bearer","expires_in":settings.access_token_minutes*60}
 @app.post("/api/client/access")
 def client_access(body:ClientAccess):
- if settings.client_access_code=="CHANGE_ME_ACCESS_CODE":raise HTTPException(503,"کد دسترسی مشترک در تنظیمات سرور تعیین نشده است")
+ if settings.client_access_code=="CHANGE_ME_ACCESS_CODE" or len(settings.client_access_code)<6:raise HTTPException(503,"کد دسترسی مشترک باید در تنظیمات سرور و با حداقل ۶ نویسه تعیین شود")
+ if settings.secret_key.startswith("CHANGE_ME"):raise HTTPException(503,"کلید امنیتی SECRET_KEY در تنظیمات سرور تعیین نشده است")
  if not hmac.compare_digest(body.code.encode('utf-8'),settings.client_access_code.encode('utf-8')):raise HTTPException(401,"کد دسترسی اشتباه است")
  return {"access_token":token_for("shared","client"),"token_type":"bearer","expires_in":settings.access_token_minutes*60}
 @app.get("/api/servers",response_model=list[ServerOut])
