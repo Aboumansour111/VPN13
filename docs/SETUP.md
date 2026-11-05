@@ -1,40 +1,59 @@
-# Setup and local build
+# راه‌اندازی MahdiVPN روی لپ‌تاپ
 
-## Prerequisites
-- Flutter stable (Dart version compatible with pubspec)
-- Android Studio / Android SDK + accepted licenses
-- Python 3.11+
-- PostgreSQL (recommended) or SQLite for local development
+## پیش‌نیاز
+- Flutter stable + Android Studio/SDK و Android licenses
+- Python 3.11 یا جدیدتر
+- PostgreSQL (پیشنهاد برای سرور) یا SQLite برای آزمایش
+- آدرس HTTPS عمومی برای Backend در استفاده واقعی
 
-## Backend
-```bash
+## Backend (Windows PowerShell)
+```powershell
 cd backend
-python -m venv .venv
-# Windows: .venv\\Scripts\\activate
-# Linux/macOS: source .venv/bin/activate
+py -3 -m venv .venv
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-cp .env.example .env
-# Set a strong ADMIN_PASSWORD and SECRET_KEY in .env
+Copy-Item .env.example .env
+```
+در فایل `.env` حتماً SECRET_KEY تصادفی و ADMIN_PASSWORD قوی قرار دهید. سپس:
+```powershell
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
-API docs during development: /docs. Do not expose development docs publicly.
-
-## Flutter apps
+برای Linux:
 ```bash
-cd client
-flutter pub get
-flutter run
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env # سپس secrets را تغییر دهید
+uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
-Repeat in `admin`. Set API base URL in each app's `lib/config.dart` before release.
-Android emulator uses 10.0.2.2 to reach host localhost; physical phone requires reachable LAN/server address and firewall rules.
 
-## Build APKs
-From repository root:
-- Windows PowerShell: `scripts/build-apks.ps1`
-- macOS/Linux: `bash scripts/build-apks.sh`
+## Build دو APK
+در ریشه repo:
+- PowerShell: `./scripts/build-apks.ps1`
+- Linux/macOS: `bash scripts/build-apks.sh`
 
-Artifacts: `client/build/app/outputs/flutter-apk/app-release.apk` and corresponding admin path.
-A release APK needs your own signing configuration. The default Flutter release build may use local debug signing only if explicitly configured; do not publish debug-signed APKs as production.
+برای تنظیم آدرس API:
+```powershell
+$env:API_BASE_URL="https://api.example.com"
+./scripts/build-apks.ps1
+```
+APKها در `client/build/app/outputs/flutter-apk/app-release.apk` و `admin/build/app/outputs/flutter-apk/app-release.apk` قرار می‌گیرند. Build نخست Android scaffold را با `flutter create . --platforms=android` تولید می‌کند.
 
-## VPN
-The client uses the sing-box Flutter integration. Android asks the user for VPN consent on first connection. A valid supported configuration and reachable VPN node are required. Validate full-device routing, DNS, IPv6 behavior, reconnects, and kill-switch expectations on a physical device before production use.
+## ورود و افزودن سرور
+1. Admin APK را باز کنید؛ نام مدیر و ADMIN_PASSWORD تنظیم‌شده در .env را وارد کنید.
+2. «+» سرور جدید، نام و کانفیگ را وارد کنید. لینک‌هایی مانند VLESS/VMess/Trojan/SS/Hysteria2/TUIC/WireGuard و JSON sing-box با موتور سازگار قابل پردازش‌اند.
+3. Client APK را باز کنید و ثبت‌نام/ورود کاربر انجام دهید.
+4. سرور فعال را انتخاب و اتصال را بزنید. نخستین اتصال مجوز VPN اندروید را می‌خواهد.
+
+## شبکه
+- Emulator اندروید: `http://10.0.2.2:8000`
+- گوشی واقعی: IP/LAN یا دامنه سرور Backend؛ فایروال و HTTPS لازم است.
+- `API_BASE_URL` در زمان Build با `--dart-define` تنظیم می‌شود.
+- از HTTP ساده فقط در تست LAN استفاده کنید. انتشار production باید HTTPS باشد.
+
+## آزمون
+```bash
+cd backend
+pip install -r requirements-dev.txt
+pytest -q
+```
+CI GitHub نیز Flutter analyze/test و Backend tests را اجرا می‌کند.
