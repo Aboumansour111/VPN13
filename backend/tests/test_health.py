@@ -20,7 +20,7 @@ def test_shared_access_code_authenticates_all_clients(monkeypatch):
     monkeypatch.setattr(settings, "client_access_code", "Vpn-2026-Shared")
     monkeypatch.setattr(settings, "secret_key", "test-only-secret-key-with-at-least-32-bytes")
     monkeypatch.setattr(settings, "client_access_code", "12345")
-    too_short=client.post("/api/client/access", json={"code":"12345"})
+    too_short=client.post("/api/client/access", json={"code":"123456"})
     assert too_short.status_code==503
     monkeypatch.setattr(settings, "client_access_code", "Vpn-2026-Shared")
     denied=client.post("/api/client/access", json={"code":"wrong-code"})
