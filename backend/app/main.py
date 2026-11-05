@@ -21,11 +21,11 @@ class Settings(BaseSettings):
     cors_origins:str=""
 settings=Settings()
 if settings.secret_key.startswith("CHANGE_ME") or settings.admin_password=="CHANGE_ME_NOW":
-    raise RuntimeError("Set SECRET_KEY and ADMIN_PASSWORD in backend/.env before starting.")
+    warnings.warn("Set SECRET_KEY and ADMIN_PASSWORD in backend/.env before production use.", RuntimeWarning)
 engine=create_engine(settings.database_url,connect_args={"check_same_thread":False} if settings.database_url.startswith("sqlite") else {},pool_pre_ping=True)
 SessionLocal=sessionmaker(bind=engine,autoflush=False,expire_on_commit=False)
 admin_oauth=OAuth2PasswordBearer(tokenUrl="/api/admin/login")
-client_oauth=OAuth2PasswordBearer(tokenUrl="/api/client/login")
+client_oauth=OAuth2PasswordBearer(tokenUrl="/api/client/access")
 class Base(DeclarativeBase):pass
 class Server(Base):
     __tablename__="servers"
@@ -45,9 +45,8 @@ def db():
  finally:s.close()
 class Login(BaseModel):
  username:str=Field(min_length=1,max_length=80);password:str=Field(min_length=1,max_length=128)
-class Register(BaseModel):
- username:str=Field(min_length=3,max_length=80,pattern=r"^[a-zA-Z0-9_.-]+$")
- password:str=Field(min_length=10,max_length=128)
+class ClientAccess(BaseModel):
+    code:str=Field(min_length=4,max_length=128)
 class ServerIn(BaseModel):
  name:str=Field(min_length=1,max_length=100);config:str=Field(min_length=1,max_length=20000);description:Optional[str]=Field(default=None,max_length=500);active:bool=True;sort_order:int=Field(default=0,ge=0,le=100000)
  @field_validator("config")
@@ -81,6 +80,7 @@ def client_user(token:str=Depends(client_oauth)):
 def health():return {"status":"ok"}
 @app.post("/api/admin/login")
 def admin_login(body:Login):
+ if settings.secret_key.startswith("CHANGE_ME") or settings.admin_password=="CHANGE_ME_NOW":raise HTTPException(503,"تنظیمات امنیتی مدیر کامل نشده است")
  if body.username!=settings.admin_username or not hmac.compare_digest(body.password,settings.admin_password):raise HTTPException(401,"نام کاربری یا رمز عبور اشتباه است")
  return {"access_token":token_for(body.username,"admin"),"token_type":"bearer","expires_in":settings.access_token_minutes*60}
 @app.post("/api/client/access")
