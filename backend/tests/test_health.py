@@ -34,6 +34,12 @@ def test_shared_access_code_authenticates_all_clients(monkeypatch):
     monkeypatch.setattr(settings, "client_access_code", "New-Code-2026")
     revoked=client.get("/api/client/servers/999/profile", headers={"Authorization":f"Bearer {token}"})
     assert revoked.status_code==403
+def test_admin_login_rejects_non_ascii_password_without_server_error(monkeypatch):
+    monkeypatch.setattr(settings, "secret_key", "test-only-secret-key-with-at-least-32-bytes")
+    monkeypatch.setattr(settings, "admin_password", "Valid-ASCII-Test-Password")
+    response=client.post("/api/admin/login", json={"username":"admin","password":"رمز اشتباه"})
+    assert response.status_code==401
+
 def test_admin_routes_require_bearer_token():
     response=client.get("/api/admin/servers")
     assert response.status_code==401
