@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     admin_password:str="CHANGE_ME_NOW"
     client_access_code:str="CHANGE_ME_ACCESS_CODE"
     access_token_minutes:int=60
+    admin_token_days:int=30
     cors_origins:str=""
 settings=Settings()
 if settings.secret_key.startswith("CHANGE_ME") or settings.admin_password=="CHANGE_ME_NOW":
@@ -64,7 +65,8 @@ class ServerIn(BaseModel):
 class ServerOut(BaseModel):id:int;name:str;description:Optional[str];active:bool;sort_order:int
 class ServerAdminOut(ServerOut):config:str
 def token_for(subject:str,role:str):
- payload={"sub":subject,"role":role,"exp":datetime.now(timezone.utc)+timedelta(minutes=settings.access_token_minutes)}
+ lifetime = timedelta(days=settings.admin_token_days) if role=="admin" else timedelta(minutes=settings.access_token_minutes)
+ payload={"sub":subject,"role":role,"exp":datetime.now(timezone.utc)+lifetime}
  if role=="client":payload["code_version"]=hashlib.sha256(settings.client_access_code.encode("utf-8")).hexdigest()
  return jwt.encode(payload,settings.secret_key,algorithm="HS256")
 def claims(token:str):
@@ -84,7 +86,7 @@ def health():return {"status":"ok"}
 def admin_login(body:Login):
  if settings.secret_key.startswith("CHANGE_ME") or settings.admin_password=="CHANGE_ME_NOW":raise HTTPException(503,"تنظیمات امنیتی مدیر کامل نشده است")
  if body.username!=settings.admin_username or not hmac.compare_digest(body.password.encode("utf-8"),settings.admin_password.encode("utf-8")):raise HTTPException(401,"نام کاربری یا رمز عبور اشتباه است")
- return {"access_token":token_for(body.username,"admin"),"token_type":"bearer","expires_in":settings.access_token_minutes*60}
+ return {"access_token":token_for(body.username,"admin"),"token_type":"bearer","expires_in":settings.admin_token_days*86400}
 @app.post("/api/client/access")
 def client_access(body:ClientAccess):
  if settings.client_access_code=="CHANGE_ME_ACCESS_CODE" or len(settings.client_access_code)<6:raise HTTPException(503,"کد دسترسی مشترک باید در تنظیمات سرور و با حداقل ۶ نویسه تعیین شود")
