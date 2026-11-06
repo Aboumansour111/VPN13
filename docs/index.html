@@ -23,8 +23,8 @@ button:disabled{opacity:.4;cursor:not-allowed}.primary{background:linear-gradien
 </head>
 <body>
 <main>
-<header class="head"><div class="logo">13</div><div><h1>مبدل کانفیگ VPN13</h1><p>تبدیل کانفیگ‌ها به فهرست استاندارد سرورهای sing-box</p></div></header>
-<section class="panel"><h2>روش استفاده</h2><p class="hint">برای هر سرور یک نام نمایشی و یک کانفیگ وارد کن. می‌توانی کانفیگ‌ها را یکی‌یکی اضافه کنی. در پایان، خروجی کامل را کپی کن و محتوای فایل <b dir="ltr">config/servers.json</b> در GitHub را با آن جایگزین کن. اطلاعات فقط در همین مرورگر پردازش می‌شوند.</p><p class="hint" style="margin-top:8px">پشتیبانی: VLESS (TLS و Reality)، VMess، Trojan، Shadowsocks، Hysteria2، SOCKS، HTTP، خروجی sing-box و کانفیگ کامل Xray با outboundهای پشتیبانی‌شده.</p></section>
+<header class="head"><div class="logo">13</div><div><h1>مبدل کانفیگ VPN13</h1><p>تبدیل کانفیگ‌ها برای VPN13؛ XHTTP با موتور Xray</p></div></header>
+<section class="panel"><h2>روش استفاده</h2><p class="hint">برای هر سرور یک نام نمایشی و یک کانفیگ وارد کن. می‌توانی کانفیگ‌ها را یکی‌یکی اضافه کنی. در پایان، خروجی کامل را کپی کن و محتوای فایل <b dir="ltr">config/servers.json</b> در GitHub را با آن جایگزین کن. اطلاعات فقط در همین مرورگر پردازش می‌شوند.</p><p class="hint" style="margin-top:8px">پشتیبانی: VLESS (TLS و Reality)، VMess، Trojan، Shadowsocks، Hysteria2، SOCKS، HTTP، خروجی sing-box و کانفیگ کامل Xray؛ پشتیبانی از VLESS XHTTP و نام قدیمی SplitHTTP با موتور Xray.</p></section>
 <div id="entries"></div>
 <div class="actions" style="margin:4px 0 18px"><button class="primary" id="add">＋ افزودن کانفیگ بعدی</button><button class="secondary" id="validate">بررسی همه کانفیگ‌ها</button></div>
 <section class="panel">
@@ -64,7 +64,7 @@ function transportFrom(q,network){
  if(network==='http'){const t={type:'http'};if(q.path)t.path=q.path;if(q.host)t.host=[q.host];return {transport:t};}
  if(network==='xhttp'){
    const t={type:'xhttp'};if(q.path)t.path=q.path;if(q.host)t.host=q.host;if(q.mode)t.mode=q.mode;
-   if(q.extra){try{t.extra=JSON.parse(decodeURIComponent(q.extra));}catch{throw Error('پارامتر extra در XHTTP معتبر نیست');}}
+   if(q.extra){try{t.extra=JSON.parse(q.extra);}catch{try{t.extra=JSON.parse(decodeURIComponent(q.extra));}catch{throw Error('پارامتر extra در XHTTP معتبر نیست');}}}
    return {transport:t};
  }
  throw Error('نوع انتقال پشتیبانی‌نشده: '+network);
@@ -138,7 +138,7 @@ function xrayToSingbox(root){
  const list=Array.isArray(root.outbounds)?root.outbounds:[root];
  const x=list.find(v=>v&&['vless','vmess','trojan','shadowsocks','socks','http'].includes(v.protocol));
  if(!x)throw Error('در JSON هیچ outbound پشتیبانی‌شده‌ای پیدا نشد.');
- const ss=x.streamSettings||{},network=ss.network||'tcp',sec=ss.security||'none';
+ const ss=x.streamSettings||{},rawNetwork=ss.network||'tcp',network=rawNetwork==='splithttp'?'xhttp':rawNetwork,sec=ss.security||'none';
  const out={tag:'proxy'};
  if(x.protocol==='vless'||x.protocol==='vmess'){
    const v=x.settings?.vnext?.[0],user=v?.users?.[0];if(!v||!user)throw Error('ساختار settings.vnext در Xray ناقص است.');
