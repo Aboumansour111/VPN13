@@ -1,9 +1,11 @@
-name: mahdvpn_client
-description: MahdiVPN Android client
+name: vpn13_client
+description: VPN13 Android VPN client
 publish_to: 'none'
 version: 1.0.0+1
+
 environment:
   sdk: '>=3.12.0 <4.0.0'
+
 dependencies:
   flutter:
     sdk: flutter
@@ -11,9 +13,11 @@ dependencies:
   shared_preferences: ^2.3.2
   flutter_secure_storage: ^9.2.2
   sing_box: ^1.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+
 flutter:
   uses-material-design: true
