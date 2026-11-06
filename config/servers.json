@@ -8,6 +8,12 @@
       "name": "سوئد",
       "description": "SHADOWSOCKS • sing-box",
       "config": "{\"type\":\"shadowsocks\",\"tag\":\"vpn13-1\",\"server\":\"3.17.61.153\",\"server_port\":41159,\"method\":\"2022-blake3-aes-256-gcm\",\"password\":\"WLfUn8pUj6h2mrWaVmaSxuMpcDhaAEm6mQMbG2zijYc=:S7cJGAJ3xxbmvHKEvBQCN3wfh7ig92JkE8OhGY87Dwc=\"}"
+    },
+    {
+      "id": 2,
+      "name": "هلند-ipv6",
+      "description": "VLESS • Xray",
+      "config": "{\"type\":\"vless\",\"tag\":\"vpn13-2\",\"server\":\"[2001:470:1f14:3cd::2]\",\"server_port\":32918,\"uuid\":\"c39e3598-4f2d-4afb-8fff-771302678377\",\"tls\":{\"enabled\":true,\"server_name\":\"aviny.com\",\"utls\":{\"enabled\":true,\"fingerprint\":\"chrome\"},\"reality\":{\"enabled\":true,\"public_key\":\"UHBrcDXhyhCzZkxxLxBTiNUz_hL5Z0QgFronx1e1jyA\",\"short_id\":\"ce809a5ba7ddf9\"}},\"transport\":{\"type\":\"xhttp\",\"path\":\"/\",\"mode\":\"auto\",\"extra\":{\"mode\":\"auto\",\"xPaddingBytes\":\"100-1000\"}}}"
     }
   ]
 }
