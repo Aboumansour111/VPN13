@@ -11,7 +11,7 @@
 <section class="card">
 <div class="row"><div><button class="alt" id="loadCurrent">دریافت سرورهای فعلی VPN13 از GitHub</button><button class="alt" id="clearCurrent">حذف همه سرورهای فعلی</button></div><div><span id="currentInfo" class="hint">هنوز لیست فعلی بارگذاری نشده است.</span></div></div>
 <label for="source">کانفیگ ورودی (JSON کامل Xray/V2Ray یا JSON یک outbound)</label>
-<textarea id="source" spellcheck="false" placeholder='کانفیگ JSON را اینجا قرار بده...'></textarea>
+<textarea id="source" spellcheck="false" placeholder='کانفیگ JSON اول را اینجا قرار بده...'></textarea><div id="extraConfigs"></div><button class="alt" id="addConfig">＋ افزودن کانفیگ دیگر</button>
 <div class="row"><div><label for="name">نام پیش‌فرض سرور</label><input id="name" value="Server"></div><div><label for="desc">توضیح</label><input id="desc" value="Converted by VPN13"></div></div>
 <button id="convert">تبدیل کانفیگ</button><button class="alt" id="sample">نمونه Shadowsocks</button><button class="alt" id="clear">پاک کردن</button>
 <div id="status" class="status"></div>
@@ -21,7 +21,7 @@
 <footer class="small">VPN13 • مبدل محلی مرورگر • هیچ اطلاعاتی ذخیره یا ارسال نمی‌شود.</footer>
 </main>
 <script>
-const $=id=>document.getElementById(id);let result=null,currentList=[];
+const $=id=>document.getElementById(id);let result=null,currentList=[],configCount=1;
 const CURRENT_URL='https://raw.githubusercontent.com/Aboumansour111/VPN13/main/config/servers.json';
 $('clearCurrent').onclick=()=>{if(!confirm('همه سرورهای فعلی از لیست مبدل حذف شوند؟'))return;currentList=[];result={version:1,servers:[]};$('currentInfo').textContent='۰ سرور فعلی؛ لیست کاملاً خالی شد.';render();tell('همه سرورهای فعلی حذف شدند. برای اعمال در برنامه، خروجی را دانلود و در GitHub جایگزین کن.',true)};
 $('loadCurrent').onclick=async()=>{try{ $('loadCurrent').disabled=true;$('loadCurrent').textContent='در حال دریافت...';const r=await fetch(CURRENT_URL+'?t='+Date.now());if(!r.ok)throw Error('دریافت فایل GitHub ناموفق بود: '+r.status);const j=await r.json();currentList=Array.isArray(j.servers)?j.servers:[];$('currentInfo').textContent=currentList.length+' سرور فعلی دریافت شد؛ هنگام خروجی حفظ می‌شوند.';tell('لیست سرورهای فعلی دریافت شد.',true);}catch(e){tell(e.message,false)}finally{$('loadCurrent').disabled=false;$('loadCurrent').textContent='دریافت سرورهای فعلی VPN13 از GitHub'}};
@@ -58,14 +58,17 @@ function mapOutbound(o,index){
  if(p==='trojan'&&!x.password)throw Error('رمز عبور Trojan در '+tag+' پیدا نشد.');
  return x;
 }
+function addConfig(){configCount++;const box=document.createElement('div');box.className='server extra-config';box.innerHTML='<label>کانفیگ '+configCount+'</label><textarea spellcheck="false" placeholder="JSON کانفیگ را اینجا قرار بده..."></textarea><button type="button" class="alt remove-config">حذف این کادر</button>';box.querySelector('.remove-config').onclick=()=>box.remove();$('extraConfigs').append(box)}
+$('addConfig').onclick=addConfig;
 function convert(){
  try{
-  const raw=JSON.parse($('source').value.trim());let list=[];
-  if(Array.isArray(raw))list=raw;
-  else if(raw.outbounds&&Array.isArray(raw.outbounds))list=raw.outbounds.filter(x=>!['freedom','blackhole','dns','direct','block'].includes(x.protocol||x.type));
-  else if(raw.protocol||raw.type)list=[raw];
-  else throw Error('ساختار JSON شناخته نشد. باید outbounds یا یک outbound داشته باشد.');
-  const converted=list.map(mapOutbound);
+  const inputs=[$('source'),...$('extraConfigs').querySelectorAll('textarea')].filter(t=>t.value.trim());if(!inputs.length)throw Error('حداقل یک کانفیگ وارد کن.');let list=[];
+  inputs.forEach((input,idx)=>{const raw=JSON.parse(input.value.trim());let part=[];
+   if(Array.isArray(raw))part=raw;
+   else if(raw.outbounds&&Array.isArray(raw.outbounds))part=raw.outbounds.filter(x=>!['freedom','blackhole','dns','direct','block'].includes(x.protocol||x.type));
+   else if(raw.protocol||raw.type)part=[raw];
+   else throw Error('ساختار JSON کانفیگ '+(idx+1)+' شناخته نشد.');list.push(...part);});
+  const converted=list.map((x,i)=>mapOutbound(x,i));
   if(!converted.length)throw Error('هیچ outbound قابل تبدیلی پیدا نشد.');
   const additions=converted.map((c,i)=>({id:currentList.length+i+1,name:converted.length===1?$('name').value:($('name').value+' '+(i+1)),description:$('desc').value,config:JSON.stringify(c)}));
   result={version:1,servers:[...currentList,...additions]};
@@ -79,7 +82,7 @@ function render(){
 }
 $('convert').onclick=convert;
 $('sample').onclick=()=>{$('source').value=JSON.stringify({outbounds:[{protocol:'shadowsocks',tag:'ss-out',settings:{servers:[{address:'1.2.3.4',port:443,method:'2022-blake3-aes-256-gcm',password:'YOUR_PASSWORD'}]}}]},null,2)};
-$('clear').onclick=()=>{$('source').value='';$('resultCard').classList.add('hidden');$('status').className='status';};
+$('clear').onclick=()=>{$('source').value='';$('extraConfigs').innerHTML='';configCount=1;$('resultCard').classList.add('hidden');$('status').className='status';};
 $('download').onclick=()=>{const blob=new Blob([JSON.stringify(result,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='servers.json';a.click();URL.revokeObjectURL(a.href)};
 $('copy').onclick=async()=>{await navigator.clipboard.writeText(JSON.stringify(result,null,2));tell('خروجی کپی شد.',true)};
 </script></body></html>
