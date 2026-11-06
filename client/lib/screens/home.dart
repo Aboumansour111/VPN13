@@ -17,13 +17,13 @@ class ServerItem {
 
   final int id;
   final String name;
-  final String config;
+  final Map<String, dynamic> config;
   final String? description;
 
   factory ServerItem.fromJson(Map<String, dynamic> json) => ServerItem(
         id: json['id'] as int,
         name: json['name'] as String,
-        config: json['config'] as String,
+        config: Map<String, dynamic>.from(json['config'] as Map),
         description: json['description'] as String?,
       );
 }
@@ -161,11 +161,10 @@ class _HomeScreenState extends State<HomeScreen> {
       final permitted = await engine.requestPermission();
       if (!permitted) throw Exception('اجازه ایجاد اتصال VPN داده نشد.');
 
-      final parsed = FlutterVless.parse(server.config);
-      final xrayConfig = parsed.getFullConfiguration();
+      final config = server.config;
+      final xrayConfig = jsonEncode(config);
 
       // Keep the diagnostic summary free of UUIDs, passwords, keys and addresses.
-      final config = jsonDecode(xrayConfig) as Map<String, dynamic>;
       final outbounds = (config['outbounds'] as List<dynamic>? ?? []);
       final firstOutbound = outbounds.isNotEmpty
           ? outbounds.first as Map<String, dynamic>
@@ -182,7 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'Top-level keys: ${config.keys.join(', ')}',
       ].join('\n');
 
-      await engine.startVless(remark: parsed.remark, config: xrayConfig);
+      await engine.startVless(remark: server.name, config: xrayConfig);
     } catch (e) {
       var coreVersion = 'نامشخص';
       var nativeDiagnostics = 'گزارش بومی موتور دریافت نشد.';
