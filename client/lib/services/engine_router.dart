@@ -43,7 +43,13 @@ class EngineRouter {
         : <Map<String, dynamic>>[
             if (decoded.containsKey('type')) decoded,
           ];
-    final xhttp = outbounds.where(_isXhttpOutbound).firstOrNull;
+    Map<String, dynamic>? xhttp;
+    for (final outbound in outbounds) {
+      if (_isXhttpOutbound(outbound)) {
+        xhttp = outbound;
+        break;
+      }
+    }
     if (xhttp != null && xhttp['protocol'] == null) {
       return _xhttpOutboundToXray(xhttp);
     }
