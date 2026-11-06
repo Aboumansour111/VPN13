@@ -23,8 +23,8 @@ button:disabled{opacity:.4;cursor:not-allowed}.primary{background:linear-gradien
 </head>
 <body>
 <main>
-<header class="head"><div class="logo">13</div><div><h1>مبدل کانفیگ VPN13</h1><p>تبدیل کانفیگ‌ها به فهرست استاندارد سرورهای sing-box</p></div></header>
-<section class="panel"><h2>روش استفاده</h2><p class="hint">برای هر سرور یک نام نمایشی و یک کانفیگ وارد کن. می‌توانی کانفیگ‌ها را یکی‌یکی اضافه کنی. در پایان، خروجی کامل را کپی کن و محتوای فایل <b dir="ltr">config/servers.json</b> در GitHub را با آن جایگزین کن. اطلاعات فقط در همین مرورگر پردازش می‌شوند.</p><p class="hint" style="margin-top:8px">پشتیبانی: VLESS (TLS و Reality)، VMess، Trojan، Shadowsocks، Hysteria2، SOCKS، HTTP، خروجی sing-box و کانفیگ کامل Xray با outboundهای پشتیبانی‌شده.</p></section>
+<header class="head"><div class="logo">13</div><div><h1>مبدل کانفیگ VPN13</h1><p>تبدیل کانفیگ‌ها برای VPN13؛ XHTTP با موتور Xray</p></div></header>
+<section class="panel"><h2>روش استفاده</h2><p class="hint">برای هر سرور یک نام نمایشی و یک کانفیگ وارد کن. می‌توانی کانفیگ‌ها را یکی‌یکی اضافه کنی. در پایان، خروجی کامل را کپی کن و محتوای فایل <b dir="ltr">config/servers.json</b> در GitHub را با آن جایگزین کن. اطلاعات فقط در همین مرورگر پردازش می‌شوند.</p><p class="hint" style="margin-top:8px">پشتیبانی: VLESS (TLS و Reality)، VMess، Trojan، Shadowsocks، Hysteria2، SOCKS، HTTP، خروجی sing-box و کانفیگ کامل Xray؛ پشتیبانی از VLESS XHTTP و نام قدیمی SplitHTTP با موتور Xray.</p></section>
 <div id="entries"></div>
 <div class="actions" style="margin:4px 0 18px"><button class="primary" id="add">＋ افزودن کانفیگ بعدی</button><button class="secondary" id="validate">بررسی همه کانفیگ‌ها</button></div>
 <section class="panel">
@@ -62,6 +62,11 @@ function transportFrom(q,network){
  if(network==='grpc'){const t={type:'grpc'};const sn=q.serviceName||q.service_name||q.path;if(sn)t.service_name=sn;return {transport:t};}
  if(network==='httpupgrade'){const t={type:'httpupgrade'};if(q.path)t.path=q.path;if(q.host)t.host=q.host;return {transport:t};}
  if(network==='http'){const t={type:'http'};if(q.path)t.path=q.path;if(q.host)t.host=[q.host];return {transport:t};}
+ if(network==='xhttp'){
+   const t={type:'xhttp'};if(q.path)t.path=q.path;if(q.host)t.host=q.host;if(q.mode)t.mode=q.mode;
+   if(q.extra){try{t.extra=JSON.parse(q.extra);}catch{try{t.extra=JSON.parse(decodeURIComponent(q.extra));}catch{throw Error('پارامتر extra در XHTTP معتبر نیست');}}}
+   return {transport:t};
+ }
  throw Error('نوع انتقال پشتیبانی‌نشده: '+network);
 }
 function tlsFrom(q,force=false){
@@ -133,7 +138,7 @@ function xrayToSingbox(root){
  const list=Array.isArray(root.outbounds)?root.outbounds:[root];
  const x=list.find(v=>v&&['vless','vmess','trojan','shadowsocks','socks','http'].includes(v.protocol));
  if(!x)throw Error('در JSON هیچ outbound پشتیبانی‌شده‌ای پیدا نشد.');
- const ss=x.streamSettings||{},network=ss.network||'tcp',sec=ss.security||'none';
+ const ss=x.streamSettings||{},rawNetwork=ss.network||'tcp',network=rawNetwork==='splithttp'?'xhttp':rawNetwork,sec=ss.security||'none';
  const out={tag:'proxy'};
  if(x.protocol==='vless'||x.protocol==='vmess'){
    const v=x.settings?.vnext?.[0],user=v?.users?.[0];if(!v||!user)throw Error('ساختار settings.vnext در Xray ناقص است.');
@@ -158,6 +163,7 @@ function xrayToSingbox(root){
  if(network==='ws'){const w=ss.wsSettings||{};out.transport={type:'ws'};if(w.path)out.transport.path=w.path;if(w.headers?.Host)out.transport.headers={Host:w.headers.Host};}
  else if(network==='grpc'){const g=ss.grpcSettings||{};out.transport={type:'grpc'};if(g.serviceName)out.transport.service_name=g.serviceName;}
  else if(network==='httpupgrade'){const h=ss.httpupgradeSettings||{};out.transport={type:'httpupgrade'};if(h.path)out.transport.path=h.path;if(h.host)out.transport.host=h.host;}
+ else if(network==='xhttp'){const h=ss.xhttpSettings||ss.splithttpSettings||{};out.transport={type:'xhttp'};if(h.path)out.transport.path=h.path;if(h.host)out.transport.host=h.host;if(h.mode)out.transport.mode=h.mode;if(h.extra)out.transport.extra=h.extra;}
  else if(!['tcp','raw',''].includes(network))throw Error('انتقال Xray پشتیبانی‌نشده: '+network);
  return out;
 }
@@ -187,7 +193,8 @@ function build(){
      if(!name)throw Error('نام نمایشی را وارد کن.');
      const config=parseConfig(raw);
      const type=config.type;config.tag='vpn13-'+(i+1);
-     servers.push({id:i+1,name,description:type.toUpperCase()+' • sing-box',config:JSON.stringify(config)});
+     const engine=config.transport?.type==='xhttp'?'Xray':'sing-box';
+     servers.push({id:i+1,name,description:type.toUpperCase()+' • '+engine,config:JSON.stringify(config)});
      status.classList.add('ok');status.textContent='✓ معتبر · '+type.toUpperCase();
    }catch(e){status.classList.add('bad');status.textContent='✕ '+e.message;throw Error('کانفیگ '+(i+1)+': '+e.message);}
  });
