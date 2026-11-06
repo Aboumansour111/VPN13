@@ -1,7 +1,5 @@
 class AppConfig {
   static const appName = 'VPN13';
-  static const apiBaseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:8000',
-  );
+  static const serversJsonUrl =
+      'https://raw.githubusercontent.com/Aboumansour111/VPN13/main/config/servers.json';
 }
