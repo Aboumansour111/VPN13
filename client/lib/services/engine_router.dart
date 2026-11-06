@@ -38,6 +38,16 @@ class EngineRouter {
     }
 
     final hasOutbounds = decoded['outbounds'] is List;
+    final outbounds = hasOutbounds
+        ? (decoded['outbounds'] as List).whereType<Map<String, dynamic>>()
+        : <Map<String, dynamic>>[
+            if (decoded.containsKey('type')) decoded,
+          ];
+    final xhttp = outbounds.where(_isXhttpOutbound).firstOrNull;
+    if (xhttp != null && xhttp['protocol'] == null) {
+      return _xhttpOutboundToXray(xhttp);
+    }
+
     final input = hasOutbounds
         ? decoded
         : decoded.containsKey('type')
@@ -47,6 +57,64 @@ class EngineRouter {
               );
 
     return FlutterVless.parse(jsonEncode(input)).getFullConfiguration();
+  }
+
+  static String _xhttpOutboundToXray(Map<String, dynamic> outbound) {
+    final transport = outbound['transport'] is Map
+        ? outbound['transport'] as Map
+        : const <String, dynamic>{};
+    final tls = outbound['tls'] is Map
+        ? outbound['tls'] as Map
+        : const <String, dynamic>{};
+    final reality = tls['reality'] is Map
+        ? tls['reality'] as Map
+        : const <String, dynamic>{};
+    final utls = tls['utls'] is Map
+        ? tls['utls'] as Map
+        : const <String, dynamic>{};
+    final server = outbound['server']?.toString();
+    final uuid = outbound['uuid']?.toString();
+    final port = outbound['server_port'];
+    if (server == null || server.isEmpty || uuid == null || uuid.isEmpty ||
+        port is! num || port < 1 || port > 65535) {
+      throw const FormatException('اطلاعات VLESS + XHTTP ناقص است.');
+    }
+
+    final query = <String, String>{
+      'type': 'xhttp',
+      'security': reality['enabled'] == true
+          ? 'reality'
+          : tls['enabled'] == true
+              ? 'tls'
+              : 'none',
+    };
+    void add(String key, Object? value) {
+      if (value != null && value.toString().isNotEmpty) {
+        query[key] = value.toString();
+      }
+    }
+
+    add('sni', tls['server_name']);
+    add('fp', utls['fingerprint']);
+    add('pbk', reality['public_key']);
+    add('sid', reality['short_id']);
+    add('flow', outbound['flow']);
+    add('host', transport['host']);
+    add('path', transport['path']);
+    add('mode', transport['mode']);
+    if (transport['extra'] != null) {
+      query['extra'] = jsonEncode(transport['extra']);
+    }
+
+    final uri = Uri(
+      scheme: 'vless',
+      userInfo: uuid,
+      host: server,
+      port: port.toInt(),
+      queryParameters: query,
+      fragment: outbound['tag']?.toString() ?? server,
+    );
+    return FlutterVless.parse(uri.toString()).getFullConfiguration();
   }
 
   static bool _isXhttpShareLink(String value) {
