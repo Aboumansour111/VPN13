@@ -15,12 +15,6 @@ class ServerItem {
   final String config;
   final String? description;
 
-  factory ServerItem.fromJson(Map<String, dynamic> json) => ServerItem(
-        id: json['id'] as int,
-        name: json['name'] as String,
-        config: json['config'] as String,
-        description: json['description'] as String?,
-      );
 }
 
 class HomeScreen extends StatefulWidget {
@@ -52,6 +46,11 @@ class _HomeScreenState extends State<HomeScreen> {
   int downloadTotal = 0;
 
   bool get connected => connectionState == VlessConnectionState.connected;
+
+  int _stableId(String value) => value.codeUnits.fold(
+        0,
+        (hash, unit) => (hash * 31 + unit) & 0x7fffffff,
+      );
 
   ServerItem? get selected {
     for (final server in servers) {
@@ -111,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
           final scheme = link.toLowerCase().startsWith('vless://') ? 'VLESS' :
               link.toLowerCase().startsWith('ss://') ? 'Shadowsocks' : 'VPN';
           final name = parsed.remark.trim().isNotEmpty ? parsed.remark.trim() : scheme + ' ' + (list.length + 1).toString();
-          list.add(ServerItem(id: link.hashCode, name: name, config: link, description: scheme));
+          list.add(ServerItem(id: _stableId(link), name: name, config: link, description: scheme));
         } catch (_) { /* Skip invalid saved entries. */ }
       }
       var id = prefs.getInt('selectedServer');
@@ -275,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: TextButton.icon(
                         onPressed: loadServers,
                         icon: const Icon(Icons.refresh_rounded, size: 18),
-                        label: const Text('به‌روزرسانی فهرست سرورها'),
+                        label: const Text('بازخوانی فهرست کانفیگ‌ها'),
                         style: TextButton.styleFrom(
                           foregroundColor: _muted,
                         ),
