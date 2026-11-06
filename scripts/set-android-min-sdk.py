@@ -16,14 +16,14 @@ if gradle is None:
 source = gradle.read_text(encoding="utf-8")
 if gradle.name.endswith(".kts"):
     updated, count = re.subn(
-        r"minSdk\\s*=\\s*(?:flutter\\.minSdkVersion|\\d+)",
+        r"minSdk\s*=\s*(?:flutter\.minSdkVersion|\d+)",
         "minSdk = 23",
         source,
         count=1,
     )
 else:
     updated, count = re.subn(
-        r"minSdkVersion\\s+(?:flutter\\.minSdkVersion|\\d+)",
+        r"minSdkVersion\s+(?:flutter\.minSdkVersion|\d+)",
         "minSdkVersion 23",
         source,
         count=1,
