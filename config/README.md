@@ -1,14 +1,14 @@
 # VPN13 server list
 
-The Android client downloads `servers.json` directly from this directory. No separate API server is required.
+The Android client downloads this file directly from GitHub. No separate backend is required.
 
 ## Add a server
 
-Edit `servers.json` and add an object to the `servers` array:
+Add one object for each server inside the `servers` array:
 
-- `id`: unique integer; do not reuse IDs for different servers.
-- `name`: display name shown in the app.
-- `description`: optional short label.
+- `id`: unique integer.
+- `name`: server name shown in the app.
+- `description`: optional label, such as protocol or location.
 - `config`: paste the complete share link exactly as received. Do not convert it to JSON.
 
 Example:
@@ -27,16 +27,22 @@ Example:
       "id": 2,
       "name": "آلمان",
       "description": "VMess",
-      "config": "vmess://BASE64_OR_SHARE_LINK"
+      "config": "vmess://BASE64_CONFIGURATION"
     }
   ]
 }
 ```
 
-Put each share link on one line as the value of `config`. Keep the quotation marks and escape any double quotes if a link format ever contains them. Separate server objects with commas.
+Keep valid JSON syntax:
+- Put a comma between server objects, but not after the last object.
+- Use double quotes around keys and values.
+- If a link contains a double quote or backslash, escape it as required by JSON.
+- Every server must have a different `id`.
 
-The app's sing-box engine accepts common share-link formats including VLESS, VMess, Trojan, Shadowsocks, Hysteria/Hysteria2, TUIC, AnyTLS, WireGuard, SOCKS and HTTP(S). Unsupported transports or malformed links will fail when connecting.
+The app's sing-box engine accepts supported share links directly, including VLESS, VMess, Trojan, Shadowsocks, Hysteria, Hysteria2, TUIC, AnyTLS, WireGuard, SOCKS and HTTP. Support for individual link options depends on the protocol and sing-box core version.
 
-## Important privacy note
+You can also put a complete sing-box configuration in `config` instead of a share link.
 
-The repository is public. Every server link committed here is visible to anyone, including credentials and subscription details embedded in the link. Only publish links you are willing to expose publicly. Do not put private subscription URLs, personal tokens, or credentials in this repository.
+## Privacy warning
+
+If this GitHub repository is public, every link and its credentials stored here are publicly readable. Do not publish private subscription URLs or credentials unless you intend them to be public.
