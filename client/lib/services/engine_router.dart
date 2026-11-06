@@ -101,7 +101,9 @@ class EngineRouter {
     }
 
     add('sni', tls['server_name']);
+    add('alpn', tls['alpn'] is List ? (tls['alpn'] as List).join(',') : tls['alpn']);
     add('fp', utls['fingerprint']);
+    add('encryption', outbound['encryption']);
     add('pbk', reality['public_key']);
     add('sid', reality['short_id']);
     add('flow', outbound['flow']);
