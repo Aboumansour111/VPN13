@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_vless/flutter_vless.dart';
@@ -44,6 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<ServerItem> servers = [];
   int? selectedId;
   bool loading = true;
+  bool manualMode = false;
   bool busy = false;
   String? error;
   String? connectionError;
@@ -104,22 +106,28 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> loadServers() async {
+  Future<void> loadServers({bool manual = false}) async {
     setState(() {
       loading = true;
       error = null;
     });
     try {
-      final response = await http
-          .get(
-            Uri.parse(AppConfig.serversJsonUrl),
-            headers: const {'Cache-Control': 'no-cache'},
-          )
-          .timeout(const Duration(seconds: 20));
-      if (response.statusCode != 200) {
-        throw Exception('HTTP ${response.statusCode}');
+      late final String responseBody;
+      if (manual) {
+        responseBody = await rootBundle.loadString('assets/servers.json');
+      } else {
+        final response = await http
+            .get(
+              Uri.parse(AppConfig.serversJsonUrl),
+              headers: const {'Cache-Control': 'no-cache'},
+            )
+            .timeout(const Duration(seconds: 20));
+        if (response.statusCode != 200) {
+          throw Exception('HTTP ${response.statusCode}');
+        }
+        responseBody = response.body;
       }
-      final document = jsonDecode(response.body) as Map<String, dynamic>;
+      final document = jsonDecode(responseBody) as Map<String, dynamic>;
       final list = (document['servers'] as List)
           .map((item) => ServerItem.fromJson(item as Map<String, dynamic>))
           .toList();
@@ -137,6 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         servers = list;
         selectedId = id;
+        manualMode = manual;
       });
     } catch (e) {
       if (mounted) {
@@ -298,9 +307,29 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 14),
                       _errorPanel(connectionError!),
                     ],
+                    if (manualMode) ...[
+                      const SizedBox(height: 8),
+                      const Center(
+                        child: Text(
+                          'حالت دستی: فهرست سرورها از فایل داخلی برنامه بارگذاری شده است.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: _muted, fontSize: 10),
+                        ),
+                      ),
+                    ],
                     if (error != null) ...[
                       const SizedBox(height: 14),
                       _errorPanel(error!),
+                      const SizedBox(height: 8),
+                      Center(
+                        child: OutlinedButton.icon(
+                          onPressed: loading || busy
+                              ? null
+                              : () => loadServers(manual: true),
+                          icon: const Icon(Icons.phone_android_rounded, size: 18),
+                          label: const Text('آزمایش حالت دستی (بدون GitHub)'),
+                        ),
+                      ),
                     ],
                     const SizedBox(height: 18),
                     Center(
