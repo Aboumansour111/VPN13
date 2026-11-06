@@ -1,0 +1,179 @@
+{
+  "version": 4,
+  "engine": "xray",
+  "format": "xray-json",
+  "servers": [
+    {
+      "id": 1,
+      "name": "Shadowsocks 2022",
+      "description": "SS • 2022-blake3-aes-256-gcm",
+      "config": {
+        "log": {
+          "loglevel": "warning"
+        },
+        "dns": {
+          "servers": [
+            "1.1.1.1",
+            "8.8.8.8"
+          ]
+        },
+        "inbounds": [
+          {
+            "tag": "socks-in",
+            "listen": "127.0.0.1",
+            "port": 10808,
+            "protocol": "socks",
+            "settings": {
+              "auth": "noauth",
+              "udp": true,
+              "ip": "127.0.0.1"
+            },
+            "sniffing": {
+              "enabled": true,
+              "destOverride": [
+                "http",
+                "tls",
+                "quic"
+              ]
+            }
+          }
+        ],
+        "outbounds": [
+          {
+            "tag": "proxy",
+            "protocol": "shadowsocks",
+            "settings": {
+              "servers": [
+                {
+                  "address": "3.17.61.153",
+                  "port": 41159,
+                  "method": "2022-blake3-aes-256-gcm",
+                  "password": "REPLACE_WITH_SERVER_KEY:USER_KEY"
+                }
+              ]
+            }
+          },
+          {
+            "tag": "direct",
+            "protocol": "freedom",
+            "settings": {}
+          },
+          {
+            "tag": "block",
+            "protocol": "blackhole",
+            "settings": {
+              "response": {
+                "type": "http"
+              }
+            }
+          }
+        ],
+        "routing": {
+          "domainStrategy": "AsIs",
+          "rules": [
+            {
+              "type": "field",
+              "inboundTag": [
+                "socks-in"
+              ],
+              "outboundTag": "proxy"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 2,
+      "name": "VLESS Reality",
+      "description": "VLESS • Reality • TCP",
+      "config": {
+        "log": {
+          "loglevel": "warning"
+        },
+        "dns": {
+          "servers": [
+            "1.1.1.1",
+            "8.8.8.8"
+          ]
+        },
+        "inbounds": [
+          {
+            "tag": "socks-in",
+            "listen": "127.0.0.1",
+            "port": 10808,
+            "protocol": "socks",
+            "settings": {
+              "auth": "noauth",
+              "udp": true,
+              "ip": "127.0.0.1"
+            },
+            "sniffing": {
+              "enabled": true,
+              "destOverride": [
+                "http",
+                "tls",
+                "quic"
+              ]
+            }
+          }
+        ],
+        "outbounds": [
+          {
+            "tag": "proxy",
+            "protocol": "vless",
+            "settings": {
+              "vnext": [
+                {
+                  "address": "3.17.61.153",
+                  "port": 35609,
+                  "users": [
+                    {
+                      "id": "f38e76ab-1d91-4a20-9a51-33feae2cdd28",
+                      "encryption": "none"
+                    }
+                  ]
+                }
+              ]
+            },
+            "streamSettings": {
+              "network": "tcp",
+              "security": "reality",
+              "realitySettings": {
+                "serverName": "youtubekids.com",
+                "fingerprint": "chrome",
+                "publicKey": "pLxVcPtk-OQuREi_t1EogDgGkCiAVEYVB1rfk6hv3Qo",
+                "shortId": "17e070"
+              }
+            }
+          },
+          {
+            "tag": "direct",
+            "protocol": "freedom",
+            "settings": {}
+          },
+          {
+            "tag": "block",
+            "protocol": "blackhole",
+            "settings": {
+              "response": {
+                "type": "http"
+              }
+            }
+          }
+        ],
+        "routing": {
+          "domainStrategy": "AsIs",
+          "rules": [
+            {
+              "type": "field",
+              "inboundTag": [
+                "socks-in"
+              ],
+              "outboundTag": "proxy"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
