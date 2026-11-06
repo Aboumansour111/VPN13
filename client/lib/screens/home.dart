@@ -155,16 +155,66 @@ class _HomeScreenState extends State<HomeScreen> {
       busy = true;
       connectionError = null;
     });
+
+    var profileSummary = 'اطلاعات ساختار کانفیگ در دسترس نیست.';
     try {
       final permitted = await engine.requestPermission();
       if (!permitted) throw Exception('اجازه ایجاد اتصال VPN داده نشد.');
+
       final parsed = FlutterVless.parse(server.config);
       final xrayConfig = parsed.getFullConfiguration();
+
+      // Keep the diagnostic summary free of UUIDs, passwords, keys and addresses.
+      final config = jsonDecode(xrayConfig) as Map<String, dynamic>;
+      final outbounds = (config['outbounds'] as List<dynamic>? ?? []);
+      final firstOutbound = outbounds.isNotEmpty
+          ? outbounds.first as Map<String, dynamic>
+          : <String, dynamic>{};
+      final stream = firstOutbound['streamSettings'] is Map
+          ? firstOutbound['streamSettings'] as Map
+          : <String, dynamic>{};
+      profileSummary = [
+        'Profile: ${server.name}',
+        'Outbound count: ${outbounds.length}',
+        'Outbound protocol: ${firstOutbound['protocol'] ?? 'unknown'}',
+        'Transport: ${stream['network'] ?? 'default'}',
+        'Security: ${stream['security'] ?? 'none'}',
+        'Top-level keys: ${config.keys.join(', ')}',
+      ].join('\\n');
+
       await engine.startVless(remark: parsed.remark, config: xrayConfig);
     } catch (e) {
+      var coreVersion = 'نامشخص';
+      var nativeDiagnostics = 'گزارش بومی موتور دریافت نشد.';
+      try {
+        coreVersion = await engine.getCoreVersion();
+      } catch (diagnosticError) {
+        coreVersion = 'خطا: $diagnosticError';
+      }
+      try {
+        final snapshot = await engine.getProviderDebugSnapshot();
+        nativeDiagnostics = snapshot.trim().isEmpty
+            ? 'موتور گزارش جزئی‌تری ثبت نکرده است.'
+            : snapshot;
+      } catch (diagnosticError) {
+        nativeDiagnostics = 'خطا در دریافت گزارش: $diagnosticError';
+      }
+
       if (mounted) {
-        setState(() => connectionError = e.toString());
-        message('اتصال برقرار نشد؛ جزئیات خطا در پایین صفحه آمده است.');
+        setState(() {
+          connectionError = [
+            e.toString(),
+            '',
+            '--- خلاصه کانفیگ (بدون اطلاعات محرمانه) ---',
+            profileSummary,
+            '',
+            'Xray Core: $coreVersion',
+            '',
+            '--- گزارش داخلی موتور ---',
+            nativeDiagnostics,
+          ].join('\\n');
+        });
+        message('اتصال برقرار نشد؛ گزارش عیب‌یابی در پایین صفحه ثبت شد.');
       }
     } finally {
       if (mounted) setState(() => busy = false);
