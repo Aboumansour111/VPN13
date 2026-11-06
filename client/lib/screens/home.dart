@@ -158,7 +158,9 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final permitted = await engine.requestPermission();
       if (!permitted) throw Exception('اجازه ایجاد اتصال VPN داده نشد.');
-      await engine.startVless(remark: server.name, config: server.config);
+      final parsed = FlutterVless.parse(server.config);
+      final xrayConfig = parsed.getFullConfiguration();
+      await engine.startVless(remark: server.name, config: xrayConfig);
     } catch (e) {
       if (mounted) {
         setState(() => connectionError = e.toString());
