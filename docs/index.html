@@ -47,7 +47,7 @@ function mapOutbound(o,index){
    if(stream.security==='reality')x.tls.reality={enabled:true,public_key:t.publicKey,short_id:t.shortId||''};
   }
  }else if(p==='socks'||p==='http'){
-  x={type:p,tag,server:first.address||first.server,server_port:Number(first.port||first.server_port)};
+  x={type:p,tag,server:addr,server_port:Number(port)};
   if(first.users?.[0]){x.username=first.users[0].user;x.password=first.users[0].pass;}
   if(first.username)x.username=first.username;if(first.password)x.password=first.password;
  }else throw Error('پروتکل '+p+' در این نسخه پشتیبانی نمی‌شود.');
