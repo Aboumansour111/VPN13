@@ -4,8 +4,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sing_box/sing_box.dart';
 import 'package:flutter_vless/flutter_vless.dart';
+import 'package:sing_box/sing_box.dart';
 
 import '../config.dart';
 import '../services/engine_router.dart';
