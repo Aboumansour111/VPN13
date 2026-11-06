@@ -1,11 +1,6 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_vless/flutter_vless.dart';
-
-import '../config.dart';
 
 class ServerItem {
   const ServerItem({
@@ -105,49 +100,71 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> loadServers() async {
-    setState(() {
-      loading = true;
-      error = null;
-    });
+    setState(() { loading = true; error = null; });
     try {
-      final response = await http
-          .get(
-            Uri.parse(AppConfig.serversJsonUrl),
-            headers: const {'Cache-Control': 'no-cache'},
-          )
-          .timeout(const Duration(seconds: 20));
-      if (response.statusCode != 200) {
-        throw Exception('HTTP ${response.statusCode}');
-      }
-      final document = jsonDecode(response.body) as Map<String, dynamic>;
-      final list = (document['servers'] as List)
-          .map((item) => ServerItem.fromJson(item as Map<String, dynamic>))
-          .toList();
       final prefs = await SharedPreferences.getInstance();
+      final links = prefs.getStringList('serverLinks') ?? <String>[];
+      final list = <ServerItem>[];
+      for (final link in links) {
+        try {
+          final parsed = FlutterVless.parse(link);
+          final scheme = link.toLowerCase().startsWith('vless://') ? 'VLESS' :
+              link.toLowerCase().startsWith('ss://') ? 'Shadowsocks' : 'VPN';
+          final name = parsed.remark.trim().isNotEmpty ? parsed.remark.trim() : scheme + ' ' + (list.length + 1).toString();
+          list.add(ServerItem(id: link.hashCode, name: name, config: link, description: scheme));
+        } catch (_) { /* Skip invalid saved entries. */ }
+      }
       var id = prefs.getInt('selectedServer');
       if (id == null || !list.any((server) => server.id == id)) {
         id = list.isEmpty ? null : list.first.id;
-        if (id == null) {
-          await prefs.remove('selectedServer');
-        } else {
-          await prefs.setInt('selectedServer', id);
-        }
+        if (id == null) { await prefs.remove('selectedServer'); }
+        else { await prefs.setInt('selectedServer', id); }
       }
       if (!mounted) return;
-      setState(() {
-        servers = list;
-        selectedId = id;
-      });
+      setState(() { servers = list; selectedId = id; });
     } catch (e) {
-      if (mounted) {
-        setState(() => error =
-            'دریافت فهرست سرورها ناموفق بود. اتصال اینترنت را بررسی کنید.\n$e');
-      }
-    } finally {
-      if (mounted) setState(() => loading = false);
-    }
+      if (mounted) setState(() => error = 'خواندن فهرست سرورها ناموفق بود. ' + e.toString());
+    } finally { if (mounted) setState(() => loading = false); }
   }
 
+  Future<void> _addServer() async {
+    if (connected || busy) return;
+    final controller = TextEditingController();
+    final link = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('افزودن کانفیگ'),
+        content: SizedBox(width: 440, child: TextField(
+          controller: controller, autofocus: true, minLines: 3, maxLines: 6,
+          textDirection: TextDirection.ltr,
+          decoration: const InputDecoration(hintText: 'vless://... یا ss://...', border: OutlineInputBorder(), alignLabelWithHint: true),
+        )),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('انصراف')),
+          FilledButton(onPressed: () => Navigator.pop(dialogContext, controller.text.trim()), child: const Text('افزودن')),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (link == null || link.isEmpty) return;
+    try {
+      final normalized = link.trim();
+      if (!normalized.startsWith('vless://') && !normalized.startsWith('ss://')) {
+        throw FormatException('لینک باید با vless:// یا ss:// شروع شود.');
+      }
+      final parsed = FlutterVless.parse(normalized);
+      parsed.getFullConfiguration();
+      final prefs = await SharedPreferences.getInstance();
+      final links = prefs.getStringList('serverLinks') ?? <String>[];
+      if (links.contains(normalized)) { message('این کانفیگ قبلاً اضافه شده است.'); return; }
+      links.add(normalized);
+      await prefs.setStringList('serverLinks', links);
+      await loadServers();
+      final matches = servers.where((s) => s.config == normalized);
+      if (matches.isNotEmpty) await selectServer(matches.first);
+      message('کانفیگ به فهرست اضافه شد.');
+    } catch (e) { message('لینک کانفیگ معتبر نیست: ' + e.toString()); }
+  }
   Future<void> connect() async {
     final server = selected;
     if (server == null || busy) return;
@@ -567,6 +584,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   '${servers.length} سرور',
                   style: const TextStyle(color: _muted, fontSize: 11),
+                ),
+                const SizedBox(width: 6),
+                IconButton(
+                  onPressed: connected || busy ? null : _addServer,
+                  tooltip: 'افزودن کانفیگ',
+                  visualDensity: VisualDensity.compact,
+                  icon: const Icon(Icons.add_circle_rounded, color: _blue),
                 ),
               ],
             ),
