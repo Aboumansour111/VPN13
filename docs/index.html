@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>تبدیل کانفیگ VPN13</title>
+<style>
+:root{font-family:Tahoma,Arial,sans-serif;color:#17243b;background:#f3f6fc}*{box-sizing:border-box}body{margin:0;padding:28px 14px}.wrap{max-width:920px;margin:auto}.head{background:linear-gradient(120deg,#142d59,#315cb4);color:#fff;padding:25px;border-radius:22px;margin-bottom:18px}.head h1{margin:0 0 8px;font-size:23px}.head p{margin:0;color:#dce7ff;line-height:1.9;font-size:13px}.card{background:#fff;border:1px solid #e3e9f3;border-radius:18px;padding:20px;margin:14px 0;box-shadow:0 8px 24px #23395b0a}label{display:block;font-weight:bold;margin:0 0 9px}textarea,input{width:100%;border:1px solid #d7dfec;border-radius:12px;padding:13px;font:13px/1.8 Consolas,monospace;direction:ltr;text-align:left;background:#fbfcff;color:#15243c}textarea{min-height:230px;resize:vertical}input{font-family:Tahoma,Arial,sans-serif;direction:rtl;text-align:right}button{border:0;border-radius:11px;background:#315fe0;color:#fff;padding:12px 18px;font-weight:bold;cursor:pointer;margin:9px 0 0 7px}button.alt{background:#eaf0ff;color:#2449ad}button:disabled{opacity:.5}.row{display:flex;gap:12px;flex-wrap:wrap}.row>div{flex:1;min-width:220px}.hint{font-size:12px;color:#65748d;line-height:1.9}.status{padding:12px;border-radius:11px;margin-top:12px;display:none;line-height:1.8}.ok{display:block;background:#eaf8f2;color:#126447}.bad{display:block;background:#fff0ed;color:#9a3e2e}pre{white-space:pre-wrap;word-break:break-word;direction:ltr;text-align:left;background:#101b2d;color:#dce8ff;padding:16px;border-radius:12px;overflow:auto;font:12px/1.7 Consolas,monospace}.small{font-size:11px;color:#738099}.server{border:1px solid #e3e9f3;border-radius:12px;padding:12px;margin:9px 0}.server input{margin:6px 0}.server textarea{min-height:100px}.hidden{display:none}
+</style></head>
+<body><main class="wrap">
+<header class="head"><h1>مبدل کانفیگ VPN13</h1><p>تبدیل کانفیگ کامل Xray/V2Ray یا یک Outbound به ساختار sing-box و ساخت فایل servers.json آماده انتشار در GitHub.</p></header>
+<section class="card">
+<label for="source">کانفیگ ورودی (JSON کامل Xray/V2Ray یا JSON یک outbound)</label>
+<textarea id="source" spellcheck="false" placeholder='کانفیگ JSON را اینجا قرار بده...'></textarea>
+<div class="row"><div><label for="name">نام پیش‌فرض سرور</label><input id="name" value="Server"></div><div><label for="desc">توضیح</label><input id="desc" value="Converted by VPN13"></div></div>
+<button id="convert">تبدیل کانفیگ</button><button class="alt" id="sample">نمونه Shadowsocks</button><button class="alt" id="clear">پاک کردن</button>
+<div id="status" class="status"></div>
+<p class="hint">این ابزار داخل مرورگر اجرا می‌شود و متن ورودی به هیچ سروری ارسال نمی‌شود. در این نسخه، پروتکل‌های Shadowsocks، VLESS، VMess، Trojan، SOCKS و HTTP از ساختار JSON پشتیبانی می‌شوند. لینک‌های اشتراکی خام و تنظیمات پیچیده/زنجیره‌ای ممکن است نیازمند تبدیل اختصاصی باشند.</p>
+</section>
+<section class="card hidden" id="resultCard"><label>خروجی آماده servers.json</label><div id="servers"></div><button id="download">دانلود servers.json</button><button class="alt" id="copy">کپی خروجی</button><pre id="output"></pre></section>
+<footer class="small">VPN13 • مبدل محلی مرورگر • هیچ اطلاعاتی ذخیره یا ارسال نمی‌شود.</footer>
+</main>
+<script>
+const $=id=>document.getElementById(id);let result=null;
+function tell(msg,good){$('status').textContent=msg;$('status').className='status '+(good?'ok':'bad')}
+function obj(v,n){if(!v||typeof v!=='object'||Array.isArray(v))throw Error(n+' باید یک شیء JSON باشد.');return v}
+function mapOutbound(o,index){
+ const p=o.protocol||o.type;const s=o.settings||o;const first=(s.servers||[])[0]||s;const stream=o.streamSettings||{};const tls=stream.security&&stream.security!=='none'?stream.securitySettings||{}:null;const net=stream.network||'tcp';const tag=o.tag||o.name||('server-'+(index+1));
+ let x={type:p,tag};
+ if(p==='shadowsocks'){x={...x,type:'shadowsocks',server:first.address||first.server,server_port:Number(first.port||first.server_port),method:first.method,password:first.password};if(stream.network&&stream.network!=='tcp')x.network=stream.network;}
+ else if(p==='vless'||p==='vmess'||p==='trojan'){
+  x.server=first.address||first.server;x.server_port=Number(first.port||first.server_port);
+  if(p==='vless'||p==='vmess')x.uuid=first.id||first.uuid;
+  if(p==='vmess')x.security=first.security||'auto';
+  if(p==='trojan')x.password=first.password;
+  if(p==='vless'&&first.flow)x.flow=first.flow;
+  if(net==='ws')x.transport={type:'ws',path:stream.wsSettings?.path||'/',headers:stream.wsSettings?.headers||{}};
+  else if(net==='grpc')x.transport={type:'grpc',service_name:stream.grpcSettings?.serviceName||''};
+  else if(net==='http'||net==='h2')x.transport={type:'http',path:(stream.httpSettings?.path||'/').split(',')[0],host:stream.httpSettings?.host||[]};
+  if(stream.security==='tls'||stream.security==='reality'){
+   const t=stream[tls?'tlsSettings':'realitySettings']||{};
+   x.tls={enabled:true,server_name:t.serverName||t.serverNames?.[0]||first.address||first.server};
+   if(t.allowInsecure)x.tls.insecure=true;
+   if(t.fingerprint)x.tls.utls={enabled:true,fingerprint:t.fingerprint};
+   if(stream.security==='reality')x.tls.reality={enabled:true,public_key:t.publicKey,short_id:t.shortId||''};
+  }
+ }else if(p==='socks'||p==='http'){
+  x={type:p,tag,server:first.address||first.server,server_port:Number(first.port||first.server_port)};
+  if(first.users?.[0]){x.username=first.users[0].user;x.password=first.users[0].pass;}
+  if(first.username)x.username=first.username;if(first.password)x.password=first.password;
+ }else throw Error('پروتکل '+p+' در این نسخه پشتیبانی نمی‌شود.');
+ if(!x.server||!Number.isFinite(x.server_port)||!x.server_port)throw Error('آدرس یا پورت سرور در '+tag+' ناقص است.');
+ if(['vless','vmess'].includes(p)&&!x.uuid)throw Error('UUID در '+tag+' پیدا نشد.');
+ if(p==='shadowsocks'&&(!x.method||!x.password))throw Error('method یا password در '+tag+' ناقص است.');
+ if(p==='trojan'&&!x.password)throw Error('رمز عبور Trojan در '+tag+' پیدا نشد.');
+ return x;
+}
+function convert(){
+ try{
+  const raw=JSON.parse($('source').value.trim());let list=[];
+  if(Array.isArray(raw))list=raw;
+  else if(raw.outbounds&&Array.isArray(raw.outbounds))list=raw.outbounds.filter(x=>!['freedom','blackhole','dns','direct','block'].includes(x.protocol||x.type));
+  else if(raw.protocol||raw.type)list=[raw];
+  else throw Error('ساختار JSON شناخته نشد. باید outbounds یا یک outbound داشته باشد.');
+  const converted=list.map(mapOutbound);
+  if(!converted.length)throw Error('هیچ outbound قابل تبدیلی پیدا نشد.');
+  result={version:1,servers:converted.map((c,i)=>({id:i+1,name:converted.length===1?$('name').value:($('name').value+' '+(i+1)),description:$('desc').value,config:JSON.stringify(c)}))};
+  render();tell(converted.length+' سرور با موفقیت تبدیل شد.',true);
+ }catch(e){$('resultCard').classList.add('hidden');tell(e.message||String(e),false)}
+}
+function render(){
+ $('resultCard').classList.remove('hidden');$('servers').innerHTML='';
+ result.servers.forEach((s,i)=>{const d=document.createElement('div');d.className='server';const l=document.createElement('label');l.textContent=s.name+' — '+JSON.parse(s.config).type;const t=document.createElement('textarea');t.readOnly=true;t.value=s.config;d.append(l,t);$('servers').append(d)});
+ $('output').textContent=JSON.stringify(result,null,2);
+}
+$('convert').onclick=convert;
+$('sample').onclick=()=>{$('source').value=JSON.stringify({outbounds:[{protocol:'shadowsocks',tag:'ss-out',settings:{servers:[{address:'1.2.3.4',port:443,method:'2022-blake3-aes-256-gcm',password:'YOUR_PASSWORD'}]}}]},null,2)};
+$('clear').onclick=()=>{$('source').value='';$('resultCard').classList.add('hidden');$('status').className='status';};
+$('download').onclick=()=>{const blob=new Blob([JSON.stringify(result,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='servers.json';a.click();URL.revokeObjectURL(a.href)};
+$('copy').onclick=async()=>{await navigator.clipboard.writeText(JSON.stringify(result,null,2));tell('خروجی کپی شد.',true)};
+</script></body></html>
