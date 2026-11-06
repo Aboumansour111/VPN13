@@ -5,15 +5,9 @@
   "servers": [
     {
       "id": 1,
-      "name": "Shadowsocks 2022",
-      "description": "SS • 2022-blake3-aes-256-gcm",
-      "config": "{\"type\":\"shadowsocks\",\"tag\":\"proxy-global-102\",\"server\":\"3.17.61.153\",\"server_port\":41159,\"method\":\"2022-blake3-aes-256-gcm\",\"password\":\"REPLACE_WITH_SERVER_KEY:USER_KEY\"}"
-    },
-    {
-      "id": 2,
-      "name": "VLESS Reality",
-      "description": "VLESS • Reality • TCP",
-      "config": "{\"type\":\"vless\",\"tag\":\"proxy-global-103\",\"server\":\"3.17.61.153\",\"server_port\":35609,\"uuid\":\"f38e76ab-1d91-4a20-9a51-33feae2cdd28\",\"tls\":{\"enabled\":true,\"server_name\":\"youtubekids.com\",\"utls\":{\"enabled\":true,\"fingerprint\":\"chrome\"},\"reality\":{\"enabled\":true,\"public_key\":\"pLxVcPtk-OQuREi_t1EogDgGkCiAVEYVB1rfk6hv3Qo\",\"short_id\":\"17e070\"}}}"
+      "name": "سوئد",
+      "description": "SHADOWSOCKS • sing-box",
+      "config": "{\"type\":\"shadowsocks\",\"tag\":\"vpn13-1\",\"server\":\"3.17.61.153\",\"server_port\":41159,\"method\":\"2022-blake3-aes-256-gcm\",\"password\":\"WLfUn8pUj6h2mrWaVmaSxuMpcDhaAEm6mQMbG2zijYc=:S7cJGAJ3xxbmvHKEvBQCN3wfh7ig92JkE8OhGY87Dwc=\"}"
     }
   ]
 }
