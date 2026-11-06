@@ -294,6 +294,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 4),
+                    Center(
+                      child: OutlinedButton.icon(
+                        onPressed: connected || busy || loading
+                            ? null
+                            : () => loadServers(manual: true),
+                        icon: const Icon(Icons.phone_android_rounded, size: 18),
+                        label: const Text('بارگذاری فهرست داخلی گوشی'),
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     const Center(
                       child: Text(
