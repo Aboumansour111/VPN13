@@ -27,21 +27,21 @@ $('loadCurrent').onclick=async()=>{try{ $('loadCurrent').disabled=true;$('loadCu
 function tell(msg,good){$('status').textContent=msg;$('status').className='status '+(good?'ok':'bad')}
 function obj(v,n){if(!v||typeof v!=='object'||Array.isArray(v))throw Error(n+' باید یک شیء JSON باشد.');return v}
 function mapOutbound(o,index){
- const p=o.protocol||o.type;const s=o.settings||o;const first=(s.servers||[])[0]||s;const stream=o.streamSettings||{};const tls=stream.security&&stream.security!=='none'?stream.securitySettings||{}:null;const net=stream.network||'tcp';const tag=o.tag||o.name||('server-'+(index+1));
+ const p=o.protocol||o.type;const s=o.settings||o;const stream=o.streamSettings||{};const first=(s.servers||s.vnext||s.outbounds||[])[0]||s;const user=(first.users||[])[0]||first;const addr=first.address||first.server||first.host||s.address||s.server;const port=first.port||first.server_port||s.port||s.server_port;const tls=stream.security&&stream.security!=='none'?stream.securitySettings||{}:null;const net=stream.network||'tcp';const tag=o.tag||o.name||('server-'+(index+1));
  let x={type:p,tag};
- if(p==='shadowsocks'){x={...x,type:'shadowsocks',server:first.address||first.server,server_port:Number(first.port||first.server_port),method:first.method,password:first.password};if(stream.network&&stream.network!=='tcp')x.network=stream.network;}
+ if(p==='shadowsocks'){x={...x,type:'shadowsocks',server:addr,server_port:Number(port),method:first.method,password:first.password};if(stream.network&&stream.network!=='tcp')x.network=stream.network;}
  else if(p==='vless'||p==='vmess'||p==='trojan'){
-  x.server=first.address||first.server;x.server_port=Number(first.port||first.server_port);
-  if(p==='vless'||p==='vmess')x.uuid=first.id||first.uuid;
-  if(p==='vmess')x.security=first.security||'auto';
+  x.server=addr;x.server_port=Number(port);
+  if(p==='vless'||p==='vmess')x.uuid=user.id||user.uuid||first.id||first.uuid;
+  if(p==='vmess')x.security=user.security||first.security||'auto';
   if(p==='trojan')x.password=first.password;
-  if(p==='vless'&&first.flow)x.flow=first.flow;
+  if(p==='vless'&&user.flow||first.flow)x.flow=user.flow||first.flow;
   if(net==='ws')x.transport={type:'ws',path:stream.wsSettings?.path||'/',headers:stream.wsSettings?.headers||{}};
   else if(net==='grpc')x.transport={type:'grpc',service_name:stream.grpcSettings?.serviceName||''};
   else if(net==='http'||net==='h2')x.transport={type:'http',path:(stream.httpSettings?.path||'/').split(',')[0],host:stream.httpSettings?.host||[]};
   if(stream.security==='tls'||stream.security==='reality'){
    const t=stream[tls?'tlsSettings':'realitySettings']||{};
-   x.tls={enabled:true,server_name:t.serverName||t.serverNames?.[0]||first.address||first.server};
+   x.tls={enabled:true,server_name:t.serverName||t.serverNames?.[0]||addr};
    if(t.allowInsecure)x.tls.insecure=true;
    if(t.fingerprint)x.tls.utls={enabled:true,fingerprint:t.fingerprint};
    if(stream.security==='reality')x.tls.reality={enabled:true,public_key:t.publicKey,short_id:t.shortId||''};
@@ -51,7 +51,7 @@ function mapOutbound(o,index){
   if(first.users?.[0]){x.username=first.users[0].user;x.password=first.users[0].pass;}
   if(first.username)x.username=first.username;if(first.password)x.password=first.password;
  }else throw Error('پروتکل '+p+' در این نسخه پشتیبانی نمی‌شود.');
- if(!x.server||!Number.isFinite(x.server_port)||!x.server_port)throw Error('آدرس یا پورت سرور در '+tag+' ناقص است.');
+ if(!x.server||!Number.isFinite(x.server_port)||!x.server_port)throw Error('آدرس یا پورت سرور در '+tag+' ناقص است. (address/port یا vnext/servers را بررسی کن؛ مقدار پیدا‌شده: '+JSON.stringify({address:x.server,port:x.server_port})+')');
  if(['vless','vmess'].includes(p)&&!x.uuid)throw Error('UUID در '+tag+' پیدا نشد.');
  if(p==='shadowsocks'&&(!x.method||!x.password))throw Error('method یا password در '+tag+' ناقص است.');
  if(p==='trojan'&&!x.password)throw Error('رمز عبور Trojan در '+tag+' پیدا نشد.');
