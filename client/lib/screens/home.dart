@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sing_box/sing_box.dart';
@@ -411,9 +412,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ? 'اتصال برقرار است'
         : status == SingBoxConnectionStatus.connecting
             ? 'در حال اتصال…'
-            : status == SingBoxConnectionStatus.disconnecting
-                ? 'در حال قطع اتصال…'
-                : 'آماده اتصال';
+            : 'آماده اتصال';
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
       decoration: BoxDecoration(
@@ -519,7 +518,6 @@ class _HomeScreenState extends State<HomeScreen> {
             child: FilledButton(
               onPressed: busy ||
                       status == SingBoxConnectionStatus.connecting ||
-                      status == SingBoxConnectionStatus.disconnecting ||
                       selected == null
                   ? null
                   : (active ? disconnect : connect),
@@ -536,8 +534,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 elevation: 0,
               ),
               child: busy ||
-                      status == SingBoxConnectionStatus.connecting ||
-                      status == SingBoxConnectionStatus.disconnecting
+                      status == SingBoxConnectionStatus.connecting
                   ? const SizedBox(
                       width: 22,
                       height: 22,
