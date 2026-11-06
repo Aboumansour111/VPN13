@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 
 /// Flutter bridge to VPN13's Android VpnService and AndroidLibXrayLite.
