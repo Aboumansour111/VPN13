@@ -180,7 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'Transport: ${stream['network'] ?? 'default'}',
         'Security: ${stream['security'] ?? 'none'}',
         'Top-level keys: ${config.keys.join(', ')}',
-      ].join('\\n');
+      ].join('\n');
 
       await engine.startVless(remark: parsed.remark, config: xrayConfig);
     } catch (e) {
@@ -212,7 +212,7 @@ class _HomeScreenState extends State<HomeScreen> {
             '',
             '--- گزارش داخلی موتور ---',
             nativeDiagnostics,
-          ].join('\\n');
+          ].join('\n');
         });
         message('اتصال برقرار نشد؛ گزارش عیب‌یابی در پایین صفحه ثبت شد.');
       }
