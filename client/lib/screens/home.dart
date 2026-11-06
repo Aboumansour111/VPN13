@@ -486,7 +486,10 @@ class _HomeScreenState extends State<HomeScreen> {
             width: double.infinity,
             height: 54,
             child: FilledButton(
-              onPressed: busy || selected == null
+              onPressed: busy ||
+                      connectionState == VlessConnectionState.connecting ||
+                      connectionState == VlessConnectionState.disconnecting ||
+                      selected == null
                   ? null
                   : (active ? disconnect : connect),
               style: FilledButton.styleFrom(
@@ -501,7 +504,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 elevation: 0,
               ),
-              child: busy
+              child: busy ||
+                      connectionState == VlessConnectionState.connecting ||
+                      connectionState == VlessConnectionState.disconnecting
                   ? const SizedBox(
                       width: 22,
                       height: 22,
