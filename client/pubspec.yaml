@@ -1,5 +1,5 @@
 name: vpn13_client
-description: VPN13 Android VPN client
+description: VPN13 Android VPN client powered by Xray
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -11,7 +11,7 @@ dependencies:
     sdk: flutter
   http: ^1.2.2
   shared_preferences: ^2.3.2
-  sing_box: ^1.0.0
+  flutter_vless: ^1.1.7
 
 dev_dependencies:
   flutter_test:
