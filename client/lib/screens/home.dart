@@ -105,9 +105,11 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     statusSub = SingBox.instance
         .watchConnectionStatus()
-        .listen(_handleStatus);
+        .listen((value) {
+      if (!xrayEngineActive) _handleStatus(value);
+    });
     statsSub = SingBox.instance.watchConnectionStats().listen((value) {
-      if (mounted) {
+      if (mounted && !xrayEngineActive) {
         setState(() {
           uploadSpeed = value.uploadSpeed;
           downloadSpeed = value.downloadSpeed;
@@ -117,7 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     });
     stateSub = SingBox.instance.watchConnectionState().listen((value) {
-      if (value.error != null && value.error!.isNotEmpty && mounted) {
+      if (!xrayEngineActive && value.error != null && value.error!.isNotEmpty && mounted) {
         setState(() => connectionError = value.error);
       }
     });
