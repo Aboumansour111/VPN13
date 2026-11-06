@@ -9,7 +9,7 @@
 <body><main class="wrap">
 <header class="head"><h1>مبدل کانفیگ VPN13</h1><p>تبدیل کانفیگ کامل Xray/V2Ray یا یک Outbound به ساختار sing-box و ساخت فایل servers.json آماده انتشار در GitHub.</p></header>
 <section class="card">
-<div class="row"><div><button class="alt" id="loadCurrent">دریافت سرورهای فعلی VPN13 از GitHub</button></div><div><span id="currentInfo" class="hint">هنوز لیست فعلی بارگذاری نشده است.</span></div></div>
+<div class="row"><div><button class="alt" id="loadCurrent">دریافت سرورهای فعلی VPN13 از GitHub</button><button class="alt" id="clearCurrent">حذف همه سرورهای فعلی</button></div><div><span id="currentInfo" class="hint">هنوز لیست فعلی بارگذاری نشده است.</span></div></div>
 <label for="source">کانفیگ ورودی (JSON کامل Xray/V2Ray یا JSON یک outbound)</label>
 <textarea id="source" spellcheck="false" placeholder='کانفیگ JSON را اینجا قرار بده...'></textarea>
 <div class="row"><div><label for="name">نام پیش‌فرض سرور</label><input id="name" value="Server"></div><div><label for="desc">توضیح</label><input id="desc" value="Converted by VPN13"></div></div>
@@ -23,6 +23,7 @@
 <script>
 const $=id=>document.getElementById(id);let result=null,currentList=[];
 const CURRENT_URL='https://raw.githubusercontent.com/Aboumansour111/VPN13/main/config/servers.json';
+$('clearCurrent').onclick=()=>{if(!confirm('همه سرورهای فعلی از لیست مبدل حذف شوند؟'))return;currentList=[];result={version:1,servers:[]};$('currentInfo').textContent='۰ سرور فعلی؛ لیست کاملاً خالی شد.';render();tell('همه سرورهای فعلی حذف شدند. برای اعمال در برنامه، خروجی را دانلود و در GitHub جایگزین کن.',true)};
 $('loadCurrent').onclick=async()=>{try{ $('loadCurrent').disabled=true;$('loadCurrent').textContent='در حال دریافت...';const r=await fetch(CURRENT_URL+'?t='+Date.now());if(!r.ok)throw Error('دریافت فایل GitHub ناموفق بود: '+r.status);const j=await r.json();currentList=Array.isArray(j.servers)?j.servers:[];$('currentInfo').textContent=currentList.length+' سرور فعلی دریافت شد؛ هنگام خروجی حفظ می‌شوند.';tell('لیست سرورهای فعلی دریافت شد.',true);}catch(e){tell(e.message,false)}finally{$('loadCurrent').disabled=false;$('loadCurrent').textContent='دریافت سرورهای فعلی VPN13 از GitHub'}};
 function tell(msg,good){$('status').textContent=msg;$('status').className='status '+(good?'ok':'bad')}
 function obj(v,n){if(!v||typeof v!=='object'||Array.isArray(v))throw Error(n+' باید یک شیء JSON باشد.');return v}
