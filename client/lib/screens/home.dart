@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sing_box/sing_box.dart';
+import 'package:flutter_vless/flutter_vless.dart';
 
 import '../config.dart';
+import '../services/engine_router.dart';
 
 class ServerItem {
   const ServerItem({
@@ -52,11 +54,19 @@ class _HomeScreenState extends State<HomeScreen> {
   StreamSubscription<SingBoxConnectionStatus>? statusSub;
   StreamSubscription<SingBoxConnectionStats>? statsSub;
   StreamSubscription<SingBoxConnectionState>? stateSub;
+  late final FlutterVless xrayEngine;
+  VlessStatus? xrayStatus;
+  Future<void>? xrayInitFuture;
+  String? xrayInitError;
+  bool xrayEngineActive = false;
+  num uploadSpeed = 0;
+  num downloadSpeed = 0;
+  num uploadTotal = 0;
+  num downloadTotal = 0;
   Timer? timer;
   DateTime? connectedAt;
   Duration elapsed = Duration.zero;
   SingBoxConnectionStatus status = SingBox.instance.status;
-  SingBoxConnectionStats? stats;
 
   bool get connected => status == SingBoxConnectionStatus.connected;
 
@@ -70,27 +80,41 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    statusSub = SingBox.instance.watchConnectionStatus().listen((value) {
-      if (value == SingBoxConnectionStatus.connected &&
-          status != SingBoxConnectionStatus.connected) {
-        connectedAt = DateTime.now();
-        elapsed = Duration.zero;
-        connectionError = null;
-        timer?.cancel();
-        timer = Timer.periodic(const Duration(seconds: 1), (_) {
-          if (mounted && connectedAt != null) {
-            setState(() => elapsed = DateTime.now().difference(connectedAt!));
-          }
+    xrayEngine = FlutterVless(
+      onStatusChanged: (value) {
+        xrayStatus = value;
+        if (!mounted || !xrayEngineActive) return;
+        final mapped = switch (value.connectionState) {
+          VlessConnectionState.connected => SingBoxConnectionStatus.connected,
+          VlessConnectionState.connecting => SingBoxConnectionStatus.connecting,
+          VlessConnectionState.disconnecting => SingBoxConnectionStatus.disconnecting,
+          VlessConnectionState.disconnected => SingBoxConnectionStatus.disconnected,
+          VlessConnectionState.unknown => SingBoxConnectionStatus.disconnected,
+        };
+        _handleStatus(mapped);
+        setState(() {
+          uploadSpeed = value.uploadSpeed;
+          downloadSpeed = value.downloadSpeed;
+          uploadTotal = value.upload;
+          downloadTotal = value.download;
         });
-      } else if (value != SingBoxConnectionStatus.connected) {
-        timer?.cancel();
-        connectedAt = null;
-        elapsed = Duration.zero;
-      }
-      if (mounted) setState(() => status = value);
+      },
+    );
+    xrayInitFuture = xrayEngine.initializeVless().catchError((Object e) {
+      xrayInitError = e.toString();
     });
+    statusSub = SingBox.instance
+        .watchConnectionStatus()
+        .listen(_handleStatus);
     statsSub = SingBox.instance.watchConnectionStats().listen((value) {
-      if (mounted) setState(() => stats = value);
+      if (mounted) {
+        setState(() {
+          uploadSpeed = value.uploadSpeed;
+          downloadSpeed = value.downloadSpeed;
+          uploadTotal = value.uploadTotal;
+          downloadTotal = value.downloadTotal;
+        });
+      }
     });
     stateSub = SingBox.instance.watchConnectionState().listen((value) {
       if (value.error != null && value.error!.isNotEmpty && mounted) {
@@ -98,6 +122,37 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     });
     loadServers();
+  }
+
+  void _handleStatus(SingBoxConnectionStatus value) {
+    if (value == SingBoxConnectionStatus.connected &&
+        status != SingBoxConnectionStatus.connected) {
+      connectedAt = DateTime.now();
+      elapsed = Duration.zero;
+      connectionError = null;
+      timer?.cancel();
+      timer = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (mounted && connectedAt != null) {
+          setState(() => elapsed = DateTime.now().difference(connectedAt!));
+        }
+      });
+    } else if (value != SingBoxConnectionStatus.connected) {
+      timer?.cancel();
+      connectedAt = null;
+      elapsed = Duration.zero;
+    }
+    if (mounted) setState(() => status = value);
+  }
+
+  Future<void> _stopXray() async {
+    final state = xrayStatus?.connectionState;
+    if (xrayEngineActive ||
+        state == VlessConnectionState.connected ||
+        state == VlessConnectionState.connecting ||
+        state == VlessConnectionState.disconnecting) {
+      await xrayEngine.stopVless();
+    }
+    xrayEngineActive = false;
   }
 
   @override
@@ -162,12 +217,36 @@ class _HomeScreenState extends State<HomeScreen> {
       connectionError = null;
     });
     try {
-      if (SingBox.instance.status.isActive) {
-        await SingBox.instance.disconnect();
+      final engine = EngineRouter.engineFor(server.config);
+      if (engine == VpnEngine.xray) {
+        if (SingBox.instance.status.isActive) {
+          await SingBox.instance.disconnect();
+        }
+        await xrayInitFuture;
+        if (xrayInitError != null) {
+          throw Exception('راه‌اندازی هسته Xray ناموفق بود: $xrayInitError');
+        }
+        if (!await xrayEngine.requestPermission()) {
+          throw Exception('مجوز VPN صادر نشد.');
+        }
+        xrayEngineActive = true;
+        final xrayConfig =
+            EngineRouter.toXrayConfiguration(server.config);
+        await xrayEngine.startVless(
+          remark: server.name,
+          config: xrayConfig,
+          notificationDisconnectButtonName: 'قطع اتصال',
+        );
+      } else {
+        await _stopXray();
+        if (SingBox.instance.status.isActive) {
+          await SingBox.instance.disconnect();
+        }
+        await SingBox.instance.requestNotificationPermission();
+        await SingBox.instance.connect(server.config);
       }
-      await SingBox.instance.requestNotificationPermission();
-      await SingBox.instance.connect(server.config);
     } catch (e) {
+      xrayEngineActive = false;
       if (mounted) {
         setState(() => connectionError = e.toString());
         message('اتصال برقرار نشد؛ جزئیات خطا در پایین صفحه آمده است.');
@@ -181,7 +260,11 @@ class _HomeScreenState extends State<HomeScreen> {
     if (busy) return;
     setState(() => busy = true);
     try {
-      await SingBox.instance.disconnect();
+      if (xrayEngineActive) {
+        await _stopXray();
+      } else {
+        await SingBox.instance.disconnect();
+      }
     } catch (e) {
       if (mounted) setState(() => connectionError = e.toString());
     } finally {
@@ -714,8 +797,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: _trafficValue(
                     icon: Icons.south_rounded,
                     title: 'دریافت',
-                    speed: speedText(stats?.downloadSpeed ?? 0),
-                    total: bytesText(stats?.downloadTotal ?? 0),
+                    speed: speedText(downloadSpeed),
+                    total: bytesText(downloadTotal),
                     color: _green,
                   ),
                 ),
@@ -724,8 +807,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: _trafficValue(
                     icon: Icons.north_rounded,
                     title: 'ارسال',
-                    speed: speedText(stats?.uploadSpeed ?? 0),
-                    total: bytesText(stats?.uploadTotal ?? 0),
+                    speed: speedText(uploadSpeed),
+                    total: bytesText(uploadTotal),
                     color: _blue,
                   ),
                 ),
