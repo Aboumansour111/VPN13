@@ -1,64 +1,68 @@
 # راه‌اندازی VPN13
 
 ## پیش‌نیاز
-- Flutter 3.44 یا جدیدتر (Dart 3.12+) و Android SDK
-- Python 3.11 یا جدیدتر
+- Flutter 3.44 یا جدیدتر و Dart 3.12+
+- Android SDK
+- Python 3.11 یا جدیدتر برای Backend
 - PostgreSQL یا SQLite برای Backend
-- آدرس HTTPS عمومی برای استفاده واقعی از Backend
 
-## موتور VPN اندروید
-برنامه Client از موتور Xray از طریق بستهٔ `flutter_vless` استفاده می‌کند. حداقل نسخه Android SDK برابر 23 است؛ اسکریپت ساخت پروژه این مقدار را پس از تولید Android scaffold تنظیم می‌کند.
+## موتورهای VPN اندروید
 
-## Backend (Windows PowerShell)
+VPN13 دو موتور دارد و بر اساس نوع کانفیگ، موتور را خودکار انتخاب می‌کند:
+
+- **sing-box:** برای پروتکل‌های معمولی که در هسته فعلی پشتیبانی می‌شوند.
+- **Xray:** برای کانفیگ‌های دارای انتقال XHTTP، از جمله VLESS + XHTTP.
+
+در هر لحظه فقط یک موتور VPN فعال است. هنگام تغییر نوع سرور، ابتدا موتور قبلی متوقف و سپس موتور موردنیاز اجرا می‌شود. XHTTP به HTTPUpgrade تبدیل نمی‌شود.
+
+## نصب وابستگی‌ها و بررسی برنامه (Windows PowerShell)
+
+از ریشه مخزن:
 ```powershell
-cd backend
-py -3 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-Copy-Item .env.example .env
-```
-در فایل `.env` مقدارهای SECRET_KEY، ADMIN_PASSWORD و CLIENT_ACCESS_CODE را تنظیم کنید. سپس:
-```powershell
-uvicorn app.main:app --host 0.0.0.0 --port 8000
-```
-
-برای Linux:
-```bash
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-uvicorn app.main:app --host 0.0.0.0 --port 8000
+cd client
+flutter clean
+flutter pub get
+flutter analyze
+flutter test
 ```
 
 ## ساخت APK
-در ریشه مخزن:
-- Windows PowerShell: `./scripts/build-apks.ps1`
-- Linux/macOS: `bash scripts/build-apks.sh`
 
-برای تنظیم آدرس API:
+از ریشه مخزن:
 ```powershell
-$env:API_BASE_URL="https://api.example.com"
 ./scripts/build-apks.ps1
 ```
 
-## افزودن سرور به VPN13
-فهرست سرورها در فایل `config/servers.json` روی GitHub نگهداری می‌شود. برای هر سرور، لینک خام اشتراک را در فیلد `config` قرار دهید؛ مانند `vless://` یا `ss://`. نیازی به ساخت JSON کامل Xray یا تبدیل sing-box نیست؛ برنامه لینک را با موتور Xray پردازش می‌کند.
+برای ساخت دستی:
+```powershell
+cd client
+flutter build apk --release --split-per-abi
+```
 
-نمونه:
+## افزودن سرور
+
+فهرست سرورها در `config/servers.json` نگهداری می‌شود. هر `config` یک outbound از sing-box به‌صورت JSON رشته‌ای یا لینک اشتراک پشتیبانی‌شده است.
+
+برای XHTTP، مقدار انتقال باید دقیقاً `xhttp` باشد. نمونه ساختار outbound:
 ```json
 {
-  "version": 3,
-  "engine": "xray",
-  "format": "share-links",
-  "servers": [
-    {
-      "id": 1,
-      "name": "My VLESS",
-      "description": "VLESS Reality",
-      "config": "vless://UUID@host:port?type=tcp&security=reality#MyServer"
-    }
-  ]
+  "type": "vless",
+  "tag": "vpn13-xhttp",
+  "server": "example.com",
+  "server_port": 443,
+  "uuid": "00000000-0000-4000-8000-000000000000",
+  "tls": {
+    "enabled": true,
+    "server_name": "example.com"
+  },
+  "transport": {
+    "type": "xhttp",
+    "path": "/your-path",
+    "mode": "auto"
+  }
 }
 ```
 
-برای افزودن سرور، یک مورد جدید با شناسه یکتا، نام و لینک خام در آرایه `servers` اضافه و تغییر را در شاخه `main` منتشر کنید. برنامه فهرست را از GitHub دریافت می‌کند؛ کاربران نیازی به افزودن دستی کانفیگ ندارند.
+مقادیر نمونه را با اطلاعات واقعی سرور جایگزین کن. UUID، کلیدها و رمزهای واقعی را در مخزن عمومی قرار نده.
+
+برای مشاهده خطاهای اتصال، جزئیات خطا در صفحه اصلی VPN13 نمایش داده می‌شود. پس از ساخت، هر دو نوع سرور را روی گوشی واقعی آزمایش کن؛ موفقیت در شروع سرویس به‌تنهایی اثبات عبور ترافیک نیست.
