@@ -1,18 +1,19 @@
 {
-  "version": 2,
+  "version": 3,
   "engine": "xray",
+  "format": "share-link",
   "servers": [
     {
       "id": 1,
-      "name": "Server 1",
-      "description": "Xray JSON",
-      "config": "{\"log\":{\"loglevel\":\"warning\"},\"inbounds\":[{\"listen\":\"127.0.0.1\",\"port\":10808,\"protocol\":\"socks\",\"settings\":{\"auth\":\"noauth\",\"udp\":true},\"sniffing\":{\"enabled\":true,\"destOverride\":[\"http\",\"tls\",\"quic\"]},\"tag\":\"socks-in\"}],\"outbounds\":[{\"protocol\":\"shadowsocks\",\"tag\":\"proxy\",\"settings\":{\"servers\":[{\"address\":\"3.17.61.153\",\"port\":41159,\"method\":\"2022-blake3-aes-256-gcm\",\"password\":\"WLfUn8pUj6h2mrWaVmaSxuMpcDhaAEm6mQMbG2zijYc=:S7cJGAJ3xxbmvHKEvBQCN3wfh7ig92JkE8OhGY87Dwc=\"}]}},{\"protocol\":\"freedom\",\"tag\":\"direct\"},{\"protocol\":\"blackhole\",\"tag\":\"block\"}],\"routing\":{\"domainStrategy\":\"AsIs\",\"rules\":[{\"type\":\"field\",\"ip\":[\"geoip:private\"],\"outboundTag\":\"direct\"}]}}"
+      "name": "Shadowsocks 2022",
+      "description": "SS • 2022-blake3-aes-256-gcm",
+      "config": "ss://2022-blake3-aes-256-gcm:WLfUn8pUj6h2mrWaVmaSxuMpcDhaAEm6mQMbG2zijYc=%3AS7cJGAJ3xxbmvHKEvBQCN3wfh7ig92JkE8OhGY87Dwc=@3.17.61.153:41159#%F0%9F%8F%B4%20%D8%A7%D9%84%D9%84%D9%87%D9%85%20%D8%A8%D8%A7%D8%B1%D9%83%20%D9%84%D9%85%D9%88%D9%84%D8%A7%D9%86%D8%A7%20%D8%B5%D8%A7%D8%AD%D8%A8%E2%80%8C%D8%A7%D9%84%D8%B2%D9%85%D8%A7%D9%86"
     },
     {
       "id": 2,
-      "name": "Server 2",
-      "description": "VLESS Reality • Xray JSON",
-      "config": "{\"log\":{\"loglevel\":\"warning\"},\"inbounds\":[{\"listen\":\"127.0.0.1\",\"port\":10808,\"protocol\":\"socks\",\"settings\":{\"auth\":\"noauth\",\"udp\":true},\"sniffing\":{\"enabled\":true,\"destOverride\":[\"http\",\"tls\",\"quic\"]},\"tag\":\"socks-in\"}],\"outbounds\":[{\"protocol\":\"vless\",\"tag\":\"proxy\",\"settings\":{\"vnext\":[{\"address\":\"3.17.61.153\",\"port\":35609,\"users\":[{\"id\":\"f38e76ab-1d91-4a20-9a51-33feae2cdd28\",\"encryption\":\"none\"}]}]},\"streamSettings\":{\"network\":\"tcp\",\"security\":\"reality\",\"realitySettings\":{\"serverName\":\"youtubekids.com\",\"fingerprint\":\"chrome\",\"publicKey\":\"pLxVcPtk-OQuREi_t1EogDgGkCiAVEYVB1rfk6hv3Qo\",\"shortId\":\"17e070\"}}},{\"protocol\":\"freedom\",\"tag\":\"direct\"},{\"protocol\":\"blackhole\",\"tag\":\"block\"}],\"routing\":{\"domainStrategy\":\"AsIs\",\"rules\":[{\"type\":\"field\",\"ip\":[\"geoip:private\"],\"outboundTag\":\"direct\"}]}}"
+      "name": "VLESS Reality",
+      "description": "VLESS • Reality • TCP",
+      "config": "vless://f38e76ab-1d91-4a20-9a51-33feae2cdd28@3.17.61.153:35609?encryption=none&fp=chrome&pbk=pLxVcPtk-OQuREi_t1EogDgGkCiAVEYVB1rfk6hv3Qo&security=reality&sid=17e070&sni=youtubekids.com&type=tcp#reality-reality"
     }
   ]
 }
