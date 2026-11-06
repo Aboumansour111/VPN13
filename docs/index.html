@@ -62,6 +62,11 @@ function transportFrom(q,network){
  if(network==='grpc'){const t={type:'grpc'};const sn=q.serviceName||q.service_name||q.path;if(sn)t.service_name=sn;return {transport:t};}
  if(network==='httpupgrade'){const t={type:'httpupgrade'};if(q.path)t.path=q.path;if(q.host)t.host=q.host;return {transport:t};}
  if(network==='http'){const t={type:'http'};if(q.path)t.path=q.path;if(q.host)t.host=[q.host];return {transport:t};}
+ if(network==='xhttp'){
+   const t={type:'xhttp'};if(q.path)t.path=q.path;if(q.host)t.host=q.host;if(q.mode)t.mode=q.mode;
+   if(q.extra){try{t.extra=JSON.parse(decodeURIComponent(q.extra));}catch{throw Error('پارامتر extra در XHTTP معتبر نیست');}}
+   return {transport:t};
+ }
  throw Error('نوع انتقال پشتیبانی‌نشده: '+network);
 }
 function tlsFrom(q,force=false){
@@ -158,6 +163,7 @@ function xrayToSingbox(root){
  if(network==='ws'){const w=ss.wsSettings||{};out.transport={type:'ws'};if(w.path)out.transport.path=w.path;if(w.headers?.Host)out.transport.headers={Host:w.headers.Host};}
  else if(network==='grpc'){const g=ss.grpcSettings||{};out.transport={type:'grpc'};if(g.serviceName)out.transport.service_name=g.serviceName;}
  else if(network==='httpupgrade'){const h=ss.httpupgradeSettings||{};out.transport={type:'httpupgrade'};if(h.path)out.transport.path=h.path;if(h.host)out.transport.host=h.host;}
+ else if(network==='xhttp'){const h=ss.xhttpSettings||ss.splithttpSettings||{};out.transport={type:'xhttp'};if(h.path)out.transport.path=h.path;if(h.host)out.transport.host=h.host;if(h.mode)out.transport.mode=h.mode;if(h.extra)out.transport.extra=h.extra;}
  else if(!['tcp','raw',''].includes(network))throw Error('انتقال Xray پشتیبانی‌نشده: '+network);
  return out;
 }
@@ -187,7 +193,8 @@ function build(){
      if(!name)throw Error('نام نمایشی را وارد کن.');
      const config=parseConfig(raw);
      const type=config.type;config.tag='vpn13-'+(i+1);
-     servers.push({id:i+1,name,description:type.toUpperCase()+' • sing-box',config:JSON.stringify(config)});
+     const engine=config.transport?.type==='xhttp'?'Xray':'sing-box';
+     servers.push({id:i+1,name,description:type.toUpperCase()+' • '+engine,config:JSON.stringify(config)});
      status.classList.add('ok');status.textContent='✓ معتبر · '+type.toUpperCase();
    }catch(e){status.classList.add('bad');status.textContent='✕ '+e.message;throw Error('کانفیگ '+(i+1)+': '+e.message);}
  });
