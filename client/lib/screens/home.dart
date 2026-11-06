@@ -125,7 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (_) {
       if (mounted) {
         setState(() => error =
-            'ارتباط با سرور برقرار نشد. آدرس API و اینترنت را بررسی کنید.');
+            'دریافت فهرست سرورها ناموفق بود. اتصال اینترنت را بررسی کنید.');
       }
     } finally {
       if (mounted) setState(() => loading = false);
