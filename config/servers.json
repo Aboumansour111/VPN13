@@ -5,7 +5,6 @@
       "id": 1,
       "name": "سوئد",
       "description": "VLESS Reality",
-      "config": "vless://f38e76ab-1d91-4a20-9a51-33feae2cdd28@3.17.61.153:35609?encryption=none&security=reality&sni=youtubekids.com&fp=chrome&pbk=pLxVcPtk-OQuREi_t1EogDgGkCiAVEYVB1rfk6hv3Qo&sid=17e070&type=tcp&headerType=none#reality-reality
-"
+      "config": "vless://f38e76ab-1d91-4a20-9a51-33feae2cdd28@3.17.61.153:35609?encryption=none&security=reality&sni=youtubekids.com&fp=chrome&pbk=pLxVcPtk-OQuREi_t1EogDgGkCiAVEYVB1rfk6hv3Qo&sid=17e070&type=tcp&headerType=none#reality-reality"
     }
 }
