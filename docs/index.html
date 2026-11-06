@@ -27,7 +27,7 @@ $('loadCurrent').onclick=async()=>{try{ $('loadCurrent').disabled=true;$('loadCu
 function tell(msg,good){$('status').textContent=msg;$('status').className='status '+(good?'ok':'bad')}
 function obj(v,n){if(!v||typeof v!=='object'||Array.isArray(v))throw Error(n+' باید یک شیء JSON باشد.');return v}
 function mapOutbound(o,index){
- const p=o.protocol||o.type;const s=o.settings||o;const stream=o.streamSettings||{};const first=(s.servers||s.vnext||s.outbounds||[])[0]||s;const user=(first.users||[])[0]||first;const addr=first.address||first.server||first.host||s.address||s.server;const port=first.port||first.server_port||s.port||s.server_port;const tls=stream.security&&stream.security!=='none'?stream.securitySettings||{}:null;const net=stream.network||'tcp';const tag=o.tag||o.name||('server-'+(index+1));
+ const p=o.protocol||o.type;const s=o.settings||o;const stream=o.streamSettings||{};const first=(s.servers||s.vnext||s.outbounds||[])[0]||s;const user=(first.users||[])[0]||first;const addr=first.address||first.server||first.host||s.address||s.server;const port=first.port||first.server_port||s.port||s.server_port;const net=stream.network||'tcp';const tag=o.tag||o.name||('server-'+(index+1));
  let x={type:p,tag};
  if(p==='shadowsocks'){x={...x,type:'shadowsocks',server:addr,server_port:Number(port),method:first.method,password:first.password};if(stream.network&&stream.network!=='tcp')x.network=stream.network;}
  else if(p==='vless'||p==='vmess'||p==='trojan'){
@@ -40,11 +40,11 @@ function mapOutbound(o,index){
   else if(net==='grpc')x.transport={type:'grpc',service_name:stream.grpcSettings?.serviceName||''};
   else if(net==='http'||net==='h2')x.transport={type:'http',path:(stream.httpSettings?.path||'/').split(',')[0],host:stream.httpSettings?.host||[]};
   if(stream.security==='tls'||stream.security==='reality'){
-   const t=stream[tls?'tlsSettings':'realitySettings']||{};
+   const isReality=stream.security==='reality';const t=stream[isReality?'realitySettings':'tlsSettings']||{};
    x.tls={enabled:true,server_name:t.serverName||t.serverNames?.[0]||addr};
    if(t.allowInsecure)x.tls.insecure=true;
    if(t.fingerprint)x.tls.utls={enabled:true,fingerprint:t.fingerprint};
-   if(stream.security==='reality')x.tls.reality={enabled:true,public_key:t.publicKey,short_id:t.shortId||''};
+   if(isReality){const pk=t.publicKey||t.public_key;const sid=t.shortId||t.short_id||'';if(!pk)throw Error('Reality در '+tag+' فاقد publicKey است.');x.tls.reality={enabled:true,public_key:pk,short_id:sid};}
   }
  }else if(p==='socks'||p==='http'){
   x={type:p,tag,server:addr,server_port:Number(port)};
