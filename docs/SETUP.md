@@ -42,27 +42,23 @@ $env:API_BASE_URL="https://api.example.com"
 ```
 
 ## افزودن سرور به VPN13
-فهرست عمومی سرورها در `config/servers.json` نگهداری می‌شود. مقدار `config` برای هر سرور باید یک رشتهٔ JSON کامل و معتبر Xray باشد و حداقل شامل `inbounds` و `outbounds` باشد. کانفیگ‌های sing-box مستقیماً قابل استفاده نیستند و دیگر مبدل آنلاین VPN13 وجود ندارد.
+فهرست سرورها در فایل `config/servers.json` روی GitHub نگهداری می‌شود. برای هر سرور، لینک خام اشتراک را در فیلد `config` قرار دهید؛ مانند `vless://` یا `ss://`. نیازی به ساخت JSON کامل Xray یا تبدیل sing-box نیست؛ برنامه لینک را با موتور Xray پردازش می‌کند.
 
-نمونهٔ ورودی SOCKS محلی مورد استفاده برای تونل:
+نمونه:
 ```json
 {
-  "listen": "127.0.0.1",
-  "port": 10808,
-  "protocol": "socks",
-  "settings": { "auth": "noauth", "udp": true }
+  "version": 3,
+  "engine": "xray",
+  "format": "share-links",
+  "servers": [
+    {
+      "id": 1,
+      "name": "My VLESS",
+      "description": "VLESS Reality",
+      "config": "vless://UUID@host:port?type=tcp&security=reality#MyServer"
+    }
+  ]
 }
 ```
 
-برای افزودن سرور، یک شیء جدید با شناسه یکتا، نام و کانفیگ کامل Xray به آرایهٔ `servers` اضافه و تغییر را در شاخهٔ `main` منتشر کنید. برنامه فهرست را مستقیماً از GitHub دریافت می‌کند.
-
-## شبکه و آزمون
-- Emulator اندروید: `http://10.0.2.2:8000`
-- گوشی واقعی: IP شبکه یا دامنه Backend؛ در انتشار عمومی HTTPS استفاده شود.
-- آزمون Backend:
-```bash
-cd backend
-pip install -r requirements-dev.txt
-pytest -q
-```
-اتصال VPN، DNS، ترافیک و قطع اتصال باید روی گوشی واقعی و با سرور فعال بررسی شود.
+برای افزودن سرور، یک مورد جدید با شناسه یکتا، نام و لینک خام در آرایه `servers` اضافه و تغییر را در شاخه `main` منتشر کنید. برنامه فهرست را از GitHub دریافت می‌کند؛ کاربران نیازی به افزودن دستی کانفیگ ندارند.
