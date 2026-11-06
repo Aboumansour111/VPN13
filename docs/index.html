@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>مبدل کانفیگ VPN13</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--panel:#121d30;--panel2:#17243a;--line:#293a55;--text:#edf3ff;--muted:#9bacc5;--green:#23c58a;--blue:#5d8cff;--red:#ff7373}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#172b49 0,#0b1220 58%);color:var(--text);font-family:Tahoma,"Segoe UI",sans-serif;line-height:1.7}
+main{width:min(920px,100%);margin:auto;padding:28px 16px 56px}.head{display:flex;align-items:center;gap:14px;margin-bottom:22px}.logo{width:52px;height:52px;border-radius:16px;background:linear-gradient(145deg,#2ed49a,#087d65);display:grid;place-items:center;font-size:25px;font-weight:900;color:#06291f;box-shadow:0 10px 30px #0ab77b33}.head h1{font-size:22px;margin:0}.head p{margin:3px 0 0;color:var(--muted);font-size:12px}
+.panel,.entry{background:linear-gradient(160deg,#15243a,#101a2b);border:1px solid var(--line);border-radius:19px;padding:18px;margin-bottom:15px;box-shadow:0 12px 34px #0002}
+.panel h2{font-size:15px;margin:0 0 8px}.hint{font-size:12px;color:var(--muted);margin:0}.entry-head{display:flex;align-items:center;gap:10px;margin-bottom:13px}.number{width:29px;height:29px;border-radius:9px;background:#203b60;color:#a9c7ff;display:grid;place-items:center;font-weight:bold;font-size:13px}.entry-head strong{font-size:14px}.entry-head .remove{margin-right:auto}
+label{display:block;font-size:12px;color:#c8d5e9;margin:10px 0 6px}
+input,textarea{width:100%;border:1px solid #344863;background:#0a1424;color:#f1f6ff;border-radius:11px;padding:12px 13px;font:13px Tahoma,sans-serif;outline:none}
+input:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px #5d8cff22}textarea{min-height:118px;resize:vertical;direction:ltr;text-align:left;font-family:Consolas,monospace;line-height:1.6}
+.row{display:grid;grid-template-columns:1fr;gap:8px}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px}
+button{border:0;border-radius:11px;padding:11px 16px;font: bold 12px Tahoma,sans-serif;cursor:pointer;transition:.15s}
+button:disabled{opacity:.4;cursor:not-allowed}.primary{background:linear-gradient(135deg,#2ac98c,#0b9b72);color:#062b20}.secondary{background:#203451;color:#e2edff;border:1px solid #395273}.copy{background:linear-gradient(135deg,#638dff,#3864d8);color:white}.danger{background:#422633;color:#ffb7b7;border:1px solid #70404e}
+.status{margin-top:9px;font-size:11px;min-height:20px;color:var(--muted);white-space:pre-wrap}.status.ok{color:#62e2b2}.status.bad{color:#ff9292}
+.output{min-height:220px}.small{font-size:11px;color:var(--muted)}.footer{text-align:center;color:#71839e;font-size:11px;margin-top:24px}
+@media(min-width:650px){.row{grid-template-columns:1fr 2fr}.panel,.entry{padding:21px}}
+</style>
+</head>
+<body>
+<main>
+<header class="head"><div class="logo">13</div><div><h1>مبدل کانفیگ VPN13</h1><p>تبدیل کانفیگ‌ها به فهرست استاندارد سرورهای sing-box</p></div></header>
+<section class="panel"><h2>روش استفاده</h2><p class="hint">برای هر سرور یک نام نمایشی و یک کانفیگ وارد کن. می‌توانی کانفیگ‌ها را یکی‌یکی اضافه کنی. در پایان، خروجی کامل را کپی کن و محتوای فایل <b dir="ltr">config/servers.json</b> در GitHub را با آن جایگزین کن. اطلاعات فقط در همین مرورگر پردازش می‌شوند.</p><p class="hint" style="margin-top:8px">پشتیبانی: VLESS (TLS و Reality)، VMess، Trojan، Shadowsocks، Hysteria2، SOCKS، HTTP، خروجی sing-box و کانفیگ کامل Xray با outboundهای پشتیبانی‌شده.</p></section>
+<div id="entries"></div>
+<div class="actions" style="margin:4px 0 18px"><button class="primary" id="add">＋ افزودن کانفیگ بعدی</button><button class="secondary" id="validate">بررسی همه کانفیگ‌ها</button></div>
+<section class="panel">
+<h2>خروجی نهایی servers.json</h2>
+<p class="hint">ساختار خروجی با برنامه VPN13 سازگار است؛ مقدار config برای هر سرور به‌صورت JSON رشته‌ای‌شده ذخیره می‌شود.</p>
+<textarea id="output" class="output" readonly spellcheck="false" placeholder="پس از بررسی موفق کانفیگ‌ها، خروجی اینجا ساخته می‌شود..."></textarea>
+<div class="actions"><button class="copy" id="copy" disabled>کپی کامل خروجی</button><button class="secondary" id="download" disabled>دریافت فایل JSON</button></div>
+<div id="globalStatus" class="status" aria-live="polite"></div>
+</section>
+<div class="footer">VPN13 · Local configuration converter</div>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const entries=$('#entries');
+let nextId=0,lastOutput='';
+const supported=new Set(['shadowsocks','vless','vmess','trojan','hysteria2','socks','http']);
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function addEntry(name='',value=''){
+ const id=++nextId,el=document.createElement('section');el.className='entry';el.dataset.id=id;
+ el.innerHTML='<div class="entry-head"><span class="number">'+id+'</span><strong>کانفیگ '+id+'</strong><button class="danger remove" type="button">حذف</button></div><div class="row"><div><label>نام نمایشی سرور</label><input class="server-name" maxlength="60" placeholder="مثلاً سرور آلمان ۱" value="'+esc(name)+'"></div><div><label>متن کانفیگ یا لینک اتصال</label><textarea class="raw-config" spellcheck="false" placeholder="vless://… یا vmess://… یا ss://… یا JSON کانفیگ"></textarea></div></div><div class="status"></div>';
+ el.querySelector('.raw-config').value=value;
+ el.querySelector('.remove').addEventListener('click',()=>{if(entries.children.length===1){el.querySelector('.server-name').value='';el.querySelector('.raw-config').value='';el.querySelector('.status').textContent='';}else el.remove();renumber();clearOutput();});
+ el.querySelectorAll('input,textarea').forEach(x=>x.addEventListener('input',clearOutput));
+ entries.appendChild(el);renumber();return el;
+}
+function renumber(){[...entries.children].forEach((e,i)=>{e.querySelector('.number').textContent=i+1;e.querySelector('.entry-head strong').textContent='کانفیگ '+(i+1);});}
+function clearOutput(){$('#output').value='';$('#copy').disabled=true;$('#download').disabled=true;$('#globalStatus').textContent='';lastOutput='';}
+function decodeB64(s){s=s.replace(/-/g,'+').replace(/_/g,'/').replace(/\s/g,'');s+='='.repeat((4-s.length%4)%4);const bin=atob(s);const bytes=Uint8Array.from(bin,c=>c.charCodeAt(0));return new TextDecoder().decode(bytes);}
+function b64url(s){return decodeB64(s);}
+function splitHostPort(hostport){const u=new URL('tcp://'+hostport);const port=Number(u.port);if(!u.hostname||!port||port<1||port>65535)throw Error('آدرس یا پورت معتبر نیست');return {server:u.hostname,server_port:port};}
+function queryObj(u){return Object.fromEntries(u.searchParams.entries());}
+function transportFrom(q,network){
+ if(!network||network==='tcp')return {};
+ if(network==='ws'){const t={type:'ws'};if(q.path)t.path=q.path;if(q.host)t.headers={Host:q.host};return {transport:t};}
+ if(network==='grpc'){const t={type:'grpc'};const sn=q.serviceName||q.service_name||q.path;if(sn)t.service_name=sn;return {transport:t};}
+ if(network==='httpupgrade'){const t={type:'httpupgrade'};if(q.path)t.path=q.path;if(q.host)t.host=q.host;return {transport:t};}
+ if(network==='http'){const t={type:'http'};if(q.path)t.path=q.path;if(q.host)t.host=[q.host];return {transport:t};}
+ throw Error('نوع انتقال پشتیبانی‌نشده: '+network);
+}
+function tlsFrom(q,force=false){
+ const sec=q.security||'';if(!force&&!['tls','reality'].includes(sec))return undefined;
+ const tls={enabled:true};const sni=q.sni||q.peer||q.serverName;if(sni)tls.server_name=sni;
+ const fp=q.fp||q.fingerprint;if(fp)tls.utls={enabled:true,fingerprint:fp};
+ if(q.allowInsecure==='1'||q.insecure==='1')tls.insecure=true;
+ if(sec==='reality'||q.pbk||q.public_key){const reality={enabled:true};const pk=q.pbk||q.public_key,sid=q.sid||q.short_id;if(pk)reality.public_key=pk;if(sid)reality.short_id=sid;tls.reality=reality;}
+ return tls;
+}
+function parseVless(raw){
+ const u=new URL(raw),q=queryObj(u),p=splitHostPort(u.host);
+ if(!u.username)throw Error('UUID در لینک VLESS وجود ندارد');
+ const o={type:'vless',tag:'proxy',...p,uuid:decodeURIComponent(u.username)};
+ if(q.flow)o.flow=q.flow;
+ const tls=tlsFrom(q);if(tls)o.tls=tls;
+ return Object.assign(o,transportFrom(q,q.type||'tcp'));
+}
+function parseTrojan(raw){
+ const u=new URL(raw),q=queryObj(u),p=splitHostPort(u.host);
+ const o={type:'trojan',tag:'proxy',...p,password:decodeURIComponent(u.username||'')};
+ if(!o.password)throw Error('رمز Trojan خالی است');
+ const tls=tlsFrom(q,true);o.tls=tls;
+ return Object.assign(o,transportFrom(q,q.type||'tcp'));
+}
+function parseVmess(raw){
+ const payload=raw.slice(raw.indexOf('://')+3).split('#')[0];
+ const data=JSON.parse(decodeB64(payload));
+ const p=splitHostPort(String(data.add||'')+':'+String(data.port||''));
+ if(!data.id)throw Error('UUID در VMess وجود ندارد');
+ const o={type:'vmess',tag:'proxy',...p,uuid:data.id,security:data.scy||'auto',alter_id:Number(data.aid||0)};
+ const q={security:data.tls?'tls':'none',sni:data.sni||data.host,fp:data.fp,host:data.host,path:data.path};
+ const tls=tlsFrom(q,!!data.tls);if(tls)o.tls=tls;
+ return Object.assign(o,transportFrom(q,data.net||'tcp'));
+}
+function parseSS(raw){
+ let body=raw.slice(5),hash='';const hi=body.indexOf('#');if(hi>=0){hash=decodeURIComponent(body.slice(hi+1));body=body.slice(0,hi);}
+ const qi=body.indexOf('?');let plugin='';if(qi>=0){plugin=body.slice(qi+1);body=body.slice(0,qi);}
+ if(plugin)throw Error('لینک Shadowsocks دارای plugin است؛ تبدیل خودکار plugin انجام نمی‌شود.');
+ let method,password,hostport;
+ if(body.includes('@')){
+   let user=body.slice(0,body.lastIndexOf('@'));hostport=body.slice(body.lastIndexOf('@')+1);
+   if(!user.includes(':'))user=decodeB64(user);
+   const i=user.indexOf(':');if(i<1)throw Error('بخش method:password در لینک SS معتبر نیست');
+   method=decodeURIComponent(user.slice(0,i));password=decodeURIComponent(user.slice(i+1));
+ }else{
+   const decoded=decodeB64(body),at=decoded.lastIndexOf('@');if(at<0)throw Error('فرمت لینک SS معتبر نیست');
+   const user=decoded.slice(0,at),i=user.indexOf(':');if(i<1)throw Error('روش رمزنگاری یا رمز عبور SS یافت نشد');
+   method=user.slice(0,i);password=user.slice(i+1);hostport=decoded.slice(at+1);
+ }
+ return {type:'shadowsocks',tag:'proxy',...splitHostPort(hostport),method,password};
+}
+function parseHysteria(raw){
+ const u=new URL(raw),q=queryObj(u),p=splitHostPort(u.host),password=decodeURIComponent(u.username||'');
+ if(!password)throw Error('رمز Hysteria2 خالی است');
+ const o={type:'hysteria2',tag:'proxy',...p,password,tls:tlsFrom({...q,security:'tls'},true)};
+ if(q.obfs)o.obfs={type:q.obfs,password:q.obfs_password||''};
+ return o;
+}
+function parseSocksHttp(raw){
+ const u=new URL(raw),p=splitHostPort(u.host),type=u.protocol.startsWith('socks')?'socks':'http';
+ const o={type,tag:'proxy',...p};if(u.username)o.username=decodeURIComponent(u.username);if(u.password)o.password=decodeURIComponent(u.password);return o;
+}
+function fromSingbox(obj){
+ if(!obj||typeof obj!=='object'||!supported.has(obj.type))throw Error('نوع outbound در sing-box پشتیبانی نمی‌شود.');
+ const o=JSON.parse(JSON.stringify(obj));o.tag='proxy';return o;
+}
+function xrayToSingbox(root){
+ const list=Array.isArray(root.outbounds)?root.outbounds:[root];
+ const x=list.find(v=>v&&['vless','vmess','trojan','shadowsocks','socks','http'].includes(v.protocol));
+ if(!x)throw Error('در JSON هیچ outbound پشتیبانی‌شده‌ای پیدا نشد.');
+ const ss=x.streamSettings||{},network=ss.network||'tcp',sec=ss.security||'none';
+ const out={tag:'proxy'};
+ if(x.protocol==='vless'||x.protocol==='vmess'){
+   const v=x.settings?.vnext?.[0],user=v?.users?.[0];if(!v||!user)throw Error('ساختار settings.vnext در Xray ناقص است.');
+   Object.assign(out,{type:x.protocol,...splitHostPort(v.address+':'+v.port),uuid:user.id});
+   if(x.protocol==='vless'){if(user.flow)out.flow=user.flow;}
+   else {out.security=user.security||'auto';out.alter_id=Number(user.alterId||0);}
+ }else if(x.protocol==='trojan'||x.protocol==='shadowsocks'||x.protocol==='socks'||x.protocol==='http'){
+   const s=x.settings?.servers?.[0];if(!s)throw Error('ساختار settings.servers در Xray ناقص است.');
+   Object.assign(out,{type:x.protocol,...splitHostPort(s.address+':'+s.port)});
+   if(x.protocol==='trojan')out.password=s.password;
+   if(x.protocol==='shadowsocks'){out.method=s.method;out.password=s.password;}
+   if(x.protocol==='socks'||x.protocol==='http'){if(s.users?.[0]){out.username=s.users[0].user;out.password=s.users[0].pass;}}
+ }else throw Error('پروتکل Xray پشتیبانی نمی‌شود.');
+ if(sec==='tls'){
+   const t=ss.tlsSettings||{};out.tls={enabled:true};if(t.serverName)out.tls.server_name=t.serverName;
+   if(t.fingerprint)out.tls.utls={enabled:true,fingerprint:t.fingerprint};
+   if(t.allowInsecure)out.tls.insecure=true;
+ }else if(sec==='reality'){
+   const r=ss.realitySettings||{};out.tls={enabled:true,server_name:r.serverName||'' ,reality:{enabled:true,public_key:r.publicKey||'',short_id:r.shortId||''}};
+   if(r.fingerprint)out.tls.utls={enabled:true,fingerprint:r.fingerprint};
+ }
+ if(network==='ws'){const w=ss.wsSettings||{};out.transport={type:'ws'};if(w.path)out.transport.path=w.path;if(w.headers?.Host)out.transport.headers={Host:w.headers.Host};}
+ else if(network==='grpc'){const g=ss.grpcSettings||{};out.transport={type:'grpc'};if(g.serviceName)out.transport.service_name=g.serviceName;}
+ else if(network==='httpupgrade'){const h=ss.httpupgradeSettings||{};out.transport={type:'httpupgrade'};if(h.path)out.transport.path=h.path;if(h.host)out.transport.host=h.host;}
+ else if(!['tcp','raw',''].includes(network))throw Error('انتقال Xray پشتیبانی‌نشده: '+network);
+ return out;
+}
+function parseConfig(raw){
+ const s=raw.trim();if(!s)throw Error('کانفیگ خالی است');
+ if(s.startsWith('{')){
+   const j=JSON.parse(s);
+   if(j.type)return fromSingbox(j);
+   return xrayToSingbox(j);
+ }
+ const scheme=s.slice(0,s.indexOf('://')).toLowerCase();
+ if(scheme==='vless')return parseVless(s);
+ if(scheme==='vmess')return parseVmess(s);
+ if(scheme==='trojan')return parseTrojan(s);
+ if(scheme==='ss')return parseSS(s);
+ if(scheme==='hysteria2'||scheme==='hy2')return parseHysteria(s.replace(/^hy2:/,'hysteria2:'));
+ if(['socks','socks5','socks4','http','https'].includes(scheme))return parseSocksHttp(s);
+ throw Error('فرمت ناشناخته است. لینک یا JSON پشتیبانی‌شده وارد کن.');
+}
+function build(){
+ const rows=[...entries.children];if(!rows.length)throw Error('حداقل یک کانفیگ اضافه کن.');
+ const servers=[];
+ rows.forEach((el,i)=>{
+   const name=el.querySelector('.server-name').value.trim(),raw=el.querySelector('.raw-config').value;
+   const status=el.querySelector('.status');status.className='status';
+   try{
+     if(!name)throw Error('نام نمایشی را وارد کن.');
+     const config=parseConfig(raw);
+     const type=config.type;config.tag='vpn13-'+(i+1);
+     servers.push({id:i+1,name,description:type.toUpperCase()+' • sing-box',config:JSON.stringify(config)});
+     status.classList.add('ok');status.textContent='✓ معتبر · '+type.toUpperCase();
+   }catch(e){status.classList.add('bad');status.textContent='✕ '+e.message;throw Error('کانفیگ '+(i+1)+': '+e.message);}
+ });
+ return JSON.stringify({version:1,engine:'sing-box',format:'sing-box-outbound-json',servers},null,2);
+}
+$('#add').addEventListener('click',()=>{addEntry();clearOutput();});
+$('#validate').addEventListener('click',()=>{try{lastOutput=build();$('#output').value=lastOutput;$('#copy').disabled=false;$('#download').disabled=false;$('#globalStatus').className='status ok';$('#globalStatus').textContent='همه کانفیگ‌ها معتبر هستند؛ '+JSON.parse(lastOutput).servers.length+' سرور آماده است.';}catch(e){clearOutput();$('#globalStatus').className='status bad';$('#globalStatus').textContent=e.message;}});
+$('#copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(lastOutput);$('#globalStatus').className='status ok';$('#globalStatus').textContent='خروجی کامل کپی شد. آن را در config/servers.json جایگذاری کن.';}catch(e){$('#output').focus();$('#output').select();$('#globalStatus').className='status bad';$('#globalStatus').textContent='کپی خودکار انجام نشد؛ متن خروجی را دستی کپی کن.';}});
+$('#download').addEventListener('click',()=>{const blob=new Blob([lastOutput],{type:'application/json;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='servers.json';a.click();URL.revokeObjectURL(a.href);});
+addEntry();
+</script>
+</body></html>
