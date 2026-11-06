@@ -1,10 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_vless/flutter_vless.dart';
+import 'package:sing_box/sing_box.dart';
 
 import '../config.dart';
 
@@ -18,13 +18,13 @@ class ServerItem {
 
   final int id;
   final String name;
-  final Map<String, dynamic> config;
+  final String config;
   final String? description;
 
   factory ServerItem.fromJson(Map<String, dynamic> json) => ServerItem(
         id: json['id'] as int,
         name: json['name'] as String,
-        config: Map<String, dynamic>.from(json['config'] as Map),
+        config: json['config'] as String,
         description: json['description'] as String?,
       );
 }
@@ -50,15 +50,16 @@ class _HomeScreenState extends State<HomeScreen> {
   String? error;
   String? connectionError;
 
-  late final FlutterVless engine;
-  VlessConnectionState connectionState = VlessConnectionState.disconnected;
+  StreamSubscription<SingBoxConnectionStatus>? statusSub;
+  StreamSubscription<SingBoxConnectionStats>? statsSub;
+  StreamSubscription<SingBoxConnectionState>? stateSub;
+  Timer? timer;
+  DateTime? connectedAt;
   Duration elapsed = Duration.zero;
-  int uploadSpeed = 0;
-  int downloadSpeed = 0;
-  int uploadTotal = 0;
-  int downloadTotal = 0;
+  SingBoxConnectionStatus status = SingBox.instance.status;
+  SingBoxConnectionStats? stats;
 
-  bool get connected => connectionState == VlessConnectionState.connected;
+  bool get connected => status == SingBoxConnectionStatus.connected;
 
   ServerItem? get selected {
     for (final server in servers) {
@@ -70,40 +71,43 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    engine = FlutterVless(onStatusChanged: (value) {
-      if (!mounted) return;
-      setState(() {
-        connectionState = value.connectionState;
-        elapsed = Duration(seconds: value.duration);
-        uploadSpeed = value.uploadSpeed;
-        downloadSpeed = value.downloadSpeed;
-        uploadTotal = value.upload;
-        downloadTotal = value.download;
-        if (value.connectionState == VlessConnectionState.connected) {
-          connectionError = null;
-        }
-      });
+    statusSub = SingBox.instance.watchConnectionStatus().listen((value) {
+      if (value == SingBoxConnectionStatus.connected &&
+          status != SingBoxConnectionStatus.connected) {
+        connectedAt = DateTime.now();
+        elapsed = Duration.zero;
+        connectionError = null;
+        timer?.cancel();
+        timer = Timer.periodic(const Duration(seconds: 1), (_) {
+          if (mounted && connectedAt != null) {
+            setState(() => elapsed = DateTime.now().difference(connectedAt!));
+          }
+        });
+      } else if (value != SingBoxConnectionStatus.connected) {
+        timer?.cancel();
+        connectedAt = null;
+        elapsed = Duration.zero;
+      }
+      if (mounted) setState(() => status = value);
     });
-    _initializeEngine();
+    statsSub = SingBox.instance.watchConnectionStats().listen((value) {
+      if (mounted) setState(() => stats = value);
+    });
+    stateSub = SingBox.instance.watchConnectionState().listen((value) {
+      if (value.error != null && value.error!.isNotEmpty && mounted) {
+        setState(() => connectionError = value.error);
+      }
+    });
+    loadServers();
   }
 
   @override
   void dispose() {
+    statusSub?.cancel();
+    statsSub?.cancel();
+    stateSub?.cancel();
+    timer?.cancel();
     super.dispose();
-  }
-
-  Future<void> _initializeEngine() async {
-    try {
-      await engine.initializeVless();
-      await loadServers();
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          loading = false;
-          error = 'راه‌اندازی موتور Xray ناموفق بود.\n$e';
-        });
-      }
-    }
   }
 
   Future<void> loadServers({bool manual = false}) async {
@@ -164,65 +168,16 @@ class _HomeScreenState extends State<HomeScreen> {
       busy = true;
       connectionError = null;
     });
-
-    var profileSummary = 'اطلاعات ساختار کانفیگ در دسترس نیست.';
     try {
-      final permitted = await engine.requestPermission();
-      if (!permitted) throw Exception('اجازه ایجاد اتصال VPN داده نشد.');
-
-      final config = server.config;
-      final xrayConfig = jsonEncode(config);
-
-      // Keep the diagnostic summary free of UUIDs, passwords, keys and addresses.
-      final outbounds = (config['outbounds'] as List<dynamic>? ?? []);
-      final firstOutbound = outbounds.isNotEmpty
-          ? outbounds.first as Map<String, dynamic>
-          : <String, dynamic>{};
-      final stream = firstOutbound['streamSettings'] is Map
-          ? firstOutbound['streamSettings'] as Map
-          : <String, dynamic>{};
-      profileSummary = [
-        'Profile: ${server.name}',
-        'Outbound count: ${outbounds.length}',
-        'Outbound protocol: ${firstOutbound['protocol'] ?? 'unknown'}',
-        'Transport: ${stream['network'] ?? 'default'}',
-        'Security: ${stream['security'] ?? 'none'}',
-        'Top-level keys: ${config.keys.join(', ')}',
-      ].join('\n');
-
-      await engine.startVless(remark: server.name, config: xrayConfig);
+      if (SingBox.instance.status.isActive) {
+        await SingBox.instance.disconnect();
+      }
+      await SingBox.instance.requestNotificationPermission();
+      await SingBox.instance.connect(server.config);
     } catch (e) {
-      var coreVersion = 'نامشخص';
-      var nativeDiagnostics = 'گزارش بومی موتور دریافت نشد.';
-      try {
-        coreVersion = await engine.getCoreVersion();
-      } catch (diagnosticError) {
-        coreVersion = 'خطا: $diagnosticError';
-      }
-      try {
-        final snapshot = await engine.getProviderDebugSnapshot();
-        nativeDiagnostics = snapshot.trim().isEmpty
-            ? 'موتور گزارش جزئی‌تری ثبت نکرده است.'
-            : snapshot;
-      } catch (diagnosticError) {
-        nativeDiagnostics = 'خطا در دریافت گزارش: $diagnosticError';
-      }
-
       if (mounted) {
-        setState(() {
-          connectionError = [
-            e.toString(),
-            '',
-            '--- خلاصه کانفیگ (بدون اطلاعات محرمانه) ---',
-            profileSummary,
-            '',
-            'Xray Core: $coreVersion',
-            '',
-            '--- گزارش داخلی موتور ---',
-            nativeDiagnostics,
-          ].join('\n');
-        });
-        message('اتصال برقرار نشد؛ گزارش عیب‌یابی در پایین صفحه ثبت شد.');
+        setState(() => connectionError = e.toString());
+        message('اتصال برقرار نشد؛ جزئیات خطا در پایین صفحه آمده است.');
       }
     } finally {
       if (mounted) setState(() => busy = false);
@@ -233,7 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (busy) return;
     setState(() => busy = true);
     try {
-      await engine.stopVless();
+      await SingBox.instance.disconnect();
     } catch (e) {
       if (mounted) setState(() => connectionError = e.toString());
     } finally {
@@ -249,10 +204,6 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         selectedId = server.id;
         connectionError = null;
-        uploadSpeed = 0;
-        downloadSpeed = 0;
-        uploadTotal = 0;
-        downloadTotal = 0;
       });
     }
   }
@@ -458,9 +409,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final active = connected;
     final statusLabel = active
         ? 'اتصال برقرار است'
-        : connectionState == VlessConnectionState.connecting
+        : status == SingBoxConnectionStatus.connecting
             ? 'در حال اتصال…'
-            : connectionState == VlessConnectionState.disconnecting
+            : status == SingBoxConnectionStatus.disconnecting
                 ? 'در حال قطع اتصال…'
                 : 'آماده اتصال';
     return Container(
@@ -567,8 +518,8 @@ class _HomeScreenState extends State<HomeScreen> {
             height: 54,
             child: FilledButton(
               onPressed: busy ||
-                      connectionState == VlessConnectionState.connecting ||
-                      connectionState == VlessConnectionState.disconnecting ||
+                      status == SingBoxConnectionStatus.connecting ||
+                      status == SingBoxConnectionStatus.disconnecting ||
                       selected == null
                   ? null
                   : (active ? disconnect : connect),
@@ -585,8 +536,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 elevation: 0,
               ),
               child: busy ||
-                      connectionState == VlessConnectionState.connecting ||
-                      connectionState == VlessConnectionState.disconnecting
+                      status == SingBoxConnectionStatus.connecting ||
+                      status == SingBoxConnectionStatus.disconnecting
                   ? const SizedBox(
                       width: 22,
                       height: 22,
@@ -794,8 +745,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: _trafficValue(
                     icon: Icons.south_rounded,
                     title: 'دریافت',
-                    speed: speedText(downloadSpeed),
-                    total: bytesText(downloadTotal),
+                    speed: speedText(stats?.downloadSpeed ?? 0),
+                    total: bytesText(stats?.downloadTotal ?? 0),
                     color: _green,
                   ),
                 ),
@@ -804,8 +755,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: _trafficValue(
                     icon: Icons.north_rounded,
                     title: 'ارسال',
-                    speed: speedText(uploadSpeed),
-                    total: bytesText(uploadTotal),
+                    speed: speedText(stats?.uploadSpeed ?? 0),
+                    total: bytesText(stats?.uploadTotal ?? 0),
                     color: _blue,
                   ),
                 ),
