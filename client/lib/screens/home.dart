@@ -243,30 +243,32 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (ctx) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(18),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('انتخاب سرور',
-                  style: TextStyle(
-                      color: navy, fontSize: 19, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 10),
-              ...servers.map((server) => ListTile(
-                    leading: const CircleAvatar(
-                      backgroundColor: Color(0xFFEAF0FF),
-                      child: Icon(Icons.public, color: blue),
-                    ),
-                    title: Text(server.name),
-                    subtitle: Text(server.description?.isNotEmpty == true
-                        ? server.description!
-                        : 'سرور فعال'),
-                    trailing: Radio<int>(
-                      value: server.id,
-                      groupValue: selectedId,
-                      onChanged: (value) => Navigator.pop(ctx, value),
-                    ),
-                    onTap: () => Navigator.pop(ctx, server.id),
-                  )),
-            ],
+          child: RadioGroup<int>(
+            groupValue: selectedId,
+            onChanged: (value) => Navigator.pop(ctx, value),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('انتخاب سرور',
+                    style: TextStyle(
+                        color: navy,
+                        fontSize: 19,
+                        fontWeight: FontWeight.bold)),
+                const SizedBox(height: 10),
+                ...servers.map((server) => ListTile(
+                      leading: const CircleAvatar(
+                        backgroundColor: Color(0xFFEAF0FF),
+                        child: Icon(Icons.public, color: blue),
+                      ),
+                      title: Text(server.name),
+                      subtitle: Text(server.description?.isNotEmpty == true
+                          ? server.description!
+                          : 'سرور فعال'),
+                      trailing: Radio<int>(value: server.id),
+                      onTap: () => Navigator.pop(ctx, server.id),
+                    )),
+              ],
+            ),
           ),
         ),
       ),
