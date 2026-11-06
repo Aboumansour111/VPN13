@@ -13,7 +13,7 @@
       "id": 2,
       "name": "VLESS Reality",
       "description": "VLESS • Reality • TCP",
-      "config": "{\"type\":\"vless\",\"tag\":\"proxy-global-103\",\"server\":\"3.17.61.153\",\"server_port\":35609,\"uuid\":\"f38e76ab-1d91-4a20-9a51-33feae2cdd28\",\"tls\":{\"enabled\":true,\"server_name\":\"youtubekids.com\",\"utls\":{\"enabled\":true,\"fingerprint\":\"chrome\"},\"reality\":{\"enabled\":true,\"public_key\":\"pLxVcPtk-OQuREi_t1EogDgGkCiAVEYVB1rfk6hv3Qo\",\"short_id\":\"17e070\"}},\"transport\":{\"type\":\"tcp\"}}"
+      "config": "{\"type\":\"vless\",\"tag\":\"proxy-global-103\",\"server\":\"3.17.61.153\",\"server_port\":35609,\"uuid\":\"f38e76ab-1d91-4a20-9a51-33feae2cdd28\",\"tls\":{\"enabled\":true,\"server_name\":\"youtubekids.com\",\"utls\":{\"enabled\":true,\"fingerprint\":\"chrome\"},\"reality\":{\"enabled\":true,\"public_key\":\"pLxVcPtk-OQuREi_t1EogDgGkCiAVEYVB1rfk6hv3Qo\",\"short_id\":\"17e070\"}}}"
     }
   ]
 }
