@@ -1,10 +1,13 @@
-# راه‌اندازی MahdiVPN روی لپ‌تاپ
+# راه‌اندازی VPN13
 
 ## پیش‌نیاز
-- Flutter 3.44 یا جدیدتر (Dart 3.12+) + Android Studio/SDK و Android licenses
+- Flutter 3.44 یا جدیدتر (Dart 3.12+) و Android SDK
 - Python 3.11 یا جدیدتر
-- PostgreSQL (پیشنهاد برای سرور) یا SQLite برای آزمایش
-- آدرس HTTPS عمومی برای Backend در استفاده واقعی
+- PostgreSQL یا SQLite برای Backend
+- آدرس HTTPS عمومی برای استفاده واقعی از Backend
+
+## موتور VPN اندروید
+برنامه Client از موتور Xray از طریق بستهٔ `flutter_vless` استفاده می‌کند. حداقل نسخه Android SDK برابر 23 است؛ اسکریپت ساخت پروژه این مقدار را پس از تولید Android scaffold تنظیم می‌کند.
 
 ## Backend (Windows PowerShell)
 ```powershell
@@ -14,21 +17,22 @@ py -3 -m venv .venv
 pip install -r requirements.txt
 Copy-Item .env.example .env
 ```
-در فایل `.env` حتماً SECRET_KEY تصادفی، ADMIN_PASSWORD قوی و CLIENT_ACCESS_CODE دلخواه (حداقل ۶ نویسه؛ عددی، حروفی یا ترکیبی) قرار دهید. همین یک کد را به تمام کاربران می‌دهید؛ هیچ ثبت‌نام یا حساب جداگانه‌ای وجود ندارد. برای تغییر کد، مقدار CLIENT_ACCESS_CODE را عوض و Backend را راه‌اندازی مجدد کنید. سپس:
+در فایل `.env` مقدارهای SECRET_KEY، ADMIN_PASSWORD و CLIENT_ACCESS_CODE را تنظیم کنید. سپس:
 ```powershell
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
+
 برای Linux:
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env # سپس secrets را تغییر دهید
+cp .env.example .env
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-## Build دو APK
-در ریشه repo:
-- PowerShell: `./scripts/build-apks.ps1`
+## ساخت APK
+در ریشه مخزن:
+- Windows PowerShell: `./scripts/build-apks.ps1`
 - Linux/macOS: `bash scripts/build-apks.sh`
 
 برای تنظیم آدرس API:
@@ -36,24 +40,29 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 $env:API_BASE_URL="https://api.example.com"
 ./scripts/build-apks.ps1
 ```
-APKها در `client/build/app/outputs/flutter-apk/app-release.apk` و `admin/build/app/outputs/flutter-apk/app-release.apk` قرار می‌گیرند. Build نخست Android scaffold را با `flutter create . --platforms=android` تولید می‌کند.
 
-## ورود و افزودن سرور
-1. Admin APK را باز کنید؛ نام مدیر و ADMIN_PASSWORD تنظیم‌شده در .env را وارد کنید.
-2. «+» سرور جدید، نام و کانفیگ را وارد کنید. لینک‌هایی مانند VLESS/VMess/Trojan/SS/Hysteria2/TUIC/WireGuard و JSON sing-box با موتور سازگار قابل پردازش‌اند.
-3. کد مشترک CLIENT_ACCESS_CODE را در اختیار کاربران بگذارید؛ هر کاربر همان کد را در Client APK وارد می‌کند. حساب مستقل و ثبت‌نام جداگانه وجود ندارد.
-4. سرور فعال را انتخاب و اتصال را بزنید. نخستین اتصال مجوز VPN اندروید را می‌خواهد.
+## افزودن سرور به VPN13
+فهرست عمومی سرورها در `config/servers.json` نگهداری می‌شود. مقدار `config` برای هر سرور باید یک رشتهٔ JSON کامل و معتبر Xray باشد و حداقل شامل `inbounds` و `outbounds` باشد. کانفیگ‌های sing-box مستقیماً قابل استفاده نیستند و دیگر مبدل آنلاین VPN13 وجود ندارد.
 
-## شبکه
+نمونهٔ ورودی SOCKS محلی مورد استفاده برای تونل:
+```json
+{
+  "listen": "127.0.0.1",
+  "port": 10808,
+  "protocol": "socks",
+  "settings": { "auth": "noauth", "udp": true }
+}
+```
+
+برای افزودن سرور، یک شیء جدید با شناسه یکتا، نام و کانفیگ کامل Xray به آرایهٔ `servers` اضافه و تغییر را در شاخهٔ `main` منتشر کنید. برنامه فهرست را مستقیماً از GitHub دریافت می‌کند.
+
+## شبکه و آزمون
 - Emulator اندروید: `http://10.0.2.2:8000`
-- گوشی واقعی: IP/LAN یا دامنه سرور Backend؛ فایروال و HTTPS لازم است.
-- `API_BASE_URL` در زمان Build با `--dart-define` تنظیم می‌شود.
-- از HTTP ساده فقط در تست LAN استفاده کنید. انتشار production باید HTTPS باشد.
-
-## آزمون
+- گوشی واقعی: IP شبکه یا دامنه Backend؛ در انتشار عمومی HTTPS استفاده شود.
+- آزمون Backend:
 ```bash
 cd backend
 pip install -r requirements-dev.txt
 pytest -q
 ```
-CI GitHub نیز Flutter analyze/test و Backend tests را اجرا می‌کند.
+اتصال VPN، DNS، ترافیک و قطع اتصال باید روی گوشی واقعی و با سرور فعال بررسی شود.
