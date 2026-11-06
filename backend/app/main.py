@@ -54,13 +54,8 @@ class ServerIn(BaseModel):
  @classmethod
  def valid_config(cls,v):
   v=v.strip()
-  if v.startswith("{"):
-   try:
-    data=json.loads(v)
-    if not isinstance(data,dict):raise ValueError()
-   except Exception:raise ValueError("JSON کانفیگ معتبر نیست")
-  elif not any(v.lower().startswith(s) for s in ("vless://","vmess://","trojan://","ss://","shadowsocks://","hysteria2://","hy2://","hysteria://","tuic://","wireguard://","wg://")):
-   raise ValueError("فرمت کانفیگ یا لینک پشتیبانی‌شده نیست")
+  if not any(v.lower().startswith(s) for s in ("vless://","vmess://","trojan://","ss://","shadowsocks://","hysteria2://","hy2://","hysteria://","tuic://","wireguard://","wg://")):
+   raise ValueError("لینک خام کانفیگ لازم است؛ JSON یا sing-box قابل قبول نیست")
   return v
 class ServerOut(BaseModel):id:int;name:str;description:Optional[str];active:bool;sort_order:int
 class ServerAdminOut(ServerOut):config:str
