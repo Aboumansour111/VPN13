@@ -188,83 +188,17 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> chooseServer() async {
-    if (servers.isEmpty || connected || busy) return;
-    final id = await showModalBottomSheet<int>(
-      context: context,
-      backgroundColor: Colors.white,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 42,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFD9E0EC),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  'انتخاب موقعیت سرور',
-                  style: TextStyle(
-                    color: _ink,
-                    fontSize: 19,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              ...servers.map((server) {
-                final active = server.id == selectedId;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 9),
-                  child: ListTile(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(
-                        color: active ? _blue : const Color(0xFFE8EDF5),
-                      ),
-                    ),
-                    tileColor:
-                        active ? const Color(0xFFF1F5FF) : Colors.white,
-                    leading: const CircleAvatar(
-                      backgroundColor: Color(0xFFEAF0FF),
-                      child: Icon(Icons.public_rounded, color: _blue),
-                    ),
-                    title: Text(
-                      server.name,
-                      style: const TextStyle(
-                        color: _ink,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    subtitle: Text(server.description ?? 'سرور VPN13'),
-                    trailing: active
-                        ? const Icon(Icons.check_circle, color: _blue)
-                        : const Icon(Icons.chevron_left, color: _muted),
-                    onTap: () => Navigator.pop(ctx, server.id),
-                  ),
-                );
-              }),
-            ],
-          ),
-        ),
-      ),
-    );
-    if (id == null) return;
+  Future<void> selectServer(ServerItem server) async {
+    if (connected || busy || server.id == selectedId) return;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('selectedServer', id);
-    if (mounted) setState(() => selectedId = id);
+    await prefs.setInt('selectedServer', server.id);
+    if (mounted) {
+      setState(() {
+        selectedId = server.id;
+        connectionError = null;
+        stats = null;
+      });
+    }
   }
 
   void message(String value) {
@@ -308,7 +242,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 18),
                     _connectionPanel(),
                     const SizedBox(height: 16),
-                    _serverCard(),
+                    _serverListCard(),
                     if (connected) ...[
                       const SizedBox(height: 16),
                       _trafficPanel(),
@@ -350,7 +284,22 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _topBar() => Row(
+  Widget _topBar() => Column(
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(bottom: 13, top: 3),
+            child: Text(
+              'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَآلِ مُحَمَّدٍ',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Color(0xFF168B68),
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ),
+          Row(
         children: [
           Container(
             width: 46,
@@ -423,6 +372,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
+          ),
+        ],
           ),
         ],
       );
@@ -586,7 +537,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _serverCard() => Container(
+  Widget _serverListCard() => Container(
         padding: const EdgeInsets.all(17),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -596,57 +547,132 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'سرور انتخاب‌شده',
-              style: TextStyle(
-                color: _muted,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
             Row(
               children: [
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEEF3FF),
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: const Icon(
-                    Icons.public_rounded,
-                    color: _blue,
-                    size: 25,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        selected?.name ?? 'سروری موجود نیست',
-                        style: const TextStyle(
-                          color: _ink,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        selected?.description ?? 'فهرست سرورها خالی است',
-                        style: const TextStyle(color: _muted, fontSize: 11),
-                      ),
-                    ],
+                const Icon(Icons.dns_rounded, color: _blue, size: 19),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'انتخاب سرور',
+                    style: TextStyle(
+                      color: _ink,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
-                TextButton(
-                  onPressed: connected || busy ? null : chooseServer,
-                  child: const Text('تغییر'),
+                Text(
+                  '${servers.length} سرور',
+                  style: const TextStyle(color: _muted, fontSize: 11),
                 ),
               ],
             ),
+            const SizedBox(height: 12),
+            if (servers.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 18),
+                child: Center(
+                  child: Text(
+                    'هنوز سروری اضافه نشده است',
+                    style: TextStyle(color: _muted, fontSize: 12),
+                  ),
+                ),
+              )
+            else
+              ...servers.map((server) {
+                final active = server.id == selectedId;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Material(
+                    color: active
+                        ? const Color(0xFFF0F5FF)
+                        : const Color(0xFFF8FAFD),
+                    borderRadius: BorderRadius.circular(15),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(15),
+                      onTap: connected || busy
+                          ? null
+                          : () => selectServer(server),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 13,
+                          vertical: 13,
+                        ),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(15),
+                          border: Border.all(
+                            color: active
+                                ? _blue.withValues(alpha: 0.55)
+                                : const Color(0xFFE9EEF5),
+                            width: active ? 1.4 : 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: active
+                                    ? const Color(0xFFE0E9FF)
+                                    : const Color(0xFFEDF1F7),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                Icons.dns_rounded,
+                                color: active ? _blue : _muted,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 11),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    server.name,
+                                    style: const TextStyle(
+                                      color: _ink,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    server.description ?? 'سرور VPN13',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: _muted,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              active
+                                  ? Icons.radio_button_checked_rounded
+                                  : Icons.radio_button_unchecked_rounded,
+                              color: active ? _blue : const Color(0xFFB7C1D0),
+                              size: 22,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            if (connected)
+              const Padding(
+                padding: EdgeInsets.only(top: 4),
+                child: Text(
+                  'برای تغییر سرور، ابتدا اتصال را قطع کنید.',
+                  style: TextStyle(color: _muted, fontSize: 10),
+                ),
+              ),
           ],
         ),
       );
