@@ -4,7 +4,7 @@ Flutter Android VPN client powered by the Xray core.
 
 ## Repository layout
 - `client/`: Flutter VPN13 application
-- `config/servers.json`: remotely hosted server list; each server stores a complete Xray JSON configuration
+- `config/servers.json`: remotely hosted server list; each server stores a raw share link such as `vless://` or `ss://`
 - `backend/`: optional FastAPI administration backend
 - `admin/`: administration application
 - `scripts/`: local build helpers
@@ -13,7 +13,7 @@ Flutter Android VPN client powered by the Xray core.
 ## VPN engine
 VPN13 uses the Xray-backed `flutter_vless` runtime for Android VPN sessions. The previous `sing_box` engine and browser-based sing-box converter are no longer part of the client.
 
-Add or update servers by placing a complete Xray JSON object in the server's `config` field in `config/servers.json`. Each profile must include an Xray `inbounds` section and at least one valid `outbounds` entry. The client passes the selected JSON directly to the Xray runtime; it does not convert sing-box configurations.
+Add or update servers by placing the original share link (`vless://`, `vmess://`, `trojan://`, or `ss://`) in the server's `config` field in `config/servers.json`. The client parses the link and prepares the Xray runtime configuration automatically. Do not paste sing-box JSON.
 
 The Android app's minimum SDK must be 23 or higher, as required by the Xray Android runtime.
 
