@@ -152,8 +152,12 @@ class _AdminHomeState extends State<AdminHome> {
                       controller: config,
                       minLines: 2,
                       maxLines: 5,
+                      textDirection: TextDirection.ltr,
+                      keyboardType: TextInputType.url,
                       decoration: const InputDecoration(
-                        labelText: 'کانفیگ (لینک یا JSON)',
+                        labelText: 'لینک کانفیگ',
+                        hintText: 'vless://...  یا  ss://...',
+                        helperText: 'لینک خام سرور را وارد کنید؛ نیازی به JSON یا sing-box نیست.',
                         alignLabelWithHint: true,
                       ),
                       validator: (value) =>
