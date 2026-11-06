@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sing_box/sing_box.dart';
@@ -10,14 +9,16 @@ import 'package:sing_box/sing_box.dart';
 import '../config.dart';
 
 class ServerItem {
-  const ServerItem({required this.id, required this.name, this.description});
+  const ServerItem({required this.id, required this.name, required this.config, this.description});
   final int id;
   final String name;
+  final String config;
   final String? description;
 
   factory ServerItem.fromJson(Map<String, dynamic> json) => ServerItem(
         id: json['id'] as int,
         name: json['name'] as String,
+        config: json['config'] as String,
         description: json['description'] as String?,
       );
 }
@@ -32,12 +33,10 @@ class _HomeScreenState extends State<HomeScreen> {
   static const navy = Color(0xFF092B68);
   static const blue = Color(0xFF174BC4);
   static const muted = Color(0xFF64749A);
-  final secure = const FlutterSecureStorage();
-
   List<ServerItem> servers = [];
   int? selectedId;
   bool loading = true, busy = false;
-  String? error, token;
+  String? error;
   StreamSubscription<SingBoxConnectionStatus>? statusSub;
   StreamSubscription<SingBoxConnectionStats>? statsSub;
   Timer? timer;
@@ -96,12 +95,16 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     try {
       final response = await http
-          .get(Uri.parse('${AppConfig.apiBaseUrl}/api/servers'))
-          .timeout(const Duration(seconds: 15));
+          .get(
+            Uri.parse(AppConfig.serversJsonUrl),
+            headers: const {'Cache-Control': 'no-cache'},
+          )
+          .timeout(const Duration(seconds: 20));
       if (response.statusCode != 200) {
         throw Exception('HTTP ${response.statusCode}');
       }
-      final list = (jsonDecode(response.body) as List)
+      final document = jsonDecode(response.body) as Map<String, dynamic>;
+      final list = (document['servers'] as List)
           .map((item) => ServerItem.fromJson(item as Map<String, dynamic>))
           .toList();
       final prefs = await SharedPreferences.getInstance();
@@ -129,90 +132,16 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<bool> ensureAccess() async {
-    token = await secure.read(key: 'sharedClientToken');
-    if (token != null) return true;
-    if (!mounted) return false;
-    final controller = TextEditingController();
-    final code = await showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: const Text('ورود به VPN13'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          obscureText: true,
-          textDirection: TextDirection.ltr,
-          decoration: const InputDecoration(
-            labelText: 'کد دسترسی',
-            border: OutlineInputBorder(),
-          ),
-          onSubmitted: (value) => Navigator.pop(ctx, value),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('انصراف'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, controller.text),
-            child: const Text('ورود'),
-          ),
-        ],
-      ),
-    );
-    controller.dispose();
-    if (code == null || code.trim().isEmpty) return false;
-    try {
-      final response = await http
-          .post(
-            Uri.parse('${AppConfig.apiBaseUrl}/api/client/access'),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'code': code.trim()}),
-          )
-          .timeout(const Duration(seconds: 15));
-      if (response.statusCode != 200) {
-        throw Exception('کد دسترسی صحیح نیست.');
-      }
-      token = jsonDecode(response.body)['access_token'] as String;
-      await secure.write(key: 'sharedClientToken', value: token);
-      return true;
-    } catch (e) {
-      if (mounted) message('ورود ناموفق بود: $e');
-      return false;
-    }
-  }
-
-  Future<http.Response> getProfile() => http
-      .get(
-        Uri.parse(
-          '${AppConfig.apiBaseUrl}/api/client/servers/$selectedId/profile',
-        ),
-        headers: {'Authorization': 'Bearer $token'},
-      )
-      .timeout(const Duration(seconds: 15));
-
   Future<void> connect() async {
-    if (selectedId == null || busy || !await ensureAccess()) return;
+    final server = selected;
+    if (server == null || busy) return;
     setState(() => busy = true);
     try {
-      var response = await getProfile();
-      if (response.statusCode == 401 || response.statusCode == 403) {
-        await secure.delete(key: 'sharedClientToken');
-        token = null;
-        if (!await ensureAccess()) return;
-        response = await getProfile();
-      }
-      if (response.statusCode != 200) {
-        throw Exception('پروفایل اتصال در دسترس نیست.');
-      }
-      final config = jsonDecode(response.body)['config'] as String;
       if (SingBox.instance.status.isActive) {
         await SingBox.instance.disconnect();
       }
       await SingBox.instance.requestNotificationPermission();
-      await SingBox.instance.connect(config);
+      await SingBox.instance.connect(server.config);
     } catch (e) {
       if (mounted) message('اتصال ناموفق بود: $e');
     } finally {
