@@ -1,10 +1,9 @@
-import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sing_box/sing_box.dart';
+import 'package:flutter_vless/flutter_vless.dart';
 
 import '../config.dart';
 
@@ -49,16 +48,15 @@ class _HomeScreenState extends State<HomeScreen> {
   String? error;
   String? connectionError;
 
-  StreamSubscription<SingBoxConnectionStatus>? statusSub;
-  StreamSubscription<SingBoxConnectionStats>? statsSub;
-  StreamSubscription<SingBoxConnectionState>? stateSub;
-  Timer? timer;
-  DateTime? connectedAt;
+  late final FlutterVless engine;
+  VlessConnectionState connectionState = VlessConnectionState.disconnected;
   Duration elapsed = Duration.zero;
-  SingBoxConnectionStatus status = SingBox.instance.status;
-  SingBoxConnectionStats? stats;
+  int uploadSpeed = 0;
+  int downloadSpeed = 0;
+  int uploadTotal = 0;
+  int downloadTotal = 0;
 
-  bool get connected => status == SingBoxConnectionStatus.connected;
+  bool get connected => connectionState == VlessConnectionState.connected;
 
   ServerItem? get selected {
     for (final server in servers) {
@@ -70,43 +68,40 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    statusSub = SingBox.instance.watchConnectionStatus().listen((value) {
-      if (value == SingBoxConnectionStatus.connected &&
-          status != SingBoxConnectionStatus.connected) {
-        connectedAt = DateTime.now();
-        elapsed = Duration.zero;
-        connectionError = null;
-        timer?.cancel();
-        timer = Timer.periodic(const Duration(seconds: 1), (_) {
-          if (mounted && connectedAt != null) {
-            setState(() => elapsed = DateTime.now().difference(connectedAt!));
-          }
-        });
-      } else if (value != SingBoxConnectionStatus.connected) {
-        timer?.cancel();
-        connectedAt = null;
-        elapsed = Duration.zero;
-      }
-      if (mounted) setState(() => status = value);
+    engine = FlutterVless(onStatusChanged: (value) {
+      if (!mounted) return;
+      setState(() {
+        connectionState = value.connectionState;
+        elapsed = Duration(seconds: value.duration);
+        uploadSpeed = value.uploadSpeed;
+        downloadSpeed = value.downloadSpeed;
+        uploadTotal = value.upload;
+        downloadTotal = value.download;
+        if (value.connectionState == VlessConnectionState.connected) {
+          connectionError = null;
+        }
+      });
     });
-    statsSub = SingBox.instance.watchConnectionStats().listen((value) {
-      if (mounted) setState(() => stats = value);
-    });
-    stateSub = SingBox.instance.watchConnectionState().listen((value) {
-      if (value.error != null && value.error!.isNotEmpty && mounted) {
-        setState(() => connectionError = value.error);
-      }
-    });
-    loadServers();
+    _initializeEngine();
   }
 
   @override
   void dispose() {
-    statusSub?.cancel();
-    statsSub?.cancel();
-    stateSub?.cancel();
-    timer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _initializeEngine() async {
+    try {
+      await engine.initializeVless();
+      await loadServers();
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          loading = false;
+          error = 'راه‌اندازی موتور Xray ناموفق بود.\n$e';
+        });
+      }
+    }
   }
 
   Future<void> loadServers() async {
@@ -161,11 +156,9 @@ class _HomeScreenState extends State<HomeScreen> {
       connectionError = null;
     });
     try {
-      if (SingBox.instance.status.isActive) {
-        await SingBox.instance.disconnect();
-      }
-      await SingBox.instance.requestNotificationPermission();
-      await SingBox.instance.connect(server.config);
+      final permitted = await engine.requestPermission();
+      if (!permitted) throw Exception('اجازه ایجاد اتصال VPN داده نشد.');
+      await engine.startVless(remark: server.name, config: server.config);
     } catch (e) {
       if (mounted) {
         setState(() => connectionError = e.toString());
@@ -180,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (busy) return;
     setState(() => busy = true);
     try {
-      await SingBox.instance.disconnect();
+      await engine.stopVless();
     } catch (e) {
       if (mounted) setState(() => connectionError = e.toString());
     } finally {
@@ -196,7 +189,10 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         selectedId = server.id;
         connectionError = null;
-        stats = null;
+        uploadSpeed = 0;
+        downloadSpeed = 0;
+        uploadTotal = 0;
+        downloadTotal = 0;
       });
     }
   }
@@ -382,9 +378,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final active = connected;
     final statusLabel = active
         ? 'اتصال برقرار است'
-        : status == SingBoxConnectionStatus.connecting
+        : connectionState == VlessConnectionState.connecting
             ? 'در حال اتصال…'
-            : status == SingBoxConnectionStatus.disconnecting
+            : connectionState == VlessConnectionState.disconnecting
                 ? 'در حال قطع اتصال…'
                 : 'آماده اتصال';
     return Container(
@@ -713,8 +709,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: _trafficValue(
                     icon: Icons.south_rounded,
                     title: 'دریافت',
-                    speed: speedText(stats?.downloadSpeed ?? 0),
-                    total: bytesText(stats?.downloadTotal ?? 0),
+                    speed: speedText(downloadSpeed),
+                    total: bytesText(downloadTotal),
                     color: _green,
                   ),
                 ),
@@ -723,8 +719,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: _trafficValue(
                     icon: Icons.north_rounded,
                     title: 'ارسال',
-                    speed: speedText(stats?.uploadSpeed ?? 0),
-                    total: bytesText(stats?.uploadTotal ?? 0),
+                    speed: speedText(uploadSpeed),
+                    total: bytesText(uploadTotal),
                     color: _blue,
                   ),
                 ),
