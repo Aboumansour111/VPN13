@@ -1,39 +1,53 @@
 # VPN13
 
-Flutter Android VPN client using one VPN engine: **Xray-core**.
+VPN13 is a Flutter Android VPN client powered by one VPN engine: **Xray-core**.
 
 ## Repository layout
-- `client/`: Flutter VPN13 application
-- `config/servers.json`: remotely hosted server list
-- `backend/`: optional FastAPI administration backend
-- `admin/`: administration application
-- `scripts/`: local build helpers
+- `client/`: Android VPN13 application
+- `config/servers.json`: GitHub-hosted server list consumed directly by the app
+- `scripts/`: client build and Xray setup helpers
 - `docs/`: architecture and setup notes
+
+The separate admin application was cancelled. Server configuration is managed by editing and committing `config/servers.json` in this repository; no admin APK or separate backend is required for the client server list.
 
 ## VPN architecture
 
 - **Only runtime engine:** Xray-core through the pinned AndroidLibXrayLite AAR.
 - **Android tunnel owner:** `XrayVpnService` owns VPN permission, TUN interface, foreground notification and Xray lifecycle.
 - **Flutter bridge:** `NativeXray` uses MethodChannel and EventChannel for connect, disconnect, state and traffic statistics.
-- **Profile conversion:** `EngineRouter` converts supported share links, Xray JSON, Clash YAML and sing-box-format JSON profiles into Xray JSON using the local pure-Dart `xray_profile_parser` package (MIT-licensed parser source).
-- **No sing-box runtime:** `sing_box` is not a dependency and no profile is routed to a second engine.
+- **Profile conversion:** `EngineRouter` converts supported share links, Xray JSON, Clash YAML and compatible sing-box-format JSON profiles into Xray JSON using the local pure-Dart `xray_profile_parser` package.
+- **No sing-box runtime:** sing-box is not a dependency and no profile is routed to a second engine. sing-box-shaped JSON, where used, is only an input data format.
 
-The server list may retain sing-box outbound JSON as an input data format. That does not mean sing-box is used as a runtime: every profile is converted to Xray JSON before it reaches the native service. The `flutter_vless` platform plugin is not a dependency, so it contributes no second VPN service or native runtime.
+## Automatic server-list updates
 
-## Supported server configuration
+The client downloads `config/servers.json` directly from the repository's `main` branch when the app starts. The user can also request a refresh from the server-list screen. Updating and committing this file on GitHub changes the list delivered to clients; rebuilding or reinstalling the APK is not required for server-list changes.
 
-The server list is loaded from `config/servers.json`. Each `config` value may be a supported share link, raw Xray JSON, or a supported sing-box outbound/profile JSON string. XHTTP transport parameters are preserved as Xray `xhttp` settings and are never downgraded to HTTPUpgrade or another transport.
+The file format is:
 
-Do not commit production credentials, UUIDs, private keys or passwords to a public repository. Use a private authenticated profile source for production deployments.
+```json
+{
+  "version": 1,
+  "servers": [
+    {
+      "id": 1,
+      "name": "Sweden",
+      "description": "VLESS Reality",
+      "config": "vless://..."
+    }
+  ]
+}
+```
+
+Each server needs a unique integer `id`, a display `name`, and a supported `config` value. Do not commit production credentials, UUIDs, private keys or passwords to a public repository: anyone can read them. Use a private authenticated source if server credentials must remain private.
 
 ## Build
 
-From the repository root, one command generates any missing Android Gradle scaffolding, downloads and verifies the pinned Xray AAR, resolves packages, runs analysis/tests and builds the client as ARM64:
+Run from the repository root in Windows PowerShell. This builds **only the client ARM64 APK**; the cancelled admin application is not built:
 
 ```powershell
-.\\scripts\\build-apks.ps1
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\\scripts\\build-apks.ps1"
 ```
 
-For a manual client-only build, first run `scripts/ensure-client-android-scaffold.ps1` and `scripts/setup-xray-core.ps1` from the repository root, then run `flutter clean`, `flutter pub get`, `flutter analyze`, `flutter test` and `flutter build apk --release --target-platform android-arm64` from `client/`.
+The script prepares the Android Gradle scaffold, downloads and verifies the pinned Xray AAR, resolves packages, runs analysis and tests, then builds the release APK.
 
-Test on a physical Android device: VPN permission, startup, DNS, IPv4/IPv6 traffic, XHTTP + REALITY, Shadowsocks 2022, traffic counters, reconnect, and disconnect cleanup. A successful service start alone does not prove traffic is passing.
+Test on a physical Android device: VPN permission, startup, DNS, IPv4/IPv6 traffic, supported VLESS transports, Shadowsocks 2022, traffic counters, reconnect and disconnect cleanup. A successful service start alone does not prove traffic is passing.
