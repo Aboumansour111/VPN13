@@ -19,6 +19,11 @@ void main() {
       ) as Map<String, dynamic>;
       final proxy = (result['outbounds'] as List).first as Map;
       final server = ((proxy['settings'] as Map)['servers'] as List).first as Map;
+      final tun = (result['inbounds'] as List)
+          .cast<Map>()
+          .firstWhere((inbound) => inbound['protocol'] == 'tun');
+      expect(tun['tag'], 'vpn13-tun');
+      expect(tun['port'], 0);
       expect(proxy['protocol'], 'shadowsocks');
       expect(server['method'], '2022-blake3-aes-256-gcm');
       expect(server['password'], 'server-key:client-key');
