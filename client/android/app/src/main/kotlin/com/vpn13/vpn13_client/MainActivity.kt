@@ -2,6 +2,7 @@ package com.vpn13.vpn13_client
 
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.VpnService
 import android.os.Build
 import io.flutter.embedding.android.FlutterActivity
@@ -12,6 +13,7 @@ import libv2ray.Libv2ray
 
 class MainActivity : FlutterActivity() {
     private var permissionResult: MethodChannel.Result? = null
+    private var notificationPermissionResult: MethodChannel.Result? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -20,6 +22,7 @@ class MainActivity : FlutterActivity() {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "prepare" -> requestVpnPermission(result)
+                    "requestNotifications" -> requestNotificationPermission(result)
                     "connect" -> {
                         val config = call.argument<String>("config")
                         if (config.isNullOrBlank()) {
@@ -79,6 +82,21 @@ class MainActivity : FlutterActivity() {
             })
     }
 
+    private fun requestNotificationPermission(result: MethodChannel.Result) {
+        if (Build.VERSION.SDK_INT < 33 ||
+            checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        ) {
+            result.success(true)
+            return
+        }
+        if (notificationPermissionResult != null) {
+            result.error("PERMISSION_PENDING", "Notification permission request is already pending", null)
+            return
+        }
+        notificationPermissionResult = result
+        requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), REQUEST_NOTIFICATION_PERMISSION)
+    }
+
     private fun requestVpnPermission(result: MethodChannel.Result) {
         if (permissionResult != null) {
             result.error("PERMISSION_PENDING", "VPN permission request is already pending", null)
@@ -107,9 +125,22 @@ class MainActivity : FlutterActivity() {
         }
     }
 
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_NOTIFICATION_PERMISSION) {
+            notificationPermissionResult?.success(grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED)
+            notificationPermissionResult = null
+        }
+    }
+
     companion object {
         private const val METHOD_CHANNEL = "vpn13/xray"
         private const val EVENT_CHANNEL = "vpn13/xray/events"
         private const val REQUEST_VPN_PERMISSION = 7313
+        private const val REQUEST_NOTIFICATION_PERMISSION = 7314
     }
 }
