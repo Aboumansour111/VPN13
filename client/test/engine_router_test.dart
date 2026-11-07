@@ -22,7 +22,7 @@ void main() {
       final tun = (result['inbounds'] as List)
           .cast<Map>()
           .firstWhere((inbound) => inbound['protocol'] == 'tun');
-      expect(tun['tag'], 'vpn13-tun');
+      expect(tun['tag'], 'tun');
       expect(tun['port'], 0);
       expect(proxy['protocol'], 'shadowsocks');
       expect(server['method'], '2022-blake3-aes-256-gcm');
