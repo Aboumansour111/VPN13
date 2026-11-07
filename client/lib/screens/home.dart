@@ -127,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
       elapsed = Duration.zero;
       connectionError = null;
       timer?.cancel();
-      timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      timer = Timer.periodic(const Duration(seconds: 5), (_) {
         if (mounted && connectedAt != null) {
           setState(() => elapsed = DateTime.now().difference(connectedAt!));
         }
@@ -200,6 +200,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     try {
       final xrayConfig = EngineRouter.toXrayConfiguration(server.config);
+      await NativeXray.requestNotificationPermission();
       if (!await NativeXray.requestPermission()) {
         throw Exception('مجوز VPN صادر نشد.');
       }
