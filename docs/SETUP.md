@@ -2,22 +2,20 @@
 
 ## پیش‌نیاز
 - Flutter 3.44 یا جدیدتر و Dart 3.12+
-- Android SDK
+- Android SDK و JDK 17
 - Python 3.11 یا جدیدتر برای Backend
 - PostgreSQL یا SQLite برای Backend
 
-## موتورهای VPN اندروید
+## موتور VPN اندروید
 
-VPN13 دو موتور دارد و بر اساس نوع کانفیگ، موتور را خودکار انتخاب می‌کند:
+VPN13 فقط از **Xray-core** استفاده می‌کند. سرویس بومی `XrayVpnService` مالک تونل VPN، مجوز اندروید، رابط TUN و چرخه عمر هسته است. هیچ مسیر اجرایی برای sing-box وجود ندارد.
 
-- **sing-box:** برای پروتکل‌های معمولی که در هسته فعلی پشتیبانی می‌شوند.
-- **Xray:** برای کانفیگ‌های دارای انتقال XHTTP، از جمله VLESS + XHTTP.
-
-در هر لحظه فقط یک موتور VPN فعال است. هنگام تغییر نوع سرور، ابتدا موتور قبلی متوقف و سپس موتور موردنیاز اجرا می‌شود. XHTTP به HTTPUpgrade تبدیل نمی‌شود.
+کدهای ورودی سرور می‌توانند لینک اشتراک، Xray JSON یا outboundهای سازگار با قالب sing-box باشند؛ همه آن‌ها پیش از اتصال به پیکربندی Xray تبدیل می‌شوند. وابستگی `flutter_vless` فعلاً فقط برای تجزیه و تبدیل پروفایل نگه داشته شده و کنترلر اتصال آن اجرا نمی‌شود.
 
 ## نصب وابستگی‌ها و بررسی برنامه (Windows PowerShell)
 
 از ریشه مخزن:
+
 ```powershell
 cd client
 flutter clean
@@ -26,43 +24,36 @@ flutter analyze
 flutter test
 ```
 
+## دریافت کتابخانه بومی Xray
+
+از ریشه مخزن:
+
+```powershell
+.\\scripts\\setup-xray-core.ps1
+```
+
+این اسکریپت AndroidLibXrayLite نسخه 26.10.31 را دریافت و SHA-256 آن را بررسی می‌کند.
+
 ## ساخت APK
 
 از ریشه مخزن:
+
 ```powershell
-./scripts/build-apks.ps1
+.\\scripts\\build-apks.ps1
 ```
 
-برای ساخت دستی:
+برای ساخت دستی ARM64 از مسیر `client/`:
+
 ```powershell
-cd client
-flutter build apk --release --split-per-abi
+flutter build apk --release --target-platform android-arm64
 ```
 
 ## افزودن سرور
 
-فهرست سرورها در `config/servers.json` نگهداری می‌شود. هر `config` یک outbound از sing-box به‌صورت JSON رشته‌ای یا لینک اشتراک پشتیبانی‌شده است.
+فهرست سرورها در `config/servers.json` نگهداری می‌شود. هر مقدار `config` باید یک لینک یا پروفایل پشتیبانی‌شده باشد. قالب sing-box فقط قالب ورودی داده است و به معنی اجرای sing-box نیست.
 
-برای XHTTP، مقدار انتقال باید دقیقاً `xhttp` باشد. نمونه ساختار outbound:
-```json
-{
-  "type": "vless",
-  "tag": "vpn13-xhttp",
-  "server": "example.com",
-  "server_port": 443,
-  "uuid": "00000000-0000-4000-8000-000000000000",
-  "tls": {
-    "enabled": true,
-    "server_name": "example.com"
-  },
-  "transport": {
-    "type": "xhttp",
-    "path": "/your-path",
-    "mode": "auto"
-  }
-}
-```
+برای XHTTP، مقدار انتقال باید دقیقاً `xhttp` باشد. پارامترهای path، mode، host و extra باید بدون تبدیل به transport دیگری حفظ شوند.
 
 مقادیر نمونه را با اطلاعات واقعی سرور جایگزین کن. UUID، کلیدها و رمزهای واقعی را در مخزن عمومی قرار نده.
 
-برای مشاهده خطاهای اتصال، جزئیات خطا در صفحه اصلی VPN13 نمایش داده می‌شود. پس از ساخت، هر دو نوع سرور را روی گوشی واقعی آزمایش کن؛ موفقیت در شروع سرویس به‌تنهایی اثبات عبور ترافیک نیست.
+پس از ساخت، Shadowsocks 2022 و VLESS + XHTTP + REALITY را روی گوشی واقعی آزمایش کن؛ موفقیت در شروع سرویس به‌تنهایی اثبات عبور ترافیک نیست.
