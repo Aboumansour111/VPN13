@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter_vless/flutter_vless.dart';
+import 'package:xray_profile_parser/xray_profile_parser.dart';
 
 /// Converts supported profile inputs into a validated Xray-core configuration.
 class EngineRouter {
@@ -12,7 +12,7 @@ class EngineRouter {
     final value = source.trim();
     if (RegExp(r'^(vless|vmess|trojan|ss|socks|hysteria2|hy2)://', caseSensitive: false)
         .hasMatch(value)) {
-      return _enableTrafficStats(FlutterVless.parse(value).getFullConfiguration());
+      return _enableTrafficStats(XrayProfileParser.parse(value).getFullConfiguration());
     }
 
     final decoded = _tryDecode(value);
