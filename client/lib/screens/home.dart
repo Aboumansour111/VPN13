@@ -40,10 +40,10 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  static const _ink = Color(0xFFEAF1FC);
-  static const _muted = Color(0xFF91A4BD);
-  static const _blue = Color(0xFF7194FF);
-  static const _green = Color(0xFF39D6A6);
+  static const _ink = Color(0xFF17243B);
+  static const _muted = Color(0xFF74829A);
+  static const _blue = Color(0xFF4169E8);
+  static const _green = Color(0xFF16A783);
 
   List<ServerItem> servers = [];
   int? selectedId;
@@ -263,7 +263,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF07111F),
+      backgroundColor: const Color(0xFFF3F6FC),
       body: SafeArea(
         child: loading
             ? const Center(child: CircularProgressIndicator())
@@ -385,9 +385,9 @@ class _HomeScreenState extends State<HomeScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFF111F31),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(30),
-              border: Border.all(color: const Color(0xFF24364B)),
+              border: Border.all(color: const Color(0xFFE5EAF2)),
             ),
             child: Row(
               children: [
@@ -590,9 +590,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _serverListCard() => Container(
         padding: const EdgeInsets.all(17),
         decoration: BoxDecoration(
-          color: const Color(0xFF111F31),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: const Color(0xFF24364B)),
+          border: Border.all(color: const Color(0xFFE5EAF2)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -635,7 +635,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Material(
                     color: active
-                        ? const Color(0xFF1B3150)
+                        ? const Color(0xFFEEF2FF)
                         : const Color(0xFF17263A),
                     borderRadius: BorderRadius.circular(15),
                     child: InkWell(
@@ -652,8 +652,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           borderRadius: BorderRadius.circular(15),
                           border: Border.all(
                             color: active
-                                ? _blue.withValues(alpha: 0.55)
-                                : const Color(0xFF24364B),
+                                ? _blue.withValues(alpha: 0.45)
+                                : const Color(0xFFE9EDF4),
                             width: active ? 1.4 : 1,
                           ),
                         ),
@@ -730,9 +730,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _trafficPanel() => Container(
         padding: const EdgeInsets.all(17),
         decoration: BoxDecoration(
-          color: const Color(0xFF111F31),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: const Color(0xFF24364B)),
+          border: Border.all(color: const Color(0xFFE5EAF2)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -794,7 +794,7 @@ class _HomeScreenState extends State<HomeScreen> {
       Container(
         padding: const EdgeInsets.all(13),
         decoration: BoxDecoration(
-          color: const Color(0xFF17263A),
+          color: const Color(0xFFF5F7FB),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -838,9 +838,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _errorPanel(String details) => Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: const Color(0xFF2A1D26),
+          color: const Color(0xFFFFF1F0),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFF58323B)),
+          border: Border.all(color: const Color(0xFFF5D0CC)),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
