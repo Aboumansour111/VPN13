@@ -10,7 +10,6 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.ParcelFileDescriptor
-import android.provider.Settings
 import libv2ray.CoreCallbackHandler
 import libv2ray.CoreController
 import libv2ray.Libv2ray
@@ -25,6 +24,8 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
     private val worker = Executors.newSingleThreadExecutor()
     private val statsWorker = Executors.newSingleThreadScheduledExecutor()
     @Volatile private var statsTask: ScheduledFuture<*>? = null
+    @Volatile private var lastUploadSample = 0L
+    @Volatile private var lastDownloadSample = 0L
     @Volatile private var profileName = "VPN13"
 
     override fun onCreate() {
@@ -35,7 +36,19 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_STOP -> {
-                stopSelf()
+                publish("disconnecting", "در حال قطع اتصال")
+                worker.execute {
+                    stopCoreAndTunnel()
+                    mainHandler.post {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            stopForeground(STOP_FOREGROUND_REMOVE)
+                        } else {
+                            @Suppress("DEPRECATION")
+                            stopForeground(true)
+                        }
+                        stopSelfResult(startId)
+                    }
+                }
                 return START_NOT_STICKY
             }
             ACTION_START -> {
@@ -123,9 +136,13 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
 
     override fun onDestroy() {
         try {
-            worker.execute { stopCoreAndTunnel() }
-            worker.shutdown()
-            worker.awaitTermination(3, java.util.concurrent.TimeUnit.SECONDS)
+            if (!worker.isShutdown) {
+                worker.execute { stopCoreAndTunnel() }
+                worker.shutdown()
+                worker.awaitTermination(5, TimeUnit.SECONDS)
+            } else {
+                stopCoreAndTunnel()
+            }
         } catch (_: Exception) {
             try {
                 controller?.stopLoop()
@@ -208,6 +225,8 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
         currentDownloadSpeed = 0L
         currentUploadTotal = 0L
         currentDownloadTotal = 0L
+        lastUploadSample = 0L
+        lastDownloadSample = 0L
         statsTask = statsWorker.scheduleAtFixedRate({
             if (controller !== core || !core.isRunning) return@scheduleAtFixedRate
             try {
@@ -223,10 +242,14 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
                         "downlink" -> downloaded += bytes
                     }
                 }
-                currentUploadSpeed = uploaded
-                currentDownloadSpeed = downloaded
-                currentUploadTotal += uploaded
-                currentDownloadTotal += downloaded
+                // Xray reports cumulative byte counters. Derive per-second
+                // rates from the difference instead of treating totals as rates.
+                currentUploadSpeed = (uploaded - lastUploadSample).coerceAtLeast(0L)
+                currentDownloadSpeed = (downloaded - lastDownloadSample).coerceAtLeast(0L)
+                currentUploadTotal = uploaded
+                currentDownloadTotal = downloaded
+                lastUploadSample = uploaded
+                lastDownloadSample = downloaded
                 publishEvent(currentState, currentMessage)
             } catch (_: Exception) {
                 // Stats polling must not interrupt an active VPN session.
