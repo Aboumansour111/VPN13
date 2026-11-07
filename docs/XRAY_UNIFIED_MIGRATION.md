@@ -1,6 +1,6 @@
 # VPN13 Xray Unified Core Migration
 
-Status: native Xray bridge is wired to HomeScreen and sing-box runtime dependency/selection have been removed. Physical-device traffic validation and final removal of the temporary FlutterVless parser dependency remain outstanding.
+Status: HomeScreen now uses the native AndroidLibXrayLite Xray service as its only VPN connection path. The sing-box and FlutterVless platform plugins are removed; profile conversion uses the local pure-Dart parser. CI and physical-device traffic validation remain outstanding.
 
 ## Target
 
@@ -36,13 +36,7 @@ Do not assume signatures beyond the pinned AAR's generated API. Pin the exact up
 2. Pin an AndroidLibXrayLite release/commit and integrate its AAR + required ABI files into Android Gradle. ARM64-only release should package `arm64-v8a`; avoid universal/multi-ABI output for the user's Honor X9b.
 3. Implement a Kotlin foreground `VpnService`: `prepare()`, establish TUN with IPv4/IPv6/DNS/routes, pass TUN fd to CoreController, protect any core-owned sockets if required by the pinned library, and close fd/controller on stop/revoke/destroy. Keep service ownership and notifications singular.
 4. Expose a small MethodChannel contract: `initialize`, `connect(configJson, profileName)`, `disconnect`, `status`, and callback events (connecting/connected/disconnected/error/stats). Never send secrets to logs.
-5. Add config parsing/conversion tests before UI wiring:
-   - VLESS URI (including IPv6 authority, percent-decoding, REALITY, TLS, XHTTP mode and extra/xPaddingBytes)
-   - VMess URI/base64 JSON
-   - Trojan URI
-   - Shadowsocks URI (including SIP002 plugin/options and SS2022 constraints)
-   - raw Xray JSON validation
-   - explicitly reject unsupported sing-box-only fields instead of silently changing semantics.
+5. Parser tests currently cover Shadowsocks 2022 outbound conversion and VLESS XHTTP/REALITY conversion with traffic counters. Extend the matrix with VLESS IPv6 authority/percent-decoding, VMess, Trojan, raw Xray JSON and explicit rejection of unsupported sing-box-only fields.
 6. HomeScreen now uses `NativeXray` as its only connection path. `sing_box` has been removed. `flutter_vless` has been replaced by the local pure-Dart `xray_profile_parser` package, so only the AndroidLibXrayLite native runtime is packaged. Keep existing UI/profile/backend contracts where possible.
 7. Verify on device: permission flow, start/stop/reconnect, process death/Always-on behavior, IPv4/IPv6, DNS, XHTTP+REALITY+IPv6, traffic counters, and non-XHTTP protocols.
 8. Build ARM64 APK, compare APK/AAB contents and size to baseline, then test before merging.
@@ -52,5 +46,5 @@ Do not assume signatures beyond the pinned AAR's generated API. Pin the exact up
 - A successful `startLoop` is not proof of data-plane connectivity; verify actual traffic.
 - Do not put real node credentials in Git, examples, CI logs, or diagnostic output.
 - Keep the existing branch intact; this migration is isolated in `feature/xray-unified-core`.
-- The Android directory is Flutter-generated/ignored in the current repository. Native source and Gradle changes must be deliberately added to Git and checked against the local generated Android project before a build.
+- The tracked Android source includes the manifest, app Gradle file and native Kotlin bridge. `scripts/ensure-client-android-scaffold.ps1` generates missing Flutter Gradle wrapper/scaffold files while preserving the tracked native files. The 60 MB AAR is downloaded separately and SHA-256 verified; it is intentionally not committed.
 - GPL/LGPL obligations and notices must be reviewed for the exact core artifact and distribution model.
