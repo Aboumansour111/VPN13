@@ -4,10 +4,12 @@ $ApiUrl = if ($env:API_BASE_URL) { $env:API_BASE_URL } else { "http://10.0.2.2:8
 foreach ($App in @("client","admin")) {
     $AppPath = Join-Path $Root $App
     Set-Location $AppPath
-    if (!(Test-Path "android")) { flutter create . --platforms=android }
     if ($App -eq "client") {
+        & (Join-Path $Root "scripts/ensure-client-android-scaffold.ps1")
         & (Join-Path $Root "scripts/setup-xray-core.ps1")
         py -3 (Join-Path $Root "scripts/set-android-min-sdk.py") $AppPath
+    } elseif (!(Test-Path "android")) {
+        flutter create . --platforms=android
     }
     flutter pub get
     flutter analyze
