@@ -26,6 +26,7 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
     @Volatile private var statsTask: ScheduledFuture<*>? = null
     @Volatile private var lastUploadSample = 0L
     @Volatile private var lastDownloadSample = 0L
+    @Volatile private var lastStatsSampleNanos = 0L
     @Volatile private var profileName = "VPN13"
 
     override fun onCreate() {
@@ -215,7 +216,20 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
             .setContentText("تونل VPN فعال است")
             .setSmallIcon(applicationInfo.icon)
             .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .setCategory(Notification.CATEGORY_SERVICE)
+            .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setContentIntent(pending)
+            .addAction(
+                android.R.drawable.ic_menu_close_clear_cancel,
+                "قطع اتصال",
+                PendingIntent.getService(
+                    this,
+                    1314,
+                    Intent(this, XrayVpnService::class.java).setAction(ACTION_STOP),
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+            )
             .build()
     }
 
@@ -227,7 +241,8 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
         currentDownloadTotal = 0L
         lastUploadSample = 0L
         lastDownloadSample = 0L
-        statsTask = statsWorker.scheduleAtFixedRate({
+        lastStatsSampleNanos = System.nanoTime()
+        statsTask = statsWorker.scheduleWithFixedDelay({
             if (controller !== core || !core.isRunning) return@scheduleAtFixedRate
             try {
                 var uploaded = 0L
@@ -244,8 +259,11 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
                 }
                 // Xray reports cumulative byte counters. Derive per-second
                 // rates from the difference instead of treating totals as rates.
-                currentUploadSpeed = (uploaded - lastUploadSample).coerceAtLeast(0L)
-                currentDownloadSpeed = (downloaded - lastDownloadSample).coerceAtLeast(0L)
+                val nowNanos = System.nanoTime()
+                val elapsedSeconds = ((nowNanos - lastStatsSampleNanos).coerceAtLeast(1L)) / 1_000_000_000.0
+                currentUploadSpeed = ((uploaded - lastUploadSample).coerceAtLeast(0L) / elapsedSeconds).toLong()
+                currentDownloadSpeed = ((downloaded - lastDownloadSample).coerceAtLeast(0L) / elapsedSeconds).toLong()
+                lastStatsSampleNanos = nowNanos
                 currentUploadTotal = uploaded
                 currentDownloadTotal = downloaded
                 lastUploadSample = uploaded
@@ -254,7 +272,7 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
             } catch (_: Exception) {
                 // Stats polling must not interrupt an active VPN session.
             }
-        }, 1, 1, TimeUnit.SECONDS)
+        }, 5, 5, TimeUnit.SECONDS)
     }
 
     private fun stopStatsPolling() {
@@ -264,6 +282,10 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
 
     private fun publish(state: String, message: String) {
         publishEvent(state, message)
+        if (state == "connected" || state == "disconnecting") {
+            val manager = getSystemService(NotificationManager::class.java)
+            manager.notify(NOTIFICATION_ID, buildNotification())
+        }
     }
 
     companion object {
