@@ -1,55 +1,38 @@
-# Android native bridge implementation
+# Android native Xray bridge
 
-The first Kotlin bridge is now present under `client/android`. It is intentionally isolated from the existing Flutter engine path until it is built and verified on a device.
+The Flutter UI is connected to one native AndroidLibXrayLite Xray runtime.
 
 ## Flutter channels
 
 - MethodChannel: `vpn13/xray`
-  - `prepare`: requests Android's VPN permission and resolves only after the user's decision.
-  - `connect`: starts the foreground VPN service with an Xray JSON config.
+  - `prepare`: requests Android VPN permission and resolves after the user's decision.
+  - `connect`: starts the foreground VPN service with Xray JSON and the selected profile name.
   - `disconnect`: stops the service and core.
-  - `getStatus`: returns the current native state and sanitized message.
+  - `getStatus`: returns the current native state and traffic counters.
   - `getVersion`: returns the linked libv2ray/Xray version.
 - EventChannel: `vpn13/xray/events`
-  - Emits state and sanitized core status messages.
+  - Emits connecting/connected/disconnected/error states and periodic upload/download speed and total counters.
 
 ## Native implementation
 
 - `MainActivity.kt`: MethodChannel, EventChannel and VPN permission result.
-- `XrayVpnService.kt`: foreground service, IPv4/IPv6 TUN interface, DNS routes and CoreController lifecycle.
+- `XrayVpnService.kt`: foreground service, IPv4/IPv6 TUN interface, DNS routes, app-UID bypass and CoreController lifecycle.
 - `AndroidManifest.xml`: VPN service declaration, BIND_VPN_SERVICE and foreground-service permissions.
 - `build.gradle.kts`: links the pinned local `libs/libv2ray.aar`.
+- `scripts/setup-xray-core.ps1`: downloads AndroidLibXrayLite v26.10.31 and verifies SHA-256.
 
-Download and verify the AAR from the repository root:
+## Traffic statistics
 
-```powershell
-.\scripts\setup-xray-core.ps1
-```
+The generated Xray configuration enables outbound uplink/downlink counters. The service polls `CoreController.queryAllOutboundTrafficStats()` once per second and emits deltas and accumulated totals through the EventChannel. Statistics polling is stopped before the controller is released.
 
-The script pins AndroidLibXrayLite v26.10.31 and verifies SHA-256 before Gradle can use the artifact.
+## Validation still required
 
-## Verified upstream API shape
+1. Flutter analyze and unit tests pass after `flutter pub get`.
+2. ARM64 APK builds against the pinned AAR.
+3. VPN permission prompt, service lifecycle, foreground notification and revocation work on a physical device.
+4. Xray core starts with real Shadowsocks 2022 and VLESS + XHTTP + REALITY configurations.
+5. IPv4/IPv6 traffic passes, DNS resolves, and the core's sockets do not loop back into the TUN.
+6. Stop/reconnect, screen-off, network handover and process recreation behave correctly.
+7. Traffic counters increase and reset correctly between sessions.
 
-The pinned Go package exposes `Libv2ray.initCoreEnv`, `Libv2ray.newCoreController`, `CoreController.startLoop(configJson, tunFd)`, `CoreController.stopLoop()`, and `CoreController.isRunning`.
-
-Gomobile callback signatures used by the Kotlin bridge (as used by the upstream Android client):
-
-```kotlin
-override fun startup(): Long
-override fun shutdown(): Long
-override fun onEmitStatus(code: Long, message: String?): Long
-```
-
-## Important validation still required
-
-This bridge is an initial integration, not a release-ready VPN implementation. Before removing the previous engines or publishing an APK, build against the pinned AAR and verify on a physical Android device:
-
-1. Kotlin/Gomobile signatures compile with the exact AAR.
-2. VPN permission prompt, service lifecycle, foreground notification and revocation.
-3. Xray core starts with a real VLESS + XHTTP + REALITY config.
-4. IPv4 and IPv6 traffic pass, DNS resolves, and there is no traffic leak or routing loop.
-5. Stop/reconnect, screen-off, network handover and process recreation.
-6. Confirm the Xray TUN integration protects core sockets from VPN recursion. Do not ship if this is not demonstrated.
-7. Measure final APK size and inspect packaged native ABIs.
-
-The Flutter UI still uses the previous engines at this stage. Do not delete `sing_box` or `flutter_vless` until the native bridge passes the checks above and all supported profile formats have a tested Xray config conversion path.
+A successful `startLoop` or a connected VPN icon is not proof of working data-plane traffic. Test actual requests through the tunnel before release.
