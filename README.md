@@ -1,6 +1,6 @@
 # VPN13
 
-Flutter Android VPN client with two native proxy engines: sing-box and Xray.
+Flutter Android VPN client using one VPN engine: **Xray-core**.
 
 ## Repository layout
 - `client/`: Flutter VPN13 application
@@ -10,44 +10,21 @@ Flutter Android VPN client with two native proxy engines: sing-box and Xray.
 - `scripts/`: local build helpers
 - `docs/`: architecture and setup notes
 
-## VPN engines
+## VPN architecture
 
-VPN13 selects the runtime from each server configuration:
+- **Only runtime engine:** Xray-core through the pinned AndroidLibXrayLite AAR.
+- **Android tunnel owner:** `XrayVpnService` owns VPN permission, TUN interface, foreground notification and Xray lifecycle.
+- **Flutter bridge:** `NativeXray` uses MethodChannel and EventChannel for connect, disconnect, state and traffic statistics.
+- **Profile conversion:** `EngineRouter` converts supported share links and sing-box-format JSON profiles into Xray JSON. The `flutter_vless` dependency is currently used for parsing/conversion only; its connection controller is not started.
+- **No sing-box runtime:** `sing_box` is not a dependency and no profile is routed to a second engine.
 
-- **sing-box** handles the existing supported protocols and profiles.
-- **Xray** handles XHTTP transports, including VLESS + XHTTP.
+The server list may retain sing-box outbound JSON as an input data format. That does not mean sing-box is used as a runtime: every profile is converted to Xray JSON before it reaches the native service.
 
-Only one engine owns the Android VPN tunnel at a time. Before switching engines, VPN13 stops the active engine and then starts the selected one. XHTTP is never rewritten as HTTPUpgrade or another transport.
+## Supported server configuration
 
-The Flutter packages are:
-- `sing_box`: native sing-box / libbox runtime.
-- `flutter_vless`: native Xray runtime with XHTTP support.
+The server list is loaded from `config/servers.json`. Each `config` value may be a supported share link, raw Xray JSON, or a supported sing-box outbound/profile JSON string. XHTTP transport parameters are preserved as Xray `xhttp` settings and are never downgraded to HTTPUpgrade or another transport.
 
-## Server configuration
-
-The server list is loaded from `config/servers.json`. Each `config` field contains a sing-box outbound JSON object as a JSON string, or a supported share link. Profiles with `transport.type = "xhttp"` are routed to Xray; other supported profiles continue to use sing-box.
-
-For example, a VLESS XHTTP outbound can use:
-```json
-{
-  "type": "vless",
-  "tag": "vpn13-xhttp",
-  "server": "example.com",
-  "server_port": 443,
-  "uuid": "00000000-0000-4000-8000-000000000000",
-  "tls": {
-    "enabled": true,
-    "server_name": "example.com"
-  },
-  "transport": {
-    "type": "xhttp",
-    "path": "/your-path",
-    "mode": "auto"
-  }
-}
-```
-
-Use real server values in your private configuration source; do not commit production credentials to a public repository.
+Do not commit production credentials, UUIDs, private keys or passwords to a public repository. Use a private authenticated profile source for production deployments.
 
 ## Build
 
@@ -58,7 +35,13 @@ flutter clean
 flutter pub get
 flutter analyze
 flutter test
-flutter build apk --release --split-per-abi
+flutter build apk --release --target-platform android-arm64
 ```
 
-Test both engines on a physical Android device: VPN permission, startup, DNS, actual traffic, stats, switching between engines, and disconnect cleanup.
+The native AAR is pinned and downloaded with SHA-256 verification from the repository root:
+
+```powershell
+.\\scripts\\setup-xray-core.ps1
+```
+
+Test on a physical Android device: VPN permission, startup, DNS, IPv4/IPv6 traffic, XHTTP + REALITY, Shadowsocks 2022, traffic counters, reconnect, and disconnect cleanup. A successful service start alone does not prove traffic is passing.
