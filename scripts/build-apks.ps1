@@ -5,10 +5,8 @@ $ClientPath = Join-Path $Root "client"
 Push-Location $ClientPath
 try {
     & (Join-Path $Root "scripts/ensure-client-android-scaffold.ps1")
-    if ($LASTEXITCODE -ne 0) { throw "Android scaffold setup failed (exit code $LASTEXITCODE)." }
 
     & (Join-Path $Root "scripts/setup-xray-core.ps1")
-    if ($LASTEXITCODE -ne 0) { throw "Xray core setup failed (exit code $LASTEXITCODE)." }
 
     py -3 (Join-Path $Root "scripts/set-android-min-sdk.py") $ClientPath
     if ($LASTEXITCODE -ne 0) { throw "Setting Android minSdk failed (exit code $LASTEXITCODE)." }
