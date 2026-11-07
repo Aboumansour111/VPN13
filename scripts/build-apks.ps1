@@ -17,6 +17,9 @@ try {
     flutter pub get
     if ($LASTEXITCODE -ne 0) { throw "Flutter dependency resolution failed (exit code $LASTEXITCODE)." }
 
+    dart run flutter_launcher_icons
+    if ($LASTEXITCODE -ne 0) { throw "Android launcher icon generation failed (exit code $LASTEXITCODE)." }
+
     flutter analyze
     if ($LASTEXITCODE -ne 0) { throw "Flutter analysis failed (exit code $LASTEXITCODE)." }
 
