@@ -104,7 +104,9 @@ class EngineRouter {
       queryParameters: query,
       fragment: outbound['tag']?.toString() ?? server,
     );
-    return FlutterVless.parse(uri.toString()).getFullConfiguration();
+    return _enableTrafficStats(
+      FlutterVless.parse(uri.toString()).getFullConfiguration(),
+    );
   }
 
   static String _enableTrafficStats(String source) {
