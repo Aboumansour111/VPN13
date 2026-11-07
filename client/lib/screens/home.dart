@@ -182,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => error =
-            'دریافت فهرست سرورها ناموفق بود. اتصال اینترنت را بررسی کنید.\\n$e');
+            'دریافت فهرست سرورها ناموفق بود. اتصال اینترنت را بررسی کنید.\n$e');
       }
     } finally {
       if (mounted) setState(() => loading = false);
