@@ -28,6 +28,10 @@ class MainActivity : FlutterActivity() {
                             val intent = Intent(this, XrayVpnService::class.java)
                                 .setAction(XrayVpnService.ACTION_START)
                                 .putExtra(XrayVpnService.EXTRA_CONFIG, config)
+                                .putExtra(
+                                    XrayVpnService.EXTRA_PROFILE_NAME,
+                                    call.argument<String>("profileName") ?: "VPN13"
+                                )
                             try {
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                                     startForegroundService(intent)
