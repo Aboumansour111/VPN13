@@ -45,8 +45,14 @@ class MainActivity : FlutterActivity() {
                         }
                     }
                     "disconnect" -> {
-                        stopService(Intent(this, XrayVpnService::class.java))
-                        result.success(true)
+                        val intent = Intent(this, XrayVpnService::class.java)
+                            .setAction(XrayVpnService.ACTION_STOP)
+                        try {
+                            startService(intent)
+                            result.success(true)
+                        } catch (error: Exception) {
+                            result.error("SERVICE_STOP_FAILED", error.message, null)
+                        }
                     }
                     "getStatus" -> result.success(XrayVpnService.statusSnapshot())
                     "getVersion" -> {
