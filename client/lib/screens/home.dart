@@ -225,7 +225,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> selectServer(ServerItem server) async {
-    if (connected || busy || server.id == selectedId) return;
+    if (status != _VpnStatus.disconnected || busy || server.id == selectedId) return;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('selectedServer', server.id);
     if (mounted) {
@@ -394,11 +394,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 Icon(
                   Icons.circle,
                   size: 8,
-                  color: connected ? _green : const Color(0xFF536A84),
+                  color: connected
+                      ? _green
+                      : status == _VpnStatus.connecting || status == _VpnStatus.disconnecting
+                          ? const Color(0xFFFFC66D)
+                          : const Color(0xFF536A84),
                 ),
                 const SizedBox(width: 7),
                 Text(
-                  connected ? 'آنلاین' : 'آفلاین',
+                  connected
+                      ? 'آنلاین'
+                      : status == _VpnStatus.disconnecting
+                          ? 'در حال قطع'
+                          : status == _VpnStatus.connecting
+                              ? 'در حال اتصال'
+                              : 'آفلاین',
                   style: const TextStyle(
                     color: _ink,
                     fontSize: 11,
@@ -630,7 +640,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     borderRadius: BorderRadius.circular(15),
                     child: InkWell(
                       borderRadius: BorderRadius.circular(15),
-                      onTap: connected || busy
+                      onTap: status != _VpnStatus.disconnected || busy
                           ? null
                           : () => selectServer(server),
                       child: Container(
