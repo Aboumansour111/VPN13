@@ -2,34 +2,16 @@ import 'dart:convert';
 
 import 'package:flutter_vless/flutter_vless.dart';
 
-enum VpnEngine { singBox, xray }
-
 /// Selects the runtime without silently translating XHTTP to another transport.
 class EngineRouter {
   const EngineRouter._();
 
-  static VpnEngine engineFor(String source) {
-    final value = source.trim();
-    if (_isXhttpShareLink(value)) return VpnEngine.xray;
-
-    final decoded = _tryDecode(value);
-    if (decoded is Map<String, dynamic>) {
-      if (_isXhttpOutbound(decoded)) return VpnEngine.xray;
-      final outbounds = decoded['outbounds'];
-      if (outbounds is List &&
-          outbounds.whereType<Map<String, dynamic>>().any(_isXhttpOutbound)) {
-        return VpnEngine.xray;
-      }
-    }
-    return VpnEngine.singBox;
-  }
-
-  /// Converts a sing-box outbound or profile into Xray JSON for flutter_vless.
-  /// The Xray parser performs the protocol-specific conversion and validation.
+  /// Converts supported share links, sing-box profiles or raw Xray JSON into Xray JSON.
+  /// Traffic counters are enabled for the native AndroidLibXrayLite controller.
   static String toXrayConfiguration(String source) {
     final value = source.trim();
     if (value.contains('://')) {
-      return FlutterVless.parse(value).getFullConfiguration();
+      return _enableTrafficStats(FlutterVless.parse(value).getFullConfiguration());
     }
 
     final decoded = _tryDecode(value);
@@ -62,7 +44,7 @@ class EngineRouter {
                 'کانفیگ باید یک outbound یا پروفایل کامل sing-box باشد.',
               );
 
-    return FlutterVless.parse(jsonEncode(input)).getFullConfiguration();
+    return _enableTrafficStats(FlutterVless.parse(jsonEncode(input)).getFullConfiguration());
   }
 
   static String _xhttpOutboundToXray(Map<String, dynamic> outbound) {
@@ -123,6 +105,28 @@ class EngineRouter {
       fragment: outbound['tag']?.toString() ?? server,
     );
     return FlutterVless.parse(uri.toString()).getFullConfiguration();
+  }
+
+  static String _enableTrafficStats(String source) {
+    final decoded = jsonDecode(source);
+    if (decoded is! Map<String, dynamic>) {
+      throw const FormatException('پیکربندی تولیدشده Xray معتبر نیست.');
+    }
+    final config = Map<String, dynamic>.from(decoded);
+    config['stats'] = config['stats'] is Map
+        ? Map<String, dynamic>.from(config['stats'] as Map)
+        : <String, dynamic>{};
+    final policy = config['policy'] is Map
+        ? Map<String, dynamic>.from(config['policy'] as Map)
+        : <String, dynamic>{};
+    final system = policy['system'] is Map
+        ? Map<String, dynamic>.from(policy['system'] as Map)
+        : <String, dynamic>{};
+    system['statsOutboundUplink'] = true;
+    system['statsOutboundDownlink'] = true;
+    policy['system'] = system;
+    config['policy'] = policy;
+    return jsonEncode(config);
   }
 
   static bool _isXhttpShareLink(String value) {
