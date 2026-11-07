@@ -4,11 +4,12 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_vless/flutter_vless.dart';
-import 'package:sing_box/sing_box.dart';
 
 import '../config.dart';
 import '../services/engine_router.dart';
+import '../services/native_xray.dart';
+
+enum _VpnStatus { disconnected, connecting, connected, disconnecting }
 
 class ServerItem {
   const ServerItem({
@@ -51,14 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String? error;
   String? connectionError;
 
-  StreamSubscription<SingBoxConnectionStatus>? statusSub;
-  StreamSubscription<SingBoxConnectionStats>? statsSub;
-  StreamSubscription<SingBoxConnectionState>? stateSub;
-  late final FlutterVless xrayEngine;
-  VlessStatus? xrayStatus;
-  Future<void>? xrayInitFuture;
-  String? xrayInitError;
-  bool xrayEngineActive = false;
+  StreamSubscription<Map<String, dynamic>>? statusSub;
   num uploadSpeed = 0;
   num downloadSpeed = 0;
   num uploadTotal = 0;
@@ -66,9 +60,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Timer? timer;
   DateTime? connectedAt;
   Duration elapsed = Duration.zero;
-  SingBoxConnectionStatus status = SingBox.instance.status;
+  _VpnStatus status = _VpnStatus.disconnected;
 
-  bool get connected => status == SingBoxConnectionStatus.connected;
+  bool get connected => status == _VpnStatus.connected;
 
   ServerItem? get selected {
     for (final server in servers) {
@@ -80,55 +74,53 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    xrayEngine = FlutterVless(
-      onStatusChanged: (value) {
-        xrayStatus = value;
-        if (!mounted || !xrayEngineActive) return;
-        final mapped = switch (value.connectionState) {
-          VlessConnectionState.connected => SingBoxConnectionStatus.connected,
-          VlessConnectionState.connecting => SingBoxConnectionStatus.connecting,
-          VlessConnectionState.disconnecting => SingBoxConnectionStatus.disconnecting,
-          VlessConnectionState.disconnected => SingBoxConnectionStatus.disconnected,
-          VlessConnectionState.unknown => SingBoxConnectionStatus.disconnected,
-        };
-        _handleStatus(mapped);
-        setState(() {
-          uploadSpeed = value.uploadSpeed;
-          downloadSpeed = value.downloadSpeed;
-          uploadTotal = value.upload;
-          downloadTotal = value.download;
-        });
+    statusSub = NativeXray.events.listen(
+      _handleNativeEvent,
+      onError: (Object e) {
+        if (mounted) setState(() => connectionError = e.toString());
       },
     );
-    xrayInitFuture = xrayEngine.initializeVless().catchError((Object e) {
-      xrayInitError = e.toString();
-    });
-    statusSub = SingBox.instance
-        .watchConnectionStatus()
-        .listen((value) {
-      if (!xrayEngineActive) _handleStatus(value);
-    });
-    statsSub = SingBox.instance.watchConnectionStats().listen((value) {
-      if (mounted && !xrayEngineActive) {
-        setState(() {
-          uploadSpeed = value.uploadSpeed;
-          downloadSpeed = value.downloadSpeed;
-          uploadTotal = value.uploadTotal;
-          downloadTotal = value.downloadTotal;
-        });
-      }
-    });
-    stateSub = SingBox.instance.watchConnectionState().listen((value) {
-      if (!xrayEngineActive && value.error != null && value.error!.isNotEmpty && mounted) {
-        setState(() => connectionError = value.error);
-      }
+    NativeXray.status().then(_handleNativeEvent).catchError((Object e) {
+      if (mounted) setState(() => connectionError = e.toString());
     });
     loadServers();
   }
 
-  void _handleStatus(SingBoxConnectionStatus value) {
-    if (value == SingBoxConnectionStatus.connected &&
-        status != SingBoxConnectionStatus.connected) {
+  num _number(Object? value) =>
+      value is num ? value : num.tryParse(value?.toString() ?? '') ?? 0;
+
+  void _handleNativeEvent(Map<String, dynamic> event) {
+    if (!mounted) return;
+    final stateName = event['state']?.toString() ?? 'disconnected';
+    final message = event['message']?.toString();
+    if (stateName == 'error') {
+      setState(() => connectionError = message?.isNotEmpty == true
+          ? message
+          : 'خطا در هسته Xray');
+      _handleStatus(_VpnStatus.disconnected);
+      return;
+    }
+    final nextStatus = switch (stateName) {
+      'connected' => _VpnStatus.connected,
+      'connecting' => _VpnStatus.connecting,
+      'disconnecting' => _VpnStatus.disconnecting,
+      'disconnected' => _VpnStatus.disconnected,
+      _ => status,
+    };
+    _handleStatus(nextStatus);
+    if (mounted) {
+      setState(() {
+        uploadSpeed = _number(event['uploadSpeed']);
+        downloadSpeed = _number(event['downloadSpeed']);
+        uploadTotal = _number(event['uploadTotal']);
+        downloadTotal = _number(event['downloadTotal']);
+        if (stateName == 'connected') connectionError = null;
+      });
+    }
+  }
+
+  void _handleStatus(_VpnStatus value) {
+    if (value == _VpnStatus.connected && status != _VpnStatus.connected) {
       connectedAt = DateTime.now();
       elapsed = Duration.zero;
       connectionError = null;
@@ -138,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
           setState(() => elapsed = DateTime.now().difference(connectedAt!));
         }
       });
-    } else if (value != SingBoxConnectionStatus.connected) {
+    } else if (value != _VpnStatus.connected) {
       timer?.cancel();
       connectedAt = null;
       elapsed = Duration.zero;
@@ -146,22 +138,9 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) setState(() => status = value);
   }
 
-  Future<void> _stopXray() async {
-    final state = xrayStatus?.connectionState;
-    if (xrayEngineActive ||
-        state == VlessConnectionState.connected ||
-        state == VlessConnectionState.connecting ||
-        state == VlessConnectionState.disconnecting) {
-      await xrayEngine.stopVless();
-    }
-    xrayEngineActive = false;
-  }
-
   @override
   void dispose() {
     statusSub?.cancel();
-    statsSub?.cancel();
-    stateSub?.cancel();
     timer?.cancel();
     super.dispose();
   }
@@ -181,8 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
       if (response.statusCode != 200) {
         throw Exception('HTTP ${response.statusCode}');
       }
-      final responseBody = response.body;
-      final document = jsonDecode(responseBody) as Map<String, dynamic>;
+      final document = jsonDecode(response.body) as Map<String, dynamic>;
       final list = (document['servers'] as List)
           .map((item) => ServerItem.fromJson(item as Map<String, dynamic>))
           .toList();
@@ -204,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => error =
-            'دریافت فهرست سرورها ناموفق بود. اتصال اینترنت را بررسی کنید.\n$e');
+            'دریافت فهرست سرورها ناموفق بود. اتصال اینترنت را بررسی کنید.\\n$e');
       }
     } finally {
       if (mounted) setState(() => loading = false);
@@ -219,36 +197,12 @@ class _HomeScreenState extends State<HomeScreen> {
       connectionError = null;
     });
     try {
-      final engine = EngineRouter.engineFor(server.config);
-      if (engine == VpnEngine.xray) {
-        if (SingBox.instance.status.isActive) {
-          await SingBox.instance.disconnect();
-        }
-        await xrayInitFuture;
-        if (xrayInitError != null) {
-          throw Exception('راه‌اندازی هسته Xray ناموفق بود: $xrayInitError');
-        }
-        if (!await xrayEngine.requestPermission()) {
-          throw Exception('مجوز VPN صادر نشد.');
-        }
-        xrayEngineActive = true;
-        final xrayConfig =
-            EngineRouter.toXrayConfiguration(server.config);
-        await xrayEngine.startVless(
-          remark: server.name,
-          config: xrayConfig,
-          notificationDisconnectButtonName: 'قطع اتصال',
-        );
-      } else {
-        await _stopXray();
-        if (SingBox.instance.status.isActive) {
-          await SingBox.instance.disconnect();
-        }
-        await SingBox.instance.requestNotificationPermission();
-        await SingBox.instance.connect(server.config);
+      final xrayConfig = EngineRouter.toXrayConfiguration(server.config);
+      if (!await NativeXray.requestPermission()) {
+        throw Exception('مجوز VPN صادر نشد.');
       }
+      await NativeXray.connect(config: xrayConfig, profileName: server.name);
     } catch (e) {
-      xrayEngineActive = false;
       if (mounted) {
         setState(() => connectionError = e.toString());
         message('اتصال برقرار نشد؛ جزئیات خطا در پایین صفحه آمده است.');
@@ -262,11 +216,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (busy) return;
     setState(() => busy = true);
     try {
-      if (xrayEngineActive) {
-        await _stopXray();
-      } else {
-        await SingBox.instance.disconnect();
-      }
+      await NativeXray.disconnect();
     } catch (e) {
       if (mounted) setState(() => connectionError = e.toString());
     } finally {
@@ -467,7 +417,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final active = connected;
     final statusLabel = active
         ? 'اتصال برقرار است'
-        : status == SingBoxConnectionStatus.connecting
+        : status == _VpnStatus.connecting
             ? 'در حال اتصال…'
             : 'آماده اتصال';
     return Container(
@@ -574,7 +524,7 @@ class _HomeScreenState extends State<HomeScreen> {
             height: 54,
             child: FilledButton(
               onPressed: busy ||
-                      status == SingBoxConnectionStatus.connecting ||
+                      status == _VpnStatus.connecting ||
                       selected == null
                   ? null
                   : (active ? disconnect : connect),
@@ -591,7 +541,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 elevation: 0,
               ),
               child: busy ||
-                      status == SingBoxConnectionStatus.connecting
+                      status == _VpnStatus.connecting
                   ? const SizedBox(
                       width: 22,
                       height: 22,
