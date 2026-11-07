@@ -14,6 +14,10 @@ class NativeXray {
       .where((event) => event is Map)
       .map((event) => Map<String, dynamic>.from(event as Map));
 
+  static Future<bool> requestNotificationPermission() async {
+    return await _methods.invokeMethod<bool>('requestNotifications') ?? false;
+  }
+
   static Future<bool> requestPermission() async {
     return await _methods.invokeMethod<bool>('prepare') ?? false;
   }
