@@ -8,7 +8,7 @@ class Vpn13ClientApp extends StatelessWidget {
   const Vpn13ClientApp({super.key});
 
   static const navy = Color(0xFF10213D);
-  static const blue = Color(0xFF3867F4);
+  static const blue = Color(0xFF159B78);
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +24,7 @@ class Vpn13ClientApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: scheme,
-        scaffoldBackgroundColor: const Color(0xFFF4F7FC),
+        scaffoldBackgroundColor: const Color(0xFFF5F7FC),
         fontFamily: 'Roboto',
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.transparent,
