@@ -10,7 +10,8 @@ class EngineRouter {
   /// Traffic counters are enabled for the native AndroidLibXrayLite controller.
   static String toXrayConfiguration(String source) {
     final value = source.trim();
-    if (value.contains('://')) {
+    if (RegExp(r'^(vless|vmess|trojan|ss|socks|hysteria2|hy2)://', caseSensitive: false)
+        .hasMatch(value)) {
       return _enableTrafficStats(FlutterVless.parse(value).getFullConfiguration());
     }
 
@@ -60,7 +61,10 @@ class EngineRouter {
     final utls = tls['utls'] is Map
         ? tls['utls'] as Map
         : const <String, dynamic>{};
-    final server = outbound['server']?.toString();
+    final rawServer = outbound['server']?.toString();
+    final server = rawServer != null && rawServer.startsWith('[') && rawServer.endsWith(']')
+        ? rawServer.substring(1, rawServer.length - 1)
+        : rawServer;
     final uuid = outbound['uuid']?.toString();
     final port = outbound['server_port'];
     if (server == null || server.isEmpty || uuid == null || uuid.isEmpty ||
