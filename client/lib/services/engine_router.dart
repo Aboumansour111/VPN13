@@ -119,6 +119,27 @@ class EngineRouter {
       throw const FormatException('پیکربندی تولیدشده Xray معتبر نیست.');
     }
     final config = Map<String, dynamic>.from(decoded);
+
+    // AndroidLibXrayLite passes VpnService's file descriptor through
+    // xray.tun.fd. Xray only reads packets from that descriptor when a TUN
+    // inbound is present in the runtime configuration.
+    final inbounds = config['inbounds'] is List
+        ? List<dynamic>.from(config['inbounds'] as List)
+        : <dynamic>[];
+    inbounds.removeWhere(
+      (inbound) => inbound is Map && inbound['protocol'] == 'tun',
+    );
+    inbounds.insert(0, <String, dynamic>{
+      'tag': 'vpn13-tun',
+      'port': 0,
+      'protocol': 'tun',
+      'settings': <String, dynamic>{
+        'name': 'VPN13',
+        'mtu': 1500,
+      },
+    });
+    config['inbounds'] = inbounds;
+
     config['stats'] = config['stats'] is Map
         ? Map<String, dynamic>.from(config['stats'] as Map)
         : <String, dynamic>{};
