@@ -8,6 +8,10 @@ on:
     branches:
       - feature/xray-unified-core
 
+concurrency:
+  group: xray-android-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
