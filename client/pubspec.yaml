@@ -31,3 +31,5 @@ flutter_launcher_icons:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/icon/vpn13_icon.jpg
