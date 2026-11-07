@@ -28,20 +28,12 @@ Do not commit production credentials, UUIDs, private keys or passwords to a publ
 
 ## Build
 
-From `client/`:
+From the repository root, one command generates any missing Android Gradle scaffolding, downloads and verifies the pinned Xray AAR, resolves packages, runs analysis/tests and builds the client as ARM64:
 
 ```powershell
-flutter clean
-flutter pub get
-flutter analyze
-flutter test
-flutter build apk --release --target-platform android-arm64
+.\\scripts\\build-apks.ps1
 ```
 
-The native AAR is pinned and downloaded with SHA-256 verification from the repository root:
-
-```powershell
-.\\scripts\\setup-xray-core.ps1
-```
+For a manual client-only build, first run `scripts/ensure-client-android-scaffold.ps1` and `scripts/setup-xray-core.ps1` from the repository root, then run `flutter clean`, `flutter pub get`, `flutter analyze`, `flutter test` and `flutter build apk --release --target-platform android-arm64` from `client/`.
 
 Test on a physical Android device: VPN permission, startup, DNS, IPv4/IPv6 traffic, XHTTP + REALITY, Shadowsocks 2022, traffic counters, reconnect, and disconnect cleanup. A successful service start alone does not prove traffic is passing.
