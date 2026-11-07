@@ -130,7 +130,7 @@ class EngineRouter {
       (inbound) => inbound is Map && inbound['protocol'] == 'tun',
     );
     inbounds.insert(0, <String, dynamic>{
-      'tag': 'vpn13-tun',
+      'tag': 'tun',
       'port': 0,
       'protocol': 'tun',
       'settings': <String, dynamic>{
