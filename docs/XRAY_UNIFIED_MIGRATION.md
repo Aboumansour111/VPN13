@@ -43,7 +43,7 @@ Do not assume signatures beyond the pinned AAR's generated API. Pin the exact up
    - Shadowsocks URI (including SIP002 plugin/options and SS2022 constraints)
    - raw Xray JSON validation
    - explicitly reject unsupported sing-box-only fields instead of silently changing semantics.
-6. HomeScreen now uses `NativeXray` as its only connection path. `sing_box` has been removed. `flutter_vless` remains temporarily as a Dart profile parser/converter; remove it only after an equivalent parser has passed protocol parity tests. Keep existing UI/profile/backend contracts where possible.
+6. HomeScreen now uses `NativeXray` as its only connection path. `sing_box` has been removed. `flutter_vless` has been replaced by the local pure-Dart `xray_profile_parser` package, so only the AndroidLibXrayLite native runtime is packaged. Keep existing UI/profile/backend contracts where possible.
 7. Verify on device: permission flow, start/stop/reconnect, process death/Always-on behavior, IPv4/IPv6, DNS, XHTTP+REALITY+IPv6, traffic counters, and non-XHTTP protocols.
 8. Build ARM64 APK, compare APK/AAB contents and size to baseline, then test before merging.
 
