@@ -6,6 +6,7 @@ foreach ($App in @("client","admin")) {
     Set-Location $AppPath
     if (!(Test-Path "android")) { flutter create . --platforms=android }
     if ($App -eq "client") {
+        & (Join-Path $Root "scripts/setup-xray-core.ps1")
         py -3 (Join-Path $Root "scripts/set-android-min-sdk.py") $AppPath
     }
     flutter pub get
