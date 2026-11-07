@@ -567,13 +567,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 84,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: active
-                      ? const Color(0xFF1B9C79)
-                      : Colors.white.withValues(alpha: 0.12),
+                  color: active ? const Color(0xFF159B78) : const Color(0xFFB8E8D8),
                 ),
                 child: Icon(
                   active ? Icons.shield_rounded : Icons.power_settings_new,
-                  color: const Color(0xFF087A60),
+                  color: active ? Colors.white : const Color(0xFF087A60),
                   size: 39,
                 ),
               ),
