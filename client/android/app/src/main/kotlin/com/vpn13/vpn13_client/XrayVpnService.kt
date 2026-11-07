@@ -243,7 +243,7 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
         lastDownloadSample = 0L
         lastStatsSampleNanos = System.nanoTime()
         statsTask = statsWorker.scheduleWithFixedDelay({
-            if (controller !== core || !core.isRunning) return@scheduleAtFixedRate
+            if (controller !== core || !core.isRunning) return@scheduleWithFixedDelay
             try {
                 var uploaded = 0L
                 var downloaded = 0L
