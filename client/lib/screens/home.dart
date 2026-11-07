@@ -40,11 +40,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  static const _ink = Color(0xFF17243B);
-  static const _muted = Color(0xFF74829A);
-  static const _blue = Color(0xFF4169E8);
-  static const _green = Color(0xFF16A783);
-
   List<ServerItem> servers = [];
   int? selectedId;
   bool loading = true;
