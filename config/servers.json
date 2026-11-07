@@ -1,12 +1,12 @@
 {
   "version": 1,
-  "engine": "sing-box",
+  "engine": "xray",
   "format": "sing-box-outbound-json",
   "servers": [
     {
       "id": 1,
       "name": "سوئد",
-      "description": "SHADOWSOCKS • sing-box",
+      "description": "SHADOWSOCKS 2022 • Xray",
       "config": "{\"type\":\"shadowsocks\",\"tag\":\"vpn13-1\",\"server\":\"3.17.61.153\",\"server_port\":41159,\"method\":\"2022-blake3-aes-256-gcm\",\"password\":\"WLfUn8pUj6h2mrWaVmaSxuMpcDhaAEm6mQMbG2zijYc=:S7cJGAJ3xxbmvHKEvBQCN3wfh7ig92JkE8OhGY87Dwc=\"}"
     }
   ]
