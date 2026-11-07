@@ -38,6 +38,10 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Ensure Flutter Android Gradle scaffold
+        shell: pwsh
+        run: ./scripts/ensure-client-android-scaffold.ps1
+
       - name: Download and verify AndroidLibXrayLite
         shell: bash
         run: |
