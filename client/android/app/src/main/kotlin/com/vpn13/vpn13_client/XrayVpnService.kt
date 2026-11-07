@@ -7,6 +7,8 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.net.VpnService
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.os.ParcelFileDescriptor
 import android.provider.Settings
 import libv2ray.CoreCallbackHandler
@@ -14,11 +16,16 @@ import libv2ray.CoreController
 import libv2ray.Libv2ray
 import go.Seq
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.TimeUnit
 
 class XrayVpnService : VpnService(), CoreCallbackHandler {
     @Volatile private var tunnel: ParcelFileDescriptor? = null
     @Volatile private var controller: CoreController? = null
     private val worker = Executors.newSingleThreadExecutor()
+    private val statsWorker = Executors.newSingleThreadScheduledExecutor()
+    @Volatile private var statsTask: ScheduledFuture<*>? = null
+    @Volatile private var profileName = "VPN13"
     @Volatile private var stopping = false
 
     override fun onCreate() {
@@ -40,6 +47,7 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
                     return START_NOT_STICKY
                 }
                 stopping = false
+                profileName = intent.getStringExtra(EXTRA_PROFILE_NAME)?.takeIf { it.isNotBlank() } ?: "VPN13"
                 startForeground(NOTIFICATION_ID, buildNotification())
                 worker.execute { startTunnel(config) }
                 return START_NOT_STICKY
@@ -53,7 +61,7 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
             stopCoreAndTunnel()
             publish("connecting", "در حال راه‌اندازی هسته Xray")
             val builder = Builder()
-                .setSession("VPN13")
+                .setSession(profileName)
                 .setMtu(1500)
                 .addAddress("10.13.0.1", 30)
                 .addRoute("0.0.0.0", 0)
@@ -61,6 +69,7 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
                 .addAddress("fd13:13::1", 126)
                 .addRoute("::", 0)
                 .addDnsServer("2606:4700:4700::1111")
+                .addDisallowedApplication(packageName)
 
             val established = builder.establish()
                 ?: throw IllegalStateException("Android did not establish the VPN interface")
@@ -79,6 +88,7 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
             if (!core.isRunning) {
                 throw IllegalStateException("Xray core did not enter running state")
             }
+            startStatsPolling(core)
             publish("connected", "هسته Xray فعال شد")
         } catch (error: Exception) {
             publish("error", error.message ?: error.javaClass.simpleName)
@@ -89,6 +99,7 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
 
     private fun stopCoreAndTunnel() {
         stopping = true
+        stopStatsPolling()
         try {
             controller?.let { core ->
                 if (core.isRunning) core.stopLoop()
@@ -97,6 +108,10 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
             publish("error", "خطا در توقف هسته: ${error.message}")
         } finally {
             controller = null
+            currentUploadSpeed = 0L
+            currentDownloadSpeed = 0L
+            currentUploadTotal = 0L
+            currentDownloadTotal = 0L
             try {
                 tunnel?.close()
             } catch (_: Exception) {
@@ -127,6 +142,7 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
             } catch (_: Exception) {
             }
         }
+        statsWorker.shutdownNow()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             stopForeground(STOP_FOREGROUND_REMOVE)
         } else {
@@ -184,12 +200,49 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
             Notification.Builder(this)
         }
         return builder
-            .setContentTitle("VPN13")
+            .setContentTitle(profileName)
             .setContentText("تونل VPN فعال است")
             .setSmallIcon(applicationInfo.icon)
             .setOngoing(true)
             .setContentIntent(pending)
             .build()
+    }
+
+    private fun startStatsPolling(core: CoreController) {
+        stopStatsPolling()
+        currentUploadSpeed = 0L
+        currentDownloadSpeed = 0L
+        currentUploadTotal = 0L
+        currentDownloadTotal = 0L
+        statsTask = statsWorker.scheduleAtFixedRate({
+            if (controller !== core || !core.isRunning) return@scheduleAtFixedRate
+            try {
+                var uploaded = 0L
+                var downloaded = 0L
+                core.queryAllOutboundTrafficStats().split(';').forEach { entry ->
+                    if (entry.isBlank()) return@forEach
+                    val parts = entry.split(',', limit = 3)
+                    if (parts.size != 3 || parts[0] == "blocked") return@forEach
+                    val bytes = parts[2].toLongOrNull() ?: return@forEach
+                    when (parts[1]) {
+                        "uplink" -> uploaded += bytes
+                        "downlink" -> downloaded += bytes
+                    }
+                }
+                currentUploadSpeed = uploaded
+                currentDownloadSpeed = downloaded
+                currentUploadTotal += uploaded
+                currentDownloadTotal += downloaded
+                publishEvent(currentState, currentMessage)
+            } catch (_: Exception) {
+                // Stats polling must not interrupt an active VPN session.
+            }
+        }, 1, 1, TimeUnit.SECONDS)
+    }
+
+    private fun stopStatsPolling() {
+        statsTask?.cancel(false)
+        statsTask = null
     }
 
     private fun publish(state: String, message: String) {
@@ -200,22 +253,32 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
         const val ACTION_START = "com.vpn13.vpn13_client.action.START_XRAY"
         const val ACTION_STOP = "com.vpn13.vpn13_client.action.STOP_XRAY"
         const val EXTRA_CONFIG = "xray_config"
+        const val EXTRA_PROFILE_NAME = "profile_name"
         private const val CHANNEL_ID = "vpn13_xray"
         private const val NOTIFICATION_ID = 1313
 
         @Volatile var eventSink: io.flutter.plugin.common.EventChannel.EventSink? = null
         @Volatile private var currentState = "disconnected"
         @Volatile private var currentMessage = "آماده اتصال"
+        @Volatile private var currentUploadSpeed = 0L
+        @Volatile private var currentDownloadSpeed = 0L
+        @Volatile private var currentUploadTotal = 0L
+        @Volatile private var currentDownloadTotal = 0L
+        private val mainHandler = Handler(Looper.getMainLooper())
 
         fun statusSnapshot(): Map<String, Any> = mapOf(
             "state" to currentState,
-            "message" to currentMessage
+            "message" to currentMessage,
+            "uploadSpeed" to currentUploadSpeed,
+            "downloadSpeed" to currentDownloadSpeed,
+            "uploadTotal" to currentUploadTotal,
+            "downloadTotal" to currentDownloadTotal
         )
 
         private fun publishEvent(state: String, message: String) {
             currentState = state
             currentMessage = message
-            eventSink?.success(statusSnapshot())
+            mainHandler.post { eventSink?.success(statusSnapshot()) }
         }
     }
 }
