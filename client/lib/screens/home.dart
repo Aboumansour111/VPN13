@@ -525,7 +525,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(
             children: [
               const Icon(Icons.lock_rounded,
-                  color: Color(0xFFB8CCF8), size: 17),
+                  color: Color(0xFF168B68), size: 17),
               const SizedBox(width: 7),
               const Text(
                 'وضعیت تونل',
@@ -540,7 +540,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   durationText(elapsed),
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Color(0xFF17243B),
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     fontFeatures: [FontFeature.tabularFigures()],
@@ -554,10 +554,10 @@ class _HomeScreenState extends State<HomeScreen> {
             height: 112,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white.withValues(alpha: 0.07),
+              color: const Color(0xFFE8F7F1),
               border: Border.all(
-                color: (active ? const Color(0xFF63D9B1) : Colors.white)
-                    .withValues(alpha: 0.55),
+                color: (active ? const Color(0xFF159B78) : const Color(0xFFB8C7D7))
+                    .withValues(alpha: 0.75),
                 width: 1.5,
               ),
             ),
@@ -573,7 +573,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 child: Icon(
                   active ? Icons.shield_rounded : Icons.power_settings_new,
-                  color: Colors.white,
+                  color: const Color(0xFF087A60),
                   size: 39,
                 ),
               ),
@@ -583,7 +583,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(
             statusLabel,
             style: const TextStyle(
-              color: Colors.white,
+              color: Color(0xFF17243B),
               fontSize: 20,
               fontWeight: FontWeight.w800,
             ),
