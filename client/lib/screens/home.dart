@@ -61,6 +61,8 @@ class _HomeScreenState extends State<HomeScreen> {
   DateTime? connectedAt;
   Duration elapsed = Duration.zero;
   _VpnStatus status = _VpnStatus.disconnected;
+  int _activeTab = 0;
+  String _serverQuery = '';
 
   bool get connected => status == _VpnStatus.connected;
 
@@ -261,63 +263,156 @@ class _HomeScreenState extends State<HomeScreen> {
   String speedText(num n) => '${bytesText(n)}/s';
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF3F6FC),
-      body: SafeArea(
-        child: loading
-            ? const Center(child: CircularProgressIndicator())
-            : RefreshIndicator(
-                onRefresh: loadServers,
-                child: ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(18, 12, 18, 30),
-                  children: [
-                    _topBar(),
-                    const SizedBox(height: 18),
-                    _connectionPanel(),
-                    const SizedBox(height: 16),
-                    _serverListCard(),
-                    if (connected) ...[
-                      const SizedBox(height: 16),
-                      _trafficPanel(),
-                    ],
-                    if (connectionError != null) ...[
-                      const SizedBox(height: 14),
-                      _errorPanel(connectionError!),
-                    ],
-                    if (error != null) ...[
-                      const SizedBox(height: 14),
-                      _errorPanel(error!),
-                    ],
-                    const SizedBox(height: 18),
-                    Center(
-                      child: TextButton.icon(
-                        onPressed: loadServers,
-                        icon: const Icon(Icons.refresh_rounded, size: 18),
-                        label: const Text('به‌روزرسانی فهرست سرورها'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: _muted,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Center(
-                      child: Text(
-                        'VPN13  •  اتصال امن و ساده',
-                        style: TextStyle(
-                          color: Color(0xFF657C98),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: const Color(0xFFF5F7FC),
+    body: SafeArea(
+      child: loading ? const Center(child: CircularProgressIndicator()) :
+        IndexedStack(index: _activeTab, children: [_homePage(), _serversPage(), _statisticsPage()]),
+    ),
+    bottomNavigationBar: NavigationBar(
+      height: 68, backgroundColor: Colors.white, indicatorColor: const Color(0xFFE1F5ED),
+      selectedIndex: _activeTab,
+      onDestinationSelected: (index) => setState(() => _activeTab = index),
+      destinations: const [
+        NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home_rounded), label: 'خانه'),
+        NavigationDestination(icon: Icon(Icons.dns_outlined), selectedIcon: Icon(Icons.dns_rounded), label: 'سرورها'),
+        NavigationDestination(icon: Icon(Icons.query_stats_outlined), selectedIcon: Icon(Icons.query_stats_rounded), label: 'آمار'),
+      ],
+    ),
+  );
+
+  Widget _homePage() => RefreshIndicator(
+    onRefresh: loadServers,
+    child: ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(18, 10, 18, 22),
+      children: [
+        _topBar(), const SizedBox(height: 18), _connectionPanel(),
+        const SizedBox(height: 14), _selectedServerSummary(),
+        const SizedBox(height: 12), _trafficPanel(),
+        const SizedBox(height: 12), _durationSummary(),
+        if (connectionError != null) ...[const SizedBox(height: 12), _errorPanel(connectionError!)],
+        if (error != null) ...[const SizedBox(height: 12), _errorPanel(error!)],
+        const SizedBox(height: 14),
+        OutlinedButton.icon(
+          onPressed: loadServers, icon: const Icon(Icons.sync_rounded, size: 19),
+          label: const Text('به‌روزرسانی فهرست سرورها'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: const Color(0xFF147D63), side: const BorderSide(color: Color(0xFFD5E5E0)),
+            backgroundColor: Colors.white, minimumSize: const Size.fromHeight(48),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          ),
+        ),
+        const SizedBox(height: 10),
+        const Center(child: Text('VPN13  •  اتصال امن و ساده', style: TextStyle(color: Color(0xFF8A96A8), fontSize: 11))),
+      ],
+    ),
+  );
+
+  Widget _selectedServerSummary() => Material(
+    color: Colors.white, borderRadius: BorderRadius.circular(19),
+    child: InkWell(
+      onTap: () => setState(() => _activeTab = 1), borderRadius: BorderRadius.circular(19),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(19), border: Border.all(color: const Color(0xFFE7ECF3))),
+        child: Row(children: [
+          const Icon(Icons.chevron_left_rounded, color: Color(0xFF17243B), size: 25), const SizedBox(width: 8),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+            const Text('سرور انتخاب‌شده', style: TextStyle(color: Color(0xFF7D899B), fontSize: 11)),
+            const SizedBox(height: 4),
+            Text(selected?.name ?? 'سروری انتخاب نشده', style: const TextStyle(color: Color(0xFF17243B), fontSize: 15, fontWeight: FontWeight.w900)),
+          ])),
+          const SizedBox(width: 12), const Icon(Icons.dns_rounded, color: Color(0xFF159B78), size: 28),
+        ]),
+      ),
+    ),
+  );
+
+  Widget _durationSummary() => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(17), border: Border.all(color: const Color(0xFFE8EDF4))),
+    child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+      const Icon(Icons.schedule_rounded, color: Color(0xFF52647B), size: 21), const SizedBox(width: 10),
+      Column(children: [
+        const Text('مدت زمان اتصال', style: TextStyle(color: Color(0xFF758297), fontSize: 11)),
+        Text(durationText(elapsed), style: const TextStyle(color: Color(0xFF17243B), fontSize: 17, fontWeight: FontWeight.w900, fontFeatures: [FontFeature.tabularFigures()])),
+      ]),
+    ]),
+  );
+
+  Widget _serversPage() => Column(children: [
+    Padding(
+      padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
+      child: Row(children: [
+        IconButton(onPressed: () => setState(() => _activeTab = 0), icon: const Icon(Icons.arrow_back_ios_new_rounded), color: const Color(0xFF17243B)),
+        const Expanded(child: Text('فهرست سرورها', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF17243B), fontSize: 19, fontWeight: FontWeight.w900))),
+        IconButton(onPressed: loadServers, icon: const Icon(Icons.refresh_rounded), color: const Color(0xFF17243B)),
+      ]),
+    ),
+    Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      child: TextField(
+        onChanged: (value) => setState(() => _serverQuery = value),
+        decoration: InputDecoration(
+          hintText: 'جستجو در سرورها...', prefixIcon: const Icon(Icons.search_rounded),
+          filled: true, fillColor: const Color(0xFFEEF1F7),
+          contentPadding: const EdgeInsets.symmetric(vertical: 13, horizontal: 16),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: BorderSide.none),
+        ),
+      ),
+    ),
+    const SizedBox(height: 12),
+    Expanded(child: servers.isEmpty
+      ? Center(child: Text(loading ? 'در حال دریافت سرورها...' : 'هنوز سروری اضافه نشده است', style: const TextStyle(color: Color(0xFF74829A))))
+      : ListView(
+        padding: const EdgeInsets.fromLTRB(18, 4, 18, 16),
+        children: [
+          ...servers.where((server) => server.name.toLowerCase().contains(_serverQuery.trim().toLowerCase())).map((server) {
+            final active = server.id == selectedId;
+            final canSelect = status == _VpnStatus.disconnected && !busy;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Material(
+                color: active ? const Color(0xFFE7F5F0) : Colors.white, borderRadius: BorderRadius.circular(19),
+                child: InkWell(
+                  onTap: !canSelect ? null : () async { await selectServer(server); if (mounted) setState(() => _activeTab = 0); },
+                  borderRadius: BorderRadius.circular(19),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
+                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(19), border: Border.all(color: active ? const Color(0xFF159B78) : const Color(0xFFE8EDF4), width: active ? 1.4 : 1)),
+                    child: Row(children: [
+                      const Icon(Icons.dns_rounded, color: Color(0xFF159B78), size: 27), const SizedBox(width: 13),
+                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text(server.name, style: const TextStyle(color: Color(0xFF17243B), fontSize: 15, fontWeight: FontWeight.w900)),
+                        const SizedBox(height: 4),
+                        Text(server.description ?? 'سرور VPN13', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF168568), fontSize: 11, fontWeight: FontWeight.w600)),
+                      ])),
+                      Icon(active ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded, color: active ? const Color(0xFF087A60) : const Color(0xFFAAB3C0), size: 23),
+                    ]),
+                  ),
                 ),
               ),
+            );
+          }),
+          if (connected) const Padding(padding: EdgeInsets.only(top: 6), child: Text('برای تغییر سرور، ابتدا اتصال را قطع کنید.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF77849A), fontSize: 11))),
+          if (error != null) _errorPanel(error!),
+        ],
       ),
-    );
-  }
+    ),
+  ]);
+
+  Widget _statisticsPage() => ListView(
+    padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+    children: [
+      _topBar(), const SizedBox(height: 20),
+      const Text('آمار اتصال', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF17243B), fontSize: 21, fontWeight: FontWeight.w900)),
+      const SizedBox(height: 8),
+      Text(connected ? 'اتصال فعال' : 'در حال حاضر اتصال فعالی وجود ندارد', textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF7D899B), fontSize: 12)),
+      const SizedBox(height: 18), _trafficPanel(), const SizedBox(height: 12), _durationSummary(),
+      if (connectionError != null) ...[const SizedBox(height: 12), _errorPanel(connectionError!)],
+    ],
+  );
 
   Widget _topBar() => Column(
         children: [
@@ -336,29 +431,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           Row(
         children: [
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF4778FF), Color(0xFF2549C8)],
-                begin: Alignment.topRight,
-                end: Alignment.bottomLeft,
-              ),
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [
-                BoxShadow(
-                  color: _blue.withValues(alpha: 0.22),
-                  blurRadius: 14,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.shield_rounded,
-              color: Colors.white,
-              size: 26,
-            ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(13),
+            child: Image.asset('assets/icon/vpn13_icon.jpg', width: 48, height: 48, fit: BoxFit.cover),
           ),
           const SizedBox(width: 12),
           const Expanded(
@@ -435,15 +510,11 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF142D59), Color(0xFF203F78), Color(0xFF28529A)],
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(27),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF18396F).withValues(alpha: 0.18),
+            color: const Color(0xFF1B3150).withValues(alpha: 0.06),
             blurRadius: 22,
             offset: const Offset(0, 10),
           ),
@@ -459,7 +530,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const Text(
                 'وضعیت تونل',
                 style: TextStyle(
-                  color: Color(0xFFD7E2F8),
+                  color: Color(0xFF74829A),
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
@@ -526,7 +597,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     : 'برای شروع، دکمه اتصال را بزنید',
             textAlign: TextAlign.center,
             style: const TextStyle(
-              color: Color(0xFFC4D2EA),
+              color: Color(0xFF7D899B),
               fontSize: 11,
             ),
           ),
@@ -542,12 +613,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ? null
                   : (active ? disconnect : connect),
               style: FilledButton.styleFrom(
-                backgroundColor: active
-                    ? const Color(0xFFEBF2FF)
-                    : const Color(0xFF5B83FF),
-                foregroundColor:
-                    active ? const Color(0xFF18386F) : Colors.white,
-                disabledBackgroundColor: Colors.white24,
+                backgroundColor: const Color(0xFF159B78),
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: const Color(0xFFB7DCCF),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
