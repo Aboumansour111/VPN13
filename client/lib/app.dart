@@ -137,28 +137,24 @@ class _LoginScreenState extends State<_LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
-                    width: 82,
-                    height: 82,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF4778FF), Color(0xFF2549C8)],
-                        begin: Alignment.topRight,
-                        end: Alignment.bottomLeft,
-                      ),
-                      borderRadius: BorderRadius.circular(26),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF3867F4).withValues(alpha: 0.22),
-                          blurRadius: 24,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
+                  const Text(
+                    'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَآلِ مُحَمَّدٍ',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Color(0xFF168B68),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      height: 1.8,
                     ),
-                    child: const Icon(
-                      Icons.shield_rounded,
-                      color: Colors.white,
-                      size: 43,
+                  ),
+                  const SizedBox(height: 22),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(22),
+                    child: Image.asset(
+                      'assets/icon/vpn13_icon.jpg',
+                      width: 88,
+                      height: 88,
+                      fit: BoxFit.cover,
                     ),
                   ),
                   const SizedBox(height: 22),
@@ -276,7 +272,7 @@ class _LoginScreenState extends State<_LoginScreen> {
                           child: FilledButton(
                             onPressed: _busy ? null : _submit,
                             style: FilledButton.styleFrom(
-                              backgroundColor: const Color(0xFF3867F4),
+                              backgroundColor: const Color(0xFF159B78),
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(15),
