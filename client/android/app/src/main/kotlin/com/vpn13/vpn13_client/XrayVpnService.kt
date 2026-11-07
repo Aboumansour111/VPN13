@@ -74,11 +74,9 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
             tunnel = established
 
             Seq.setContext(applicationContext)
-            val deviceId = Settings.Secure.getString(
-                contentResolver,
-                Settings.Secure.ANDROID_ID
-            ).orEmpty()
-            Libv2ray.initCoreEnv(filesDir.absolutePath, deviceId)
+            // Let Xray generate and retain its own cryptographically random
+            // 32-byte XUDP base key. Android ID is not a valid Base64URL key.
+            Libv2ray.initCoreEnv(filesDir.absolutePath, "")
             val core = Libv2ray.newCoreController(this)
             controller = core
             core.startLoop(config, established.fd)
