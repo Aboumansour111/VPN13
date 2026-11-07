@@ -1,25 +1,38 @@
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
-$ApiUrl = if ($env:API_BASE_URL) { $env:API_BASE_URL } else { "http://10.0.2.2:8000" }
-foreach ($App in @("client","admin")) {
-    $AppPath = Join-Path $Root $App
-    Set-Location $AppPath
-    if ($App -eq "client") {
-        & (Join-Path $Root "scripts/ensure-client-android-scaffold.ps1")
-        & (Join-Path $Root "scripts/setup-xray-core.ps1")
-        py -3 (Join-Path $Root "scripts/set-android-min-sdk.py") $AppPath
-    } elseif (!(Test-Path "android")) {
-        flutter create . --platforms=android
-    }
-    if ($App -eq "client") { flutter clean }
+$ClientPath = Join-Path $Root "client"
+
+Push-Location $ClientPath
+try {
+    & (Join-Path $Root "scripts/ensure-client-android-scaffold.ps1")
+    if ($LASTEXITCODE -ne 0) { throw "Android scaffold setup failed (exit code $LASTEXITCODE)." }
+
+    & (Join-Path $Root "scripts/setup-xray-core.ps1")
+    if ($LASTEXITCODE -ne 0) { throw "Xray core setup failed (exit code $LASTEXITCODE)." }
+
+    py -3 (Join-Path $Root "scripts/set-android-min-sdk.py") $ClientPath
+    if ($LASTEXITCODE -ne 0) { throw "Setting Android minSdk failed (exit code $LASTEXITCODE)." }
+
+    flutter clean
+    if ($LASTEXITCODE -ne 0) { throw "Flutter clean failed (exit code $LASTEXITCODE)." }
+
     flutter pub get
+    if ($LASTEXITCODE -ne 0) { throw "Flutter dependency resolution failed (exit code $LASTEXITCODE)." }
+
     flutter analyze
+    if ($LASTEXITCODE -ne 0) { throw "Flutter analysis failed (exit code $LASTEXITCODE)." }
+
     flutter test
-    if ($App -eq "client") {
-        flutter build apk --release --target-platform android-arm64 --dart-define="API_BASE_URL=$ApiUrl"
-    } else {
-        flutter build apk --release --dart-define="API_BASE_URL=$ApiUrl"
-    }
+    if ($LASTEXITCODE -ne 0) { throw "Flutter tests failed (exit code $LASTEXITCODE)." }
+
+    flutter build apk --release --target-platform android-arm64
+    if ($LASTEXITCODE -ne 0) { throw "Client APK build failed (exit code $LASTEXITCODE)." }
+
+    $ApkPath = Join-Path $ClientPath "build/app/outputs/flutter-apk/app-release.apk"
+    if (!(Test-Path $ApkPath)) { throw "Build command completed but APK was not found at $ApkPath." }
+
+    Write-Host "Client APK: $ApkPath"
 }
-Write-Host "Client APK: client/build/app/outputs/flutter-apk/app-release.apk"
-Write-Host "Admin APK: admin/build/app/outputs/flutter-apk/app-release.apk"
+finally {
+    Pop-Location
+}
