@@ -11,6 +11,7 @@ foreach ($App in @("client","admin")) {
     } elseif (!(Test-Path "android")) {
         flutter create . --platforms=android
     }
+    if ($App -eq "client") { flutter clean }
     flutter pub get
     flutter analyze
     flutter test
