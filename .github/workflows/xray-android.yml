@@ -1,0 +1,60 @@
+name: Xray Android validation
+
+on:
+  push:
+    branches:
+      - feature/xray-unified-core
+  pull_request:
+    branches:
+      - feature/xray-unified-core
+
+permissions:
+  contents: read
+
+jobs:
+  android-arm64:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.47.0"
+          channel: stable
+          cache: true
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Download and verify AndroidLibXrayLite
+        shell: bash
+        run: |
+          mkdir -p client/android/app/libs
+          curl --fail --location --retry 3 \
+            "https://github.com/2dust/AndroidLibXrayLite/releases/download/v26.10.31/libv2ray.aar" \
+            --output client/android/app/libs/libv2ray.aar
+          echo "2efdf731b1ed624eb1cb0d5a4d0aa95c0672e89f9702226d1ba2dc90308630b6  client/android/app/libs/libv2ray.aar" | sha256sum --check -
+
+      - name: Resolve Flutter dependencies
+        working-directory: client
+        run: flutter pub get
+
+      - name: Analyze Dart
+        working-directory: client
+        run: flutter analyze
+
+      - name: Run Dart tests
+        working-directory: client
+        run: flutter test
+
+      - name: Build ARM64 release APK
+        working-directory: client
+        run: flutter build apk --release --target-platform android-arm64
