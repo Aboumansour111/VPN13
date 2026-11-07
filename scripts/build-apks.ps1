@@ -11,7 +11,11 @@ foreach ($App in @("client","admin")) {
     flutter pub get
     flutter analyze
     flutter test
-    flutter build apk --release --dart-define="API_BASE_URL=$ApiUrl"
+    if ($App -eq "client") {
+        flutter build apk --release --target-platform android-arm64 --dart-define="API_BASE_URL=$ApiUrl"
+    } else {
+        flutter build apk --release --dart-define="API_BASE_URL=$ApiUrl"
+    }
 }
 Write-Host "Client APK: client/build/app/outputs/flutter-apk/app-release.apk"
 Write-Host "Admin APK: admin/build/app/outputs/flutter-apk/app-release.apk"
