@@ -31,3 +31,6 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+
+# Downloaded Android native runtime artifacts (verified by setup scripts)
+**/android/app/libs/*.aar
