@@ -263,7 +263,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FC),
+      backgroundColor: const Color(0xFF07111F),
       body: SafeArea(
         child: loading
             ? const Center(child: CircularProgressIndicator())
@@ -356,7 +356,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             child: const Icon(
               Icons.shield_rounded,
-              color: const Color(0xFF111F31),
+              color: Colors.white,
               size: 26,
             ),
           ),
@@ -459,7 +459,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   durationText(elapsed),
                   style: const TextStyle(
-                    color: const Color(0xFF111F31),
+                    color: Colors.white,
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     fontFeatures: [FontFeature.tabularFigures()],
@@ -492,7 +492,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 child: Icon(
                   active ? Icons.shield_rounded : Icons.power_settings_new,
-                  color: const Color(0xFF111F31),
+                  color: Colors.white,
                   size: 39,
                 ),
               ),
@@ -502,7 +502,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(
             statusLabel,
             style: const TextStyle(
-              color: const Color(0xFF111F31),
+              color: Colors.white,
               fontSize: 20,
               fontWeight: FontWeight.w800,
             ),
@@ -551,7 +551,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       height: 22,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: const Color(0xFF111F31),
+                        color: Colors.white,
                       ),
                     )
                   : Row(
