@@ -45,7 +45,7 @@ class EngineRouter {
                 'کانفیگ باید یک outbound یا پروفایل کامل sing-box باشد.',
               );
 
-    return _enableTrafficStats(FlutterVless.parse(jsonEncode(input)).getFullConfiguration());
+    return _enableTrafficStats(XrayProfileParser.parse(jsonEncode(input)).getFullConfiguration());
   }
 
   static String _xhttpOutboundToXray(Map<String, dynamic> outbound) {
@@ -109,7 +109,7 @@ class EngineRouter {
       fragment: outbound['tag']?.toString() ?? server,
     );
     return _enableTrafficStats(
-      FlutterVless.parse(uri.toString()).getFullConfiguration(),
+      XrayProfileParser.parse(uri.toString()).getFullConfiguration(),
     );
   }
 
