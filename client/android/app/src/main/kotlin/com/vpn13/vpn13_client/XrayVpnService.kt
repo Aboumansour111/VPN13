@@ -114,7 +114,7 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
             } catch (_: Exception) {
             }
             tunnel = null
-            XrayVpnService.publish("disconnected", "اتصال قطع شد")
+            publish("disconnected", "اتصال قطع شد")
         }
     }
 
@@ -124,7 +124,6 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
     }
 
     override fun onDestroy() {
-        stopping = true
         try {
             worker.execute { stopCoreAndTunnel() }
             worker.shutdown()
