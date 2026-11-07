@@ -1,7 +1,7 @@
 name: vpn13_client
 description: VPN13 Android VPN client powered by Xray-core
 publish_to: 'none'
-version: 1.0.2+2004
+version: 1.0.3+2005
 
 environment:
   sdk: '>=3.12.0 <4.0.0'
