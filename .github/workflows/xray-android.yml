@@ -42,6 +42,9 @@ jobs:
         shell: pwsh
         run: ./scripts/ensure-client-android-scaffold.ps1
 
+      - name: Set Gradle wrapper permissions
+        run: chmod +x client/android/gradlew
+
       - name: Download and verify AndroidLibXrayLite
         shell: bash
         run: |
