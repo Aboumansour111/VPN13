@@ -306,7 +306,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Text(
                         'VPN13  •  اتصال امن و ساده',
                         style: TextStyle(
-                          color: Color(0xFF9AA6B8),
+                          color: Color(0xFF657C98),
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
                         ),
@@ -394,7 +394,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Icon(
                   Icons.circle,
                   size: 8,
-                  color: connected ? _green : const Color(0xFFB3BDCC),
+                  color: connected ? _green : const Color(0xFF536A84),
                 ),
                 const SizedBox(width: 7),
                 Text(
@@ -625,8 +625,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Material(
                     color: active
-                        ? const Color(0xFFF0F5FF)
-                        : const Color(0xFFF8FAFD),
+                        ? const Color(0xFF1B3150)
+                        : const Color(0xFF17263A),
                     borderRadius: BorderRadius.circular(15),
                     child: InkWell(
                       borderRadius: BorderRadius.circular(15),
@@ -643,7 +643,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           border: Border.all(
                             color: active
                                 ? _blue.withValues(alpha: 0.55)
-                                : const Color(0xFFE9EEF5),
+                                : const Color(0xFF24364B),
                             width: active ? 1.4 : 1,
                           ),
                         ),
@@ -828,21 +828,21 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _errorPanel(String details) => Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFF4F1),
+          color: const Color(0xFF2A1D26),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFF4D7D0)),
+          border: Border.all(color: const Color(0xFF58323B)),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Icon(Icons.error_outline_rounded,
-                color: Color(0xFFC45A43), size: 20),
+                color: Color(0xFFFF8A80), size: 20),
             const SizedBox(width: 9),
             Expanded(
               child: SelectableText(
                 details,
                 style: const TextStyle(
-                  color: Color(0xFF8D4435),
+                  color: Color(0xFFFFC2BC),
                   fontSize: 11,
                   height: 1.6,
                 ),
