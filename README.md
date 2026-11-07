@@ -15,10 +15,10 @@ Flutter Android VPN client using one VPN engine: **Xray-core**.
 - **Only runtime engine:** Xray-core through the pinned AndroidLibXrayLite AAR.
 - **Android tunnel owner:** `XrayVpnService` owns VPN permission, TUN interface, foreground notification and Xray lifecycle.
 - **Flutter bridge:** `NativeXray` uses MethodChannel and EventChannel for connect, disconnect, state and traffic statistics.
-- **Profile conversion:** `EngineRouter` converts supported share links and sing-box-format JSON profiles into Xray JSON. The `flutter_vless` dependency is currently used for parsing/conversion only; its connection controller is not started.
+- **Profile conversion:** `EngineRouter` converts supported share links, Xray JSON, Clash YAML and sing-box-format JSON profiles into Xray JSON using the local pure-Dart `xray_profile_parser` package (MIT-licensed parser source).
 - **No sing-box runtime:** `sing_box` is not a dependency and no profile is routed to a second engine.
 
-The server list may retain sing-box outbound JSON as an input data format. That does not mean sing-box is used as a runtime: every profile is converted to Xray JSON before it reaches the native service.
+The server list may retain sing-box outbound JSON as an input data format. That does not mean sing-box is used as a runtime: every profile is converted to Xray JSON before it reaches the native service. The `flutter_vless` platform plugin is not a dependency, so it contributes no second VPN service or native runtime.
 
 ## Supported server configuration
 
