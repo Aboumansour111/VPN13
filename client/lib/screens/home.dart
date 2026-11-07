@@ -40,10 +40,10 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  static const _ink = Color(0xFF10213D);
-  static const _muted = Color(0xFF71809A);
-  static const _blue = Color(0xFF3867F4);
-  static const _green = Color(0xFF19A879);
+  static const _ink = Color(0xFFEAF1FC);
+  static const _muted = Color(0xFF91A4BD);
+  static const _blue = Color(0xFF7194FF);
+  static const _green = Color(0xFF39D6A6);
 
   List<ServerItem> servers = [];
   int? selectedId;
@@ -356,7 +356,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             child: const Icon(
               Icons.shield_rounded,
-              color: Colors.white,
+              color: const Color(0xFF111F31),
               size: 26,
             ),
           ),
@@ -385,9 +385,9 @@ class _HomeScreenState extends State<HomeScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: const Color(0xFF111F31),
               borderRadius: BorderRadius.circular(30),
-              border: Border.all(color: const Color(0xFFE7ECF4)),
+              border: Border.all(color: const Color(0xFF24364B)),
             ),
             child: Row(
               children: [
@@ -419,7 +419,9 @@ class _HomeScreenState extends State<HomeScreen> {
         ? 'اتصال برقرار است'
         : status == _VpnStatus.connecting
             ? 'در حال اتصال…'
-            : 'آماده اتصال';
+            : status == _VpnStatus.disconnecting
+                ? 'در حال قطع اتصال…'
+                : 'آماده اتصال';
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
       decoration: BoxDecoration(
@@ -457,7 +459,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   durationText(elapsed),
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: const Color(0xFF111F31),
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     fontFeatures: [FontFeature.tabularFigures()],
@@ -490,7 +492,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 child: Icon(
                   active ? Icons.shield_rounded : Icons.power_settings_new,
-                  color: Colors.white,
+                  color: const Color(0xFF111F31),
                   size: 39,
                 ),
               ),
@@ -500,7 +502,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(
             statusLabel,
             style: const TextStyle(
-              color: Colors.white,
+              color: const Color(0xFF111F31),
               fontSize: 20,
               fontWeight: FontWeight.w800,
             ),
@@ -510,7 +512,7 @@ class _HomeScreenState extends State<HomeScreen> {
             selected == null
                 ? 'ابتدا یک سرور انتخاب کنید'
                 : active
-                    ? 'ترافیک دستگاه از تونل VPN عبور می‌کند'
+                    ? 'تونل Xray فعال است؛ وضعیت ترافیک در پایین نمایش داده می‌شود'
                     : 'برای شروع، دکمه اتصال را بزنید',
             textAlign: TextAlign.center,
             style: const TextStyle(
@@ -525,6 +527,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: FilledButton(
               onPressed: busy ||
                       status == _VpnStatus.connecting ||
+                      status == _VpnStatus.disconnecting ||
                       selected == null
                   ? null
                   : (active ? disconnect : connect),
@@ -541,13 +544,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 elevation: 0,
               ),
               child: busy ||
-                      status == _VpnStatus.connecting
+                      status == _VpnStatus.connecting ||
+                      status == _VpnStatus.disconnecting
                   ? const SizedBox(
                       width: 22,
                       height: 22,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Colors.white,
+                        color: const Color(0xFF111F31),
                       ),
                     )
                   : Row(
@@ -576,9 +580,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _serverListCard() => Container(
         padding: const EdgeInsets.all(17),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: const Color(0xFF111F31),
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: const Color(0xFFE8EDF5)),
+          border: Border.all(color: const Color(0xFF24364B)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -716,9 +720,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _trafficPanel() => Container(
         padding: const EdgeInsets.all(17),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: const Color(0xFF111F31),
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: const Color(0xFFE8EDF5)),
+          border: Border.all(color: const Color(0xFF24364B)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -780,7 +784,7 @@ class _HomeScreenState extends State<HomeScreen> {
       Container(
         padding: const EdgeInsets.all(13),
         decoration: BoxDecoration(
-          color: const Color(0xFFF7F9FD),
+          color: const Color(0xFF17263A),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
