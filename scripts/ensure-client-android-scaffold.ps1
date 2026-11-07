@@ -16,7 +16,7 @@ if (!$Missing) {
     exit 0
 }
 
-$TempRoot = Join-Path $env:TEMP ("vpn13_android_scaffold_" + [guid]::NewGuid().ToString("N"))
+$TempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("vpn13_android_scaffold_" + [guid]::NewGuid().ToString("N"))
 $GeneratedRoot = Join-Path $TempRoot "generated"
 $ExistingRoot = Join-Path $TempRoot "existing"
 
