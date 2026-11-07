@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_vless/flutter_vless.dart';
 
-/// Selects the runtime without silently translating XHTTP to another transport.
+/// Converts supported profile inputs into a validated Xray-core configuration.
 class EngineRouter {
   const EngineRouter._();
 
@@ -33,7 +33,7 @@ class EngineRouter {
       }
     }
     if (xhttp != null && xhttp['protocol'] == null) {
-      return _xhttpOutboundToXray(xhttp);
+      return _enableTrafficStats(_xhttpOutboundToXray(xhttp));
     }
 
     final input = hasOutbounds
@@ -127,19 +127,6 @@ class EngineRouter {
     policy['system'] = system;
     config['policy'] = policy;
     return jsonEncode(config);
-  }
-
-  static bool _isXhttpShareLink(String value) {
-    final uri = Uri.tryParse(value);
-    if (uri == null || !value.contains('://')) return false;
-    final scheme = value.substring(0, value.indexOf('://')).toLowerCase();
-    if (scheme != 'vless' && scheme != 'vmess' && scheme != 'trojan') {
-      return false;
-    }
-    return (uri.queryParameters['type'] ??
-            uri.queryParameters['net'] ??
-            '')
-        .toLowerCase() == 'xhttp';
   }
 
   static bool _isXhttpOutbound(Map<String, dynamic> outbound) {
