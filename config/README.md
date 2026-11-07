@@ -1,17 +1,17 @@
-# VPN13 server list
+# فهرست سرورهای VPN13
 
-The Android client downloads this file directly from GitHub. No separate backend is required.
+اپ اندروید این فایل را مستقیماً از شاخه `main` همین مخزن GitHub دریافت می‌کند. اپ ادمین و بک‌اند جداگانه برای مدیریت این فهرست استفاده نمی‌شوند.
 
-## Add a server
+## افزودن یا ویرایش سرور
 
-Add one object for each server inside the `servers` array:
+فایل `config/servers.json` را در GitHub باز کن و در آرایه `servers` برای هر سرور یک شیء قرار بده:
 
-- `id`: unique integer.
-- `name`: server name shown in the app.
-- `description`: optional label, such as protocol or location.
-- `config`: paste the complete share link exactly as received. Do not convert it to JSON.
+- `id`: شناسه عددی یکتا
+- `name`: نامی که در اپ نمایش داده می‌شود
+- `description`: توضیح اختیاری، مانند پروتکل یا کشور
+- `config`: لینک کامل اتصال یا پروفایل سازگار با مبدل Xray
 
-Example:
+نمونه:
 
 ```json
 {
@@ -33,16 +33,15 @@ Example:
 }
 ```
 
-Keep valid JSON syntax:
-- Put a comma between server objects, but not after the last object.
-- Use double quotes around keys and values.
-- If a link contains a double quote or backslash, escape it as required by JSON.
-- Every server must have a different `id`.
+نکات:
+- پس از ویرایش، تغییرات را در شاخه `main` با Commit ذخیره کن.
+- اپ هنگام بازشدن، فهرست را از GitHub دریافت می‌کند؛ دکمه «به‌روزرسانی فهرست سرورها» نیز دریافت مجدد را انجام می‌دهد.
+- برای تغییر فهرست یا مشخصات سرورها، ساخت APK جدید لازم نیست.
+- بین اشیای سرورها ویرگول بگذار، اما بعد از آخرین شیء ویرگول نگذار.
+- همه کلیدها و مقادیر متنی باید داخل دابل‌کوتیشن باشند.
+- مقدار `id` هر سرور باید با بقیه متفاوت باشد.
+- موتور اجرایی برنامه فقط Xray-core است. قالب‌های ورودی پشتیبانی‌شده به پیکربندی Xray تبدیل می‌شوند؛ sing-box به‌عنوان موتور اجرا نمی‌شود.
 
-The app's sing-box engine accepts supported share links directly, including VLESS, VMess, Trojan, Shadowsocks, Hysteria, Hysteria2, TUIC, AnyTLS, WireGuard, SOCKS and HTTP. Support for individual link options depends on the protocol and sing-box core version.
+## هشدار امنیتی
 
-You can also put a complete sing-box configuration in `config` instead of a share link.
-
-## Privacy warning
-
-If this GitHub repository is public, every link and its credentials stored here are publicly readable. Do not publish private subscription URLs or credentials unless you intend them to be public.
+اگر مخزن عمومی باشد، تمام لینک‌ها و اطلاعات اتصال داخل این فایل برای همه قابل مشاهده‌اند. UUID، رمز عبور، کلید خصوصی یا لینک اشتراک محرمانه را در مخزن عمومی قرار نده.
