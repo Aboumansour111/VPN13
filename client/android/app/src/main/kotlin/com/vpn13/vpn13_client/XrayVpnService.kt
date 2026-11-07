@@ -26,7 +26,6 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
     private val statsWorker = Executors.newSingleThreadScheduledExecutor()
     @Volatile private var statsTask: ScheduledFuture<*>? = null
     @Volatile private var profileName = "VPN13"
-    @Volatile private var stopping = false
 
     override fun onCreate() {
         super.onCreate()
@@ -46,7 +45,6 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
                     stopSelf()
                     return START_NOT_STICKY
                 }
-                stopping = false
                 profileName = intent.getStringExtra(EXTRA_PROFILE_NAME)?.takeIf { it.isNotBlank() } ?: "VPN13"
                 startForeground(NOTIFICATION_ID, buildNotification())
                 worker.execute { startTunnel(config) }
@@ -98,7 +96,6 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
     }
 
     private fun stopCoreAndTunnel() {
-        stopping = true
         stopStatsPolling()
         try {
             controller?.let { core ->
