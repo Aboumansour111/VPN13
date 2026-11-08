@@ -1,5 +1,9 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
 
 import 'config.dart';
 import 'screens/home.dart';
@@ -50,8 +54,12 @@ class _AccessGate extends StatefulWidget {
 }
 
 class _AccessGateState extends State<_AccessGate> {
+  static const _storage = FlutterSecureStorage();
+  static const _accessCodeKey = 'vpn13_access_code';
+
   bool _checking = true;
   bool _authorized = false;
+  String? _gateMessage;
 
   @override
   void initState() {
@@ -59,21 +67,66 @@ class _AccessGateState extends State<_AccessGate> {
     _restoreAccess();
   }
 
-  Future<void> _restoreAccess() async {
-    final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getBool('vpn13_access_granted') ?? false;
-    if (!mounted) return;
-    setState(() {
-      _authorized = saved;
-      _checking = false;
-    });
+  Future<bool> _validateCode(String code) async {
+    final response = await http
+        .post(
+          Uri.parse(AppConfig.serversJsonUrl),
+          headers: const {
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Accept': 'application/json',
+          },
+          body: jsonEncode({
+            'action': 'validate',
+            'code': code,
+          }),
+        )
+        .timeout(const Duration(seconds: 20));
+
+    if (response.statusCode != 200) {
+      throw Exception('Validation server returned HTTP ${response.statusCode}');
+    }
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic> || decoded['success'] != true) {
+      throw const FormatException('Invalid validation response');
+    }
+
+    return decoded['valid'] == true;
   }
 
-  Future<void> _grantAccess() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('vpn13_access_granted', true);
-    if (!mounted) return;
-    setState(() => _authorized = true);
+  Future<void> _restoreAccess() async {
+    try {
+      final savedCode = await _storage.read(key: _accessCodeKey);
+      if (savedCode == null || savedCode.isEmpty) {
+        return;
+      }
+
+      final valid = await _validateCode(savedCode);
+      if (valid) {
+        _authorized = true;
+      } else {
+        await _storage.delete(key: _accessCodeKey);
+        _gateMessage = 'کد ذخیره‌شده دیگر معتبر نیست؛ کد جدید را وارد کنید.';
+      }
+    } catch (_) {
+      _gateMessage =
+          'برای بررسی اعتبار کد، اتصال اینترنت لازم است. پس از اتصال دوباره تلاش کنید.';
+    } finally {
+      if (mounted) {
+        setState(() => _checking = false);
+      }
+    }
+  }
+
+  Future<bool> _authenticate(String code) async {
+    final valid = await _validateCode(code);
+    if (!valid) return false;
+
+    await _storage.write(key: _accessCodeKey, value: code);
+    if (mounted) {
+      setState(() => _authorized = true);
+    }
+    return true;
   }
 
   @override
@@ -85,14 +138,18 @@ class _AccessGateState extends State<_AccessGate> {
     }
     return _authorized
         ? const HomeScreen()
-        : _LoginScreen(onSuccess: _grantAccess);
+        : _LoginScreen(
+            onSubmit: _authenticate,
+            initialMessage: _gateMessage,
+          );
   }
 }
 
 class _LoginScreen extends StatefulWidget {
-  const _LoginScreen({required this.onSuccess});
+  const _LoginScreen({required this.onSubmit, this.initialMessage});
 
-  final Future<void> Function() onSuccess;
+  final Future<bool> Function(String code) onSubmit;
+  final String? initialMessage;
 
   @override
   State<_LoginScreen> createState() => _LoginScreenState();
@@ -105,6 +162,12 @@ class _LoginScreenState extends State<_LoginScreen> {
   String? _error;
 
   @override
+  void initState() {
+    super.initState();
+    _error = widget.initialMessage;
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
@@ -112,16 +175,30 @@ class _LoginScreenState extends State<_LoginScreen> {
 
   Future<void> _submit() async {
     if (_busy) return;
-    if (_controller.text.trim() != AppConfig.accessCode) {
-      setState(() => _error = 'کد ورود صحیح نیست.');
+    final code = _controller.text.trim();
+    if (code.isEmpty) {
+      setState(() => _error = 'کد ورود را وارد کنید.');
       return;
     }
+
     setState(() {
       _busy = true;
       _error = null;
     });
+
     try {
-      await widget.onSuccess();
+      final accepted = await widget.onSubmit(code);
+      if (!accepted && mounted) {
+        setState(() => _error = 'کد ورود صحیح نیست یا اعتبار آن پایان یافته است.');
+      }
+    } on TimeoutException {
+      if (mounted) {
+        setState(() => _error = 'پاسخ سرور دریافت نشد؛ اتصال اینترنت را بررسی کنید.');
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _error = 'ارتباط با سرور برقرار نشد؛ اینترنت را بررسی و دوباره تلاش کنید.');
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
