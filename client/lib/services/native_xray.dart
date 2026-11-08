@@ -50,6 +50,17 @@ class NativeXray {
     return result ?? const {'state': 'unknown', 'message': ''};
   }
 
+  static Future<int> measureOutboundDelay(String config) async {
+    final result = await _methods.invokeMethod<int>('measureOutboundDelay', {
+      'config': config,
+      'url': 'https://www.google.com/generate_204',
+    });
+    if (result == null || result < 0) {
+      throw Exception('پاسخی از سرور دریافت نشد.');
+    }
+    return result;
+  }
+
   static Future<String> version() async {
     return await _methods.invokeMethod<String>('getVersion') ?? 'Unknown';
   }
