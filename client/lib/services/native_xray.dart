@@ -22,13 +22,22 @@ class NativeXray {
     return await _methods.invokeMethod<bool>('prepare') ?? false;
   }
 
+  static Future<List<Map<String, String>>> installedApps() async {
+    final result = await _methods.invokeListMethod<dynamic>('getApps');
+    return (result ?? []).map((item) => Map<String, String>.from(item as Map)).toList();
+  }
+
   static Future<void> connect({
     required String config,
     required String profileName,
+    String dnsAddress = '1.1.1.1',
+    List<String> excludedApps = const [],
   }) async {
     await _methods.invokeMethod<bool>('connect', {
       'config': config,
       'profileName': profileName,
+      'dnsAddress': dnsAddress,
+      'excludedApps': excludedApps,
     });
   }
 
