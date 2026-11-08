@@ -13,6 +13,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 import libv2ray.Libv2ray
+import go.Seq
 import java.util.concurrent.Executors
 
 class MainActivity : FlutterActivity() {
