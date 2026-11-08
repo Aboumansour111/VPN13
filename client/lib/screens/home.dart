@@ -301,7 +301,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         IndexedStack(index: _activeTab, children: [_homePage(), _settingsPage()]),
     ),
     bottomNavigationBar: NavigationBar(
-      height: 68, backgroundColor: Colors.white, indicatorColor: const Color(0xFFE1F5ED),
+      height: 70, backgroundColor: Colors.white, indicatorColor: const Color(0xFFE1F5ED),
       selectedIndex: _activeTab,
       onDestinationSelected: (index) => setState(() => _activeTab = index),
       destinations: const [
@@ -315,7 +315,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     onRefresh: loadServers,
     child: ListView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(18, 10, 18, 22),
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 24),
       children: [
         _topBar(), const SizedBox(height: 18), _connectionPanel(),
         const SizedBox(height: 16), _homeServersSection(),
@@ -494,15 +494,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget _topBar() => Column(
         children: [
           const Padding(
-            padding: EdgeInsets.only(bottom: 13, top: 3),
+            padding: EdgeInsets.only(bottom: 11, top: 5),
             child: Text(
               'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَآلِ مُحَمَّدٍ',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Color(0xFF168B68),
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: FontWeight.w800,
-                letterSpacing: 0.2,
+                letterSpacing: 0.15,
               ),
             ),
           ),
@@ -585,7 +585,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ? 'در حال قطع اتصال…'
                 : 'آماده اتصال';
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
+      padding: const EdgeInsets.fromLTRB(18, 19, 18, 18),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(27),
@@ -625,10 +625,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 17),
           Container(
-            width: 112,
-            height: 112,
+            width: 104,
+            height: 104,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: const Color(0xFFE8F7F1),
@@ -640,8 +640,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ),
             child: Center(
               child: Container(
-                width: 84,
-                height: 84,
+                width: 78,
+                height: 78,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: active ? const Color(0xFF159B78) : const Color(0xFFB8E8D8),
@@ -649,12 +649,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 child: Icon(
                   active ? Icons.shield_rounded : Icons.power_settings_new,
                   color: active ? Colors.white : const Color(0xFF087A60),
-                  size: 39,
+                  size: 36,
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 15),
+          const SizedBox(height: 13),
           Text(
             statusLabel,
             style: const TextStyle(
@@ -676,10 +676,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               fontSize: 11,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 17),
           SizedBox(
             width: double.infinity,
-            height: 54,
+            height: 52,
             child: FilledButton(
               onPressed: busy ||
                       status == _VpnStatus.connecting ||
@@ -855,7 +855,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               child: SelectableText(
                 details,
                 style: const TextStyle(
-                  color: Color(0xFFFFC2BC),
+                  color: Color(0xFF9F3028),
                   fontSize: 11,
                   height: 1.6,
                 ),
