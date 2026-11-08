@@ -110,6 +110,7 @@ class EngineRouter {
     );
     return _enableTrafficStats(
       XrayProfileParser.parse(uri.toString()).getFullConfiguration(),
+      remoteDns: remoteDns,
     );
   }
 
