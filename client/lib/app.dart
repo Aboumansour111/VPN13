@@ -7,15 +7,15 @@ import 'screens/home.dart';
 class Vpn13ClientApp extends StatelessWidget {
   const Vpn13ClientApp({super.key});
 
-  static const navy = Color(0xFF10213D);
-  static const blue = Color(0xFF159B78);
+  static const navy = Color(0xFFF0F3F4);
+  static const blue = Color(0xFF39A98B);
 
   @override
   Widget build(BuildContext context) {
     final scheme = ColorScheme.fromSeed(
       seedColor: blue,
-      brightness: Brightness.light,
-      surface: const Color(0xFFF4F7FC),
+      brightness: Brightness.dark,
+      surface: const Color(0xFF35434C),
     );
 
     return MaterialApp(
@@ -24,7 +24,9 @@ class Vpn13ClientApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: scheme,
-        scaffoldBackgroundColor: const Color(0xFFF5F7FC),
+        scaffoldBackgroundColor: const Color(0xFF252F38),
+        cardColor: const Color(0xFF35434C),
+        dividerColor: const Color(0xFF46555E),
         fontFamily: 'Roboto',
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.transparent,
@@ -141,7 +143,7 @@ class _LoginScreenState extends State<_LoginScreen> {
                     'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَآلِ مُحَمَّدٍ',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: Color(0xFF168B68),
+                      color: Color(0xFF39A98B),
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
                       height: 1.8,
@@ -172,7 +174,7 @@ class _LoginScreenState extends State<_LoginScreen> {
                     'برای ورود، کد دسترسی را وارد کنید',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: Color(0xFF71809A),
+                      color: Color(0xFFB5C0C6),
                       fontSize: 14,
                     ),
                   ),
@@ -180,12 +182,12 @@ class _LoginScreenState extends State<_LoginScreen> {
                   Container(
                     padding: const EdgeInsets.all(22),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: const Color(0xFF35434C),
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: const Color(0xFFE8EDF5)),
+                      border: Border.all(color: const Color(0xFF46555E)),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF1A3155).withValues(alpha: 0.05),
+                          color: const Color(0xFF10171C).withValues(alpha: 0.22),
                           blurRadius: 24,
                           offset: const Offset(0, 10),
                         ),
@@ -214,14 +216,14 @@ class _LoginScreenState extends State<_LoginScreen> {
                           decoration: InputDecoration(
                             hintText: 'کد دسترسی را وارد کنید',
                             hintStyle: const TextStyle(
-                              color: Color(0xFFA3AEC0),
+                              color: Color(0xFF91A0A8),
                               fontSize: 13,
                             ),
                             filled: true,
-                            fillColor: const Color(0xFFF7F9FD),
+                            fillColor: const Color(0xFF293740),
                             prefixIcon: const Icon(
                               Icons.key_rounded,
-                              color: Color(0xFF71809A),
+                              color: Color(0xFFB5C0C6),
                             ),
                             suffixIcon: IconButton(
                               onPressed: () =>
@@ -236,19 +238,19 @@ class _LoginScreenState extends State<_LoginScreen> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(15),
                               borderSide: const BorderSide(
-                                color: Color(0xFFE5EAF2),
+                                color: Color(0xFF53636B),
                               ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(15),
                               borderSide: const BorderSide(
-                                color: Color(0xFFE5EAF2),
+                                color: Color(0xFF53636B),
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(15),
                               borderSide: const BorderSide(
-                                color: Color(0xFF3867F4),
+                                color: Color(0xFF39A98B),
                                 width: 1.5,
                               ),
                             ),
@@ -260,7 +262,7 @@ class _LoginScreenState extends State<_LoginScreen> {
                             _error!,
                             textAlign: TextAlign.center,
                             style: const TextStyle(
-                              color: Color(0xFFC44F4F),
+                              color: Color(0xFFFFA39A),
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                             ),
@@ -272,7 +274,7 @@ class _LoginScreenState extends State<_LoginScreen> {
                           child: FilledButton(
                             onPressed: _busy ? null : _submit,
                             style: FilledButton.styleFrom(
-                              backgroundColor: const Color(0xFF159B78),
+                              backgroundColor: const Color(0xFF39A98B),
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(15),
@@ -303,7 +305,7 @@ class _LoginScreenState extends State<_LoginScreen> {
                   const Text(
                     'دسترسی خصوصی  •  VPN13',
                     style: TextStyle(
-                      color: Color(0xFFA0AABD),
+                      color: Color(0xFF91A0A8),
                       fontSize: 11,
                     ),
                   ),
