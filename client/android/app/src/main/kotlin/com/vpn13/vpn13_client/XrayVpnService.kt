@@ -28,14 +28,20 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
     @Volatile private var lastDownloadSample = 0L
     @Volatile private var lastStatsSampleNanos = 0L
     @Volatile private var profileName = "VPN13"
+    @Volatile private var uiForeground = true
 
     override fun onCreate() {
         super.onCreate()
+        instance = this
         createNotificationChannel()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
+            ACTION_UI_FOREGROUND, ACTION_UI_BACKGROUND -> {
+                updateUiVisibility(intent.action == ACTION_UI_FOREGROUND)
+                return START_NOT_STICKY
+            }
             ACTION_STOP -> {
                 publish("disconnecting", "در حال قطع اتصال")
                 worker.execute {
@@ -165,6 +171,7 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
             @Suppress("DEPRECATION")
             stopForeground(true)
         }
+        instance = null
         super.onDestroy()
     }
 
@@ -246,6 +253,7 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
         lastUploadSample = 0L
         lastDownloadSample = 0L
         lastStatsSampleNanos = System.nanoTime()
+        val intervalSeconds = if (uiForeground) 5L else 30L
         statsTask = statsWorker.scheduleWithFixedDelay({
             if (controller !== core || !core.isRunning) return@scheduleWithFixedDelay
             try {
@@ -276,7 +284,13 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
             } catch (_: Exception) {
                 // Stats polling must not interrupt an active VPN session.
             }
-        }, 5, 5, TimeUnit.SECONDS)
+        }, intervalSeconds, intervalSeconds, TimeUnit.SECONDS)
+    }
+
+    private fun updateUiVisibility(foreground: Boolean) {
+        if (uiForeground == foreground) return
+        uiForeground = foreground
+        controller?.takeIf { it.isRunning }?.let { startStatsPolling(it) }
     }
 
     private fun stopStatsPolling() {
@@ -295,6 +309,13 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
     companion object {
         const val ACTION_START = "com.vpn13.vpn13_client.action.START_XRAY"
         const val ACTION_STOP = "com.vpn13.vpn13_client.action.STOP_XRAY"
+        const val ACTION_UI_FOREGROUND = "com.vpn13.vpn13_client.action.UI_FOREGROUND"
+        const val ACTION_UI_BACKGROUND = "com.vpn13.vpn13_client.action.UI_BACKGROUND"
+        @Volatile private var instance: XrayVpnService? = null
+
+        fun updateAppVisibility(foreground: Boolean) {
+            instance?.updateUiVisibility(foreground)
+        }
         const val EXTRA_CONFIG = "xray_config"
         const val EXTRA_PROFILE_NAME = "profile_name"
         const val EXTRA_DNS = "dns_address"
