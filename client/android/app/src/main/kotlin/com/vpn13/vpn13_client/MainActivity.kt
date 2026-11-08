@@ -3,6 +3,7 @@ package com.vpn13.vpn13_client
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.pm.ApplicationInfo
 import android.net.VpnService
 import android.os.Build
 import io.flutter.embedding.android.FlutterActivity
@@ -35,6 +36,11 @@ class MainActivity : FlutterActivity() {
                                     XrayVpnService.EXTRA_PROFILE_NAME,
                                     call.argument<String>("profileName") ?: "VPN13"
                                 )
+                                .putExtra(XrayVpnService.EXTRA_DNS, call.argument<String>("dnsAddress") ?: "1.1.1.1")
+                                .putStringArrayListExtra(
+                                    XrayVpnService.EXTRA_EXCLUDED_APPS,
+                                    ArrayList(call.argument<List<String>>("excludedApps") ?: emptyList())
+                                )
                             try {
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                                     startForegroundService(intent)
@@ -57,6 +63,7 @@ class MainActivity : FlutterActivity() {
                             result.error("SERVICE_STOP_FAILED", error.message, null)
                         }
                     }
+                    "getApps" -> result.success(listInstalledApps())
                     "getStatus" -> result.success(XrayVpnService.statusSnapshot())
                     "getVersion" -> {
                         try {
@@ -80,6 +87,18 @@ class MainActivity : FlutterActivity() {
                     XrayVpnService.eventSink = null
                 }
             })
+    }
+
+    private fun listInstalledApps(): List<Map<String, String>> {
+        val launcher = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+        return packageManager.queryIntentActivities(launcher, 0)
+            .mapNotNull { resolve ->
+                val pkg = resolve.activityInfo?.applicationInfo?.packageName ?: return@mapNotNull null
+                if (pkg == packageName) return@mapNotNull null
+                mapOf("package" to pkg, "label" to resolve.loadLabel(packageManager).toString())
+            }
+            .distinctBy { it["package"] }
+            .sortedBy { it["label"]?.lowercase() }
     }
 
     private fun requestNotificationPermission(result: MethodChannel.Result) {
