@@ -158,7 +158,14 @@ class EngineRouter {
         }
       }
     }
-    if (proxyTag == null) {\n      for (final item in outbounds) {\n        if (item is Map<String, dynamic> && item['tag'] is String) {\n          proxyTag = item['tag'] as String;\n          break;\n        }\n      }\n    }
+    if (proxyTag == null) {
+      for (final item in outbounds) {
+        if (item is Map<String, dynamic> && item['tag'] is String) {
+          proxyTag = item['tag'] as String;
+          break;
+        }
+      }
+    }
 
     config['dns'] = <String, dynamic>{
       'servers': ['tcp://$remoteDns'],
