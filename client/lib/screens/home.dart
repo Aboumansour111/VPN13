@@ -465,7 +465,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFE5EAF2))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Text('DNS', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF17243B))),
       const SizedBox(height: 8), const Text('DNS انتخابی روی اتصال بعدی اعمال می‌شود.', style: TextStyle(fontSize: 11, color: Color(0xFF74829A))),
-      const SizedBox(height: 12), DropdownButtonFormField<String>(initialValue: dnsAddress, decoration: const InputDecoration(labelText: 'سرور DNS', border: OutlineInputBorder()), items: const [
+      const SizedBox(height: 12), DropdownButtonFormField<String>(key: ValueKey(dnsAddress), initialValue: dnsAddress, decoration: const InputDecoration(labelText: 'سرور DNS', border: OutlineInputBorder()), items: const [
         DropdownMenuItem(value: '1.1.1.1', child: Text('Cloudflare — 1.1.1.1')),
         DropdownMenuItem(value: '1.0.0.1', child: Text('Cloudflare — 1.0.0.1')),
         DropdownMenuItem(value: '8.8.8.8', child: Text('Google — 8.8.8.8')),
