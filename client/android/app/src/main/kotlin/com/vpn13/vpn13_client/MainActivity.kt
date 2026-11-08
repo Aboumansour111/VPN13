@@ -6,11 +6,14 @@ import android.content.pm.PackageManager
 import android.content.pm.ApplicationInfo
 import android.net.VpnService
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 import libv2ray.Libv2ray
+import java.util.concurrent.Executors
 
 class MainActivity : FlutterActivity() {
     override fun onResume() {
@@ -22,6 +25,10 @@ class MainActivity : FlutterActivity() {
         XrayVpnService.updateAppVisibility(false)
         super.onPause()
     }
+
+    private val pingExecutor = Executors.newFixedThreadPool(2)
+    private val mainHandler = Handler(Looper.getMainLooper())
+    @Volatile private var pingEnvironmentInitialized = false
 
     private var permissionResult: MethodChannel.Result? = null
     private var notificationPermissionResult: MethodChannel.Result? = null
@@ -71,6 +78,31 @@ class MainActivity : FlutterActivity() {
                             result.success(true)
                         } catch (error: Exception) {
                             result.error("SERVICE_STOP_FAILED", error.message, null)
+                        }
+                    }
+                    "measureOutboundDelay" -> {
+                        val config = call.argument<String>("config")
+                        val url = call.argument<String>("url") ?: "https://www.google.com/generate_204"
+                        if (config.isNullOrBlank()) {
+                            result.error("INVALID_CONFIG", "Xray config is empty", null)
+                        } else {
+                            pingExecutor.execute {
+                                try {
+                                    synchronized(this) {
+                                        if (!pingEnvironmentInitialized) {
+                                            Seq.setContext(applicationContext)
+                                            Libv2ray.initCoreEnv(filesDir.absolutePath, "")
+                                            pingEnvironmentInitialized = true
+                                        }
+                                    }
+                                    val delay = Libv2ray.measureOutboundDelay(config, url)
+                                    mainHandler.post { result.success(delay) }
+                                } catch (error: Exception) {
+                                    mainHandler.post {
+                                        result.error("PING_FAILED", error.message ?: "Xray delay test failed", null)
+                                    }
+                                }
+                            }
                         }
                     }
                     "getApps" -> result.success(listInstalledApps())
