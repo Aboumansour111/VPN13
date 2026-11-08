@@ -339,26 +339,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     ),
   );
 
-  Widget _selectedServerSummary() => Material(
-    color: Colors.white, borderRadius: BorderRadius.circular(19),
-    child: InkWell(
-      onTap: () => setState(() => _activeTab = 0), borderRadius: BorderRadius.circular(19),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(19), border: Border.all(color: const Color(0xFFE7ECF3))),
-        child: Row(children: [
-          const Icon(Icons.chevron_left_rounded, color: Color(0xFF17243B), size: 25), const SizedBox(width: 8),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            const Text('سرور انتخاب‌شده', style: TextStyle(color: Color(0xFF7D899B), fontSize: 11)),
-            const SizedBox(height: 4),
-            Text(selected?.name ?? 'سروری انتخاب نشده', style: const TextStyle(color: Color(0xFF17243B), fontSize: 15, fontWeight: FontWeight.w900)),
-          ])),
-          const SizedBox(width: 12), const Icon(Icons.dns_rounded, color: Color(0xFF159B78), size: 28),
-        ]),
-      ),
-    ),
-  );
-
   Widget _durationSummary() => Container(
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
     decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(17), border: Border.all(color: const Color(0xFFE8EDF4))),
@@ -485,7 +465,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFE5EAF2))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Text('DNS', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF17243B))),
       const SizedBox(height: 8), const Text('DNS انتخابی روی اتصال بعدی اعمال می‌شود.', style: TextStyle(fontSize: 11, color: Color(0xFF74829A))),
-      const SizedBox(height: 12), DropdownButtonFormField<String>(value: dnsAddress, decoration: const InputDecoration(labelText: 'سرور DNS', border: OutlineInputBorder()), items: const [
+      const SizedBox(height: 12), DropdownButtonFormField<String>(initialValue: dnsAddress, decoration: const InputDecoration(labelText: 'سرور DNS', border: OutlineInputBorder()), items: const [
         DropdownMenuItem(value: '1.1.1.1', child: Text('Cloudflare — 1.1.1.1')),
         DropdownMenuItem(value: '1.0.0.1', child: Text('Cloudflare — 1.0.0.1')),
         DropdownMenuItem(value: '8.8.8.8', child: Text('Google — 8.8.8.8')),
