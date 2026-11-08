@@ -90,6 +90,16 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) setState(() => connectionError = e.toString());
     });
     loadServers();
+    _loadConnectionSettings();
+  }
+
+  Future<void> _loadConnectionSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      dnsAddress = prefs.getString('dnsAddress') ?? '1.1.1.1';
+      excludedApps.addAll(prefs.getStringList('excludedApps') ?? const []);
+    });
   }
 
   num _number(Object? value) =>
