@@ -13,6 +13,16 @@ import io.flutter.plugin.common.MethodChannel
 import libv2ray.Libv2ray
 
 class MainActivity : FlutterActivity() {
+    override fun onResume() {
+        super.onResume()
+        XrayVpnService.updateAppVisibility(true)
+    }
+
+    override fun onPause() {
+        XrayVpnService.updateAppVisibility(false)
+        super.onPause()
+    }
+
     private var permissionResult: MethodChannel.Result? = null
     private var notificationPermissionResult: MethodChannel.Result? = null
 
