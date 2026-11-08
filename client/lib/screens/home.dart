@@ -67,6 +67,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final Set<String> excludedApps = {};
   List<Map<String, String>> installedApps = [];
   bool appsLoading = false;
+  final Map<int, int> _pingResults = {};
+  final Set<int> _pingTesting = {};
+  bool _testingAll = false;
 
   bool get connected => status == _VpnStatus.connected;
 
@@ -361,6 +364,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
         const Expanded(child: Text('انتخاب سرور', style: TextStyle(color: Color(0xFFF0F3F4), fontSize: 15, fontWeight: FontWeight.w900))),
+        TextButton.icon(
+          onPressed: _testingAll || _pingTesting.isNotEmpty || servers.isEmpty ? null : _testAllServers,
+          icon: _testingAll
+              ? const SizedBox(width: 15, height: 15, child: CircularProgressIndicator(strokeWidth: 2))
+              : const Icon(Icons.speed_rounded, size: 17),
+          label: Text(_testingAll ? 'در حال تست' : 'تست همه'),
+          style: TextButton.styleFrom(
+            foregroundColor: const Color(0xFF75D6B5),
+            visualDensity: VisualDensity.compact,
+            padding: const EdgeInsets.symmetric(horizontal: 7),
+          ),
+        ),
         IconButton(onPressed: loadServers, icon: const Icon(Icons.refresh_rounded, size: 20), tooltip: 'به‌روزرسانی'),
       ]),
       TextField(
@@ -403,7 +418,47 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       if (server.description != null)
                         Text(server.description!, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF79CDB2), fontSize: 10)),
                     ])),
-                    const Icon(Icons.dns_rounded, color: Color(0xFF39A98B), size: 23),
+                    if (_pingTesting.contains(server.id))
+                      const SizedBox(
+                        width: 19,
+                        height: 19,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Color(0xFF75D6B5),
+                        ),
+                      )
+                    else
+                      IconButton(
+                        onPressed: _testingAll ? null : () => _testServer(server),
+                        tooltip: 'تست پینگ',
+                        visualDensity: VisualDensity.compact,
+                        constraints: const BoxConstraints.tightFor(width: 34, height: 34),
+                        padding: EdgeInsets.zero,
+                        icon: Icon(
+                          Icons.speed_rounded,
+                          color: _pingResults.containsKey(server.id)
+                              ? (_pingResults[server.id]! >= 0
+                                  ? const Color(0xFF75D6B5)
+                                  : const Color(0xFFFF8A80))
+                              : const Color(0xFF39A98B),
+                          size: 21,
+                        ),
+                      ),
+                    if (_pingResults.containsKey(server.id)) ...[
+                      const SizedBox(width: 3),
+                      Text(
+                        _pingResults[server.id]! >= 0
+                            ? '${_pingResults[server.id]} ms'
+                            : 'خطا',
+                        style: TextStyle(
+                          color: _pingResults[server.id]! >= 0
+                              ? const Color(0xFF75D6B5)
+                              : const Color(0xFFFF8A80),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
                   ]),
                 ),
               ),
@@ -414,6 +469,45 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         const Padding(padding: EdgeInsets.only(top: 4), child: Text('برای تغییر سرور، ابتدا اتصال را قطع کنید.', style: TextStyle(color: Color(0xFF77849A), fontSize: 10))),
     ]),
   );
+
+  Future<void> _runPingTest(ServerItem server) async {
+    if (!mounted) return;
+    setState(() => _pingTesting.add(server.id));
+    try {
+      final config = EngineRouter.toXrayConfiguration(
+        server.config,
+        remoteDns: dnsAddress,
+      );
+      final delay = await NativeXray.measureOutboundDelay(config);
+      if (mounted) setState(() => _pingResults[server.id] = delay);
+    } catch (_) {
+      if (mounted) setState(() => _pingResults[server.id] = -1);
+    } finally {
+      if (mounted) setState(() => _pingTesting.remove(server.id));
+    }
+  }
+
+  Future<void> _testServer(ServerItem server) async {
+    if (_testingAll || _pingTesting.contains(server.id)) return;
+    await _runPingTest(server);
+  }
+
+  Future<void> _testAllServers() async {
+    if (_testingAll || _pingTesting.isNotEmpty || servers.isEmpty) return;
+    setState(() {
+      _testingAll = true;
+      _pingResults.clear();
+    });
+    try {
+      // Two independent Xray test instances at a time keeps memory and CPU use bounded.
+      for (var i = 0; i < servers.length; i += 2) {
+        final batch = servers.skip(i).take(2).toList();
+        await Future.wait(batch.map(_runPingTest));
+      }
+    } finally {
+      if (mounted) setState(() => _testingAll = false);
+    }
+  }
 
   Future<void> loadInstalledApps() async {
     setState(() => appsLoading = true);
