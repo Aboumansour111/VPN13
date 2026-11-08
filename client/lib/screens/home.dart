@@ -63,6 +63,10 @@ class _HomeScreenState extends State<HomeScreen> {
   _VpnStatus status = _VpnStatus.disconnected;
   int _activeTab = 0;
   String _serverQuery = '';
+  String dnsAddress = '1.1.1.1';
+  final Set<String> excludedApps = {};
+  List<Map<String, String>> installedApps = [];
+  bool appsLoading = false;
 
   bool get connected => status == _VpnStatus.connected;
 
@@ -204,7 +208,7 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!await NativeXray.requestPermission()) {
         throw Exception('مجوز VPN صادر نشد.');
       }
-      await NativeXray.connect(config: xrayConfig, profileName: server.name);
+      await NativeXray.connect(config: xrayConfig, profileName: server.name, dnsAddress: dnsAddress, excludedApps: excludedApps.toList());
     } catch (e) {
       if (mounted) {
         setState(() => connectionError = e.toString());
@@ -268,7 +272,7 @@ class _HomeScreenState extends State<HomeScreen> {
     backgroundColor: const Color(0xFFF5F7FC),
     body: SafeArea(
       child: loading ? const Center(child: CircularProgressIndicator()) :
-        IndexedStack(index: _activeTab, children: [_homePage(), _serversPage(), _statisticsPage()]),
+        IndexedStack(index: _activeTab, children: [_homePage(), _serversPage(), _settingsPage()]),
     ),
     bottomNavigationBar: NavigationBar(
       height: 68, backgroundColor: Colors.white, indicatorColor: const Color(0xFFE1F5ED),
@@ -277,7 +281,7 @@ class _HomeScreenState extends State<HomeScreen> {
       destinations: const [
         NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home_rounded), label: 'خانه'),
         NavigationDestination(icon: Icon(Icons.dns_outlined), selectedIcon: Icon(Icons.dns_rounded), label: 'سرورها'),
-        NavigationDestination(icon: Icon(Icons.query_stats_outlined), selectedIcon: Icon(Icons.query_stats_rounded), label: 'آمار'),
+        NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings_rounded), label: 'تنظیمات'),
       ],
     ),
   );
@@ -403,17 +407,81 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
   ]);
 
-  Widget _statisticsPage() => ListView(
-    padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
-    children: [
-      _topBar(), const SizedBox(height: 20),
-      const Text('آمار اتصال', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF17243B), fontSize: 21, fontWeight: FontWeight.w900)),
-      const SizedBox(height: 8),
-      Text(connected ? 'اتصال فعال' : 'در حال حاضر اتصال فعالی وجود ندارد', textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF7D899B), fontSize: 12)),
-      const SizedBox(height: 18), _trafficPanel(), const SizedBox(height: 12), _durationSummary(),
-      if (connectionError != null) ...[const SizedBox(height: 12), _errorPanel(connectionError!)],
-    ],
-  );
+  Future<void> loadInstalledApps() async {
+    setState(() => appsLoading = true);
+    try {
+      final apps = await NativeXray.installedApps();
+      if (mounted) setState(() => installedApps = apps);
+    } catch (e) {
+      if (mounted) message('دریافت برنامه‌ها ناموفق بود: $e');
+    } finally {
+      if (mounted) setState(() => appsLoading = false);
+    }
+  }
+
+  Future<void> _chooseExcludedApps() async {
+    if (installedApps.isEmpty && !appsLoading) await loadInstalledApps();
+    if (!mounted) return;
+    final draft = Set<String>.from(excludedApps);
+    await showDialog<void>(context: context, builder: (dialogContext) => StatefulBuilder(
+      builder: (context, setDialogState) => AlertDialog(
+        title: const Text('برنامه‌های خارج از تونل'),
+        content: SizedBox(width: double.maxFinite, height: 440, child: appsLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(children: installedApps.map((app) {
+              final pkg = app['package']!;
+              return CheckboxListTile(
+                dense: true, value: draft.contains(pkg),
+                title: Text(app['label'] ?? pkg, maxLines: 1, overflow: TextOverflow.ellipsis),
+                subtitle: Text(pkg, maxLines: 1, overflow: TextOverflow.ellipsis),
+                onChanged: (v) => setDialogState(() { if (v == true) draft.add(pkg); else draft.remove(pkg); }),
+              );
+            }).toList())),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('لغو')),
+          FilledButton(onPressed: () async {
+            setState(() { excludedApps..clear()..addAll(draft); });
+            final p = await SharedPreferences.getInstance();
+            await p.setStringList('excludedApps', excludedApps.toList());
+            if (dialogContext.mounted) Navigator.pop(dialogContext);
+          }, child: const Text('ذخیره')),
+        ],
+      ),
+    ));
+  }
+
+  Widget _settingsPage() => ListView(padding: const EdgeInsets.fromLTRB(18, 12, 18, 24), children: [
+    _topBar(), const SizedBox(height: 20),
+    const Text('تنظیمات اتصال', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF17243B), fontSize: 21, fontWeight: FontWeight.w900)),
+    const SizedBox(height: 18),
+    Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFE5EAF2))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const Text('DNS', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF17243B))),
+      const SizedBox(height: 8), const Text('DNS انتخابی روی اتصال بعدی اعمال می‌شود.', style: TextStyle(fontSize: 11, color: Color(0xFF74829A))),
+      const SizedBox(height: 12), DropdownButtonFormField<String>(value: dnsAddress, decoration: const InputDecoration(labelText: 'سرور DNS', border: OutlineInputBorder()), items: const [
+        DropdownMenuItem(value: '1.1.1.1', child: Text('Cloudflare — 1.1.1.1')),
+        DropdownMenuItem(value: '1.0.0.1', child: Text('Cloudflare — 1.0.0.1')),
+        DropdownMenuItem(value: '8.8.8.8', child: Text('Google — 8.8.8.8')),
+        DropdownMenuItem(value: '8.8.4.4', child: Text('Google — 8.8.4.4')),
+        DropdownMenuItem(value: '9.9.9.9', child: Text('Quad9 — 9.9.9.9')),
+      ], onChanged: (v) async {
+        if (v == null) return;
+        setState(() => dnsAddress = v);
+        final p = await SharedPreferences.getInstance();
+        await p.setString('dnsAddress', v);
+      }),
+    ])),
+    const SizedBox(height: 12),
+    Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFE5EAF2))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const Text('برنامه‌های خارج از VPN', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF17243B))),
+      const SizedBox(height: 8), const Text('ترافیک این برنامه‌ها از تونل VPN عبور نمی‌کند.', style: TextStyle(fontSize: 11, color: Color(0xFF74829A))),
+      const SizedBox(height: 12), OutlinedButton.icon(onPressed: _chooseExcludedApps, icon: const Icon(Icons.apps_rounded), label: Text('انتخاب برنامه‌ها (\${excludedApps.length})'), style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48))),
+      if (excludedApps.isNotEmpty) ...[const SizedBox(height: 8), Text(excludedApps.map((p) => installedApps.firstWhere((a) => a['package'] == p, orElse: () => {'label': p})['label']).join('، '), style: const TextStyle(fontSize: 12, color: Color(0xFF52647B)))],
+    ])),
+    const SizedBox(height: 14),
+    const Text('برای اعمال DNS و فهرست استثناها، اتصال فعلی را قطع و دوباره وصل کنید.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF74829A), fontSize: 11)),
+  ]);
+
+
 
   Widget _topBar() => Column(
         children: [
