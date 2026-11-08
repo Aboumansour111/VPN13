@@ -68,30 +68,62 @@ class _AccessGateState extends State<_AccessGate> {
   }
 
   Future<bool> _validateCode(String code) async {
-    final response = await http
-        .post(
-          Uri.parse(AppConfig.serversJsonUrl),
-          headers: const {
-            'Content-Type': 'application/json; charset=UTF-8',
-            'Accept': 'application/json',
-          },
-          body: jsonEncode({
-            'action': 'validate',
-            'code': code,
-          }),
-        )
-        .timeout(const Duration(seconds: 20));
+    final uri = Uri.parse(AppConfig.serversJsonUrl);
+    final client = http.Client();
 
-    if (response.statusCode != 200) {
-      throw Exception('Validation server returned HTTP ${response.statusCode}');
+    try {
+      final request = http.Request('POST', uri)
+        ..followRedirects = false
+        ..headers.addAll(const {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Accept': 'application/json',
+        })
+        ..body = jsonEncode({
+          'action': 'validate',
+          'code': code,
+        });
+
+      var streamed = await client
+          .send(request)
+          .timeout(const Duration(seconds: 20));
+
+      // Google Apps Script redirects ContentService responses to
+      // script.googleusercontent.com. Fetch that one-time response URL
+      // with GET instead of letting the HTTP client rewrite the POST.
+      if ([301, 302, 303, 307, 308].contains(streamed.statusCode)) {
+        final location = streamed.headers['location'];
+        if (location == null || location.isEmpty) {
+          throw const FormatException(
+            'Validation redirect did not include a Location header',
+          );
+        }
+
+        final redirectUri = uri.resolve(location);
+        streamed = await client
+            .get(redirectUri)
+            .timeout(const Duration(seconds: 20));
+      }
+
+      final response = await http.Response.fromStream(streamed)
+          .timeout(const Duration(seconds: 20));
+
+      if (response.statusCode != 200) {
+        throw Exception(
+          'Validation server returned HTTP ${response.statusCode}',
+        );
+      }
+
+      final decoded = jsonDecode(response.body);
+      if (decoded is! Map<String, dynamic> ||
+          decoded['success'] != true ||
+          decoded['valid'] is! bool) {
+        throw const FormatException('Invalid validation response');
+      }
+
+      return decoded['valid'] as bool;
+    } finally {
+      client.close();
     }
-
-    final decoded = jsonDecode(response.body);
-    if (decoded is! Map<String, dynamic> || decoded['success'] != true) {
-      throw const FormatException('Invalid validation response');
-    }
-
-    return decoded['valid'] == true;
   }
 
   Future<void> _restoreAccess() async {
