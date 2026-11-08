@@ -401,9 +401,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Text(server.name, style: const TextStyle(color: Color(0xFFF0F3F4), fontSize: 14, fontWeight: FontWeight.w800)),
                       if (server.description != null)
-                        Text(server.description!, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF168568), fontSize: 10)),
+                        Text(server.description!, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF79CDB2), fontSize: 10)),
                     ])),
-                    const Icon(Icons.dns_rounded, color: Color(0xFF159B78), size: 23),
+                    const Icon(Icons.dns_rounded, color: Color(0xFF39A98B), size: 23),
                   ]),
                 ),
               ),
@@ -587,7 +587,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 19, 18, 18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFF35434C),
         borderRadius: BorderRadius.circular(27),
         boxShadow: [
           BoxShadow(
