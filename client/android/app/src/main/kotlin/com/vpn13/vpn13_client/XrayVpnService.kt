@@ -244,14 +244,16 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
             .build()
     }
 
-    private fun startStatsPolling(core: CoreController) {
+    private fun startStatsPolling(core: CoreController, resetCounters: Boolean = true) {
         stopStatsPolling()
-        currentUploadSpeed = 0L
-        currentDownloadSpeed = 0L
-        currentUploadTotal = 0L
-        currentDownloadTotal = 0L
-        lastUploadSample = 0L
-        lastDownloadSample = 0L
+        if (resetCounters) {
+            currentUploadSpeed = 0L
+            currentDownloadSpeed = 0L
+            currentUploadTotal = 0L
+            currentDownloadTotal = 0L
+            lastUploadSample = 0L
+            lastDownloadSample = 0L
+        }
         lastStatsSampleNanos = System.nanoTime()
         val intervalSeconds = if (uiForeground) 5L else 30L
         statsTask = statsWorker.scheduleWithFixedDelay({
@@ -290,7 +292,7 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
     private fun updateUiVisibility(foreground: Boolean) {
         if (uiForeground == foreground) return
         uiForeground = foreground
-        controller?.takeIf { it.isRunning }?.let { startStatsPolling(it) }
+        controller?.takeIf { it.isRunning }?.let { startStatsPolling(it, resetCounters = false) }
     }
 
     private fun stopStatsPolling() {
