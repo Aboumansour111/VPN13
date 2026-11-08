@@ -108,10 +108,7 @@ class EngineRouter {
       queryParameters: query,
       fragment: outbound['tag']?.toString() ?? server,
     );
-    return _enableTrafficStats(
-      XrayProfileParser.parse(uri.toString()).getFullConfiguration(),
-      remoteDns: remoteDns,
-    );
+    return XrayProfileParser.parse(uri.toString()).getFullConfiguration();
   }
 
   static String _enableTrafficStats(String source, {required String remoteDns}) {
