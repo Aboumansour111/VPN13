@@ -61,14 +61,16 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
                 }
                 profileName = intent.getStringExtra(EXTRA_PROFILE_NAME)?.takeIf { it.isNotBlank() } ?: "VPN13"
                 startForeground(NOTIFICATION_ID, buildNotification())
-                worker.execute { startTunnel(config) }
+                val dnsAddress = intent.getStringExtra(EXTRA_DNS)?.takeIf { it.isNotBlank() } ?: "1.1.1.1"
+                val excludedApps = intent.getStringArrayListExtra(EXTRA_EXCLUDED_APPS) ?: arrayListOf()
+                worker.execute { startTunnel(config, dnsAddress, excludedApps) }
                 return START_NOT_STICKY
             }
             else -> return START_NOT_STICKY
         }
     }
 
-    private fun startTunnel(config: String) {
+    private fun startTunnel(config: String, dnsAddress: String, excludedApps: List<String>) {
         try {
             stopCoreAndTunnel()
             publish("connecting", "در حال راه‌اندازی هسته Xray")
@@ -77,11 +79,13 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
                 .setMtu(1500)
                 .addAddress("10.13.0.1", 30)
                 .addRoute("0.0.0.0", 0)
-                .addDnsServer("1.1.1.1")
+                .addDnsServer(dnsAddress)
                 .addAddress("fd13:13::1", 126)
                 .addRoute("::", 0)
-                .addDnsServer("2606:4700:4700::1111")
                 .addDisallowedApplication(packageName)
+            excludedApps.filter { it.isNotBlank() && it != packageName }.forEach { app ->
+                try { builder.addDisallowedApplication(app) } catch (_: Exception) { /* app may have been uninstalled */ }
+            }
 
             val established = builder.establish()
                 ?: throw IllegalStateException("Android did not establish the VPN interface")
@@ -293,6 +297,8 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
         const val ACTION_STOP = "com.vpn13.vpn13_client.action.STOP_XRAY"
         const val EXTRA_CONFIG = "xray_config"
         const val EXTRA_PROFILE_NAME = "profile_name"
+        const val EXTRA_DNS = "dns_address"
+        const val EXTRA_EXCLUDED_APPS = "excluded_apps"
         private const val CHANNEL_ID = "vpn13_xray"
         private const val NOTIFICATION_ID = 1313
 
