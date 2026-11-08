@@ -229,7 +229,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       connectionError = null;
     });
     try {
-      final xrayConfig = EngineRouter.toXrayConfiguration(server.config);
+      final xrayConfig = EngineRouter.toXrayConfiguration(server.config, remoteDns: dnsAddress);
       await NativeXray.requestNotificationPermission();
       if (!await NativeXray.requestPermission()) {
         throw Exception('مجوز VPN صادر نشد.');
