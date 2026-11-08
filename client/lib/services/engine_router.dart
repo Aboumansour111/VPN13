@@ -8,11 +8,11 @@ class EngineRouter {
 
   /// Converts supported share links, sing-box profiles or raw Xray JSON into Xray JSON.
   /// Traffic counters are enabled for the native AndroidLibXrayLite controller.
-  static String toXrayConfiguration(String source) {
+  static String toXrayConfiguration(String source, {String remoteDns = '1.1.1.1'}) {
     final value = source.trim();
     if (RegExp(r'^(vless|vmess|trojan|ss|socks|hysteria2|hy2)://', caseSensitive: false)
         .hasMatch(value)) {
-      return _enableTrafficStats(XrayProfileParser.parse(value).getFullConfiguration());
+      return _enableTrafficStats(XrayProfileParser.parse(value).getFullConfiguration(), remoteDns: remoteDns);
     }
 
     final decoded = _tryDecode(value);
@@ -34,7 +34,7 @@ class EngineRouter {
       }
     }
     if (xhttp != null && xhttp['protocol'] == null) {
-      return _enableTrafficStats(_xhttpOutboundToXray(xhttp));
+      return _enableTrafficStats(_xhttpOutboundToXray(xhttp), remoteDns: remoteDns);
     }
 
     final input = hasOutbounds
@@ -45,7 +45,7 @@ class EngineRouter {
                 'کانفیگ باید یک outbound یا پروفایل کامل sing-box باشد.',
               );
 
-    return _enableTrafficStats(XrayProfileParser.parse(jsonEncode(input)).getFullConfiguration());
+    return _enableTrafficStats(XrayProfileParser.parse(jsonEncode(input)).getFullConfiguration(), remoteDns: remoteDns);
   }
 
   static String _xhttpOutboundToXray(Map<String, dynamic> outbound) {
@@ -113,7 +113,7 @@ class EngineRouter {
     );
   }
 
-  static String _enableTrafficStats(String source) {
+  static String _enableTrafficStats(String source, {required String remoteDns}) {
     final decoded = jsonDecode(source);
     if (decoded is! Map<String, dynamic>) {
       throw const FormatException('پیکربندی تولیدشده Xray معتبر نیست.');
@@ -158,12 +158,10 @@ class EngineRouter {
         }
       }
     }
-    proxyTag ??= outbounds.whereType<Map<String, dynamic>>()
-        .map((item) => item['tag']?.toString())
-        .whereType<String>().firstOrNull;
+    if (proxyTag == null) {\n      for (final item in outbounds) {\n        if (item is Map<String, dynamic> && item['tag'] is String) {\n          proxyTag = item['tag'] as String;\n          break;\n        }\n      }\n    }
 
     config['dns'] = <String, dynamic>{
-      'servers': ['tcp://1.1.1.1'],
+      'servers': ['tcp://$remoteDns'],
       'queryStrategy': 'UseIPv4',
       'tag': 'vpn13-dns',
     };
