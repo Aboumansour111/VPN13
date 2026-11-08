@@ -40,10 +40,10 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
-  static const _ink = Color(0xFF17243B);
-  static const _muted = Color(0xFF74829A);
-  static const _blue = Color(0xFF4169E8);
-  static const _green = Color(0xFF16A783);
+  static const _ink = Color(0xFFF0F3F4);
+  static const _muted = Color(0xFFB5C0C6);
+  static const _blue = Color(0xFF8FA9B5);
+  static const _green = Color(0xFF39A98B);
 
   List<ServerItem> servers = [];
   int? selectedId;
@@ -301,7 +301,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         IndexedStack(index: _activeTab, children: [_homePage(), _settingsPage()]),
     ),
     bottomNavigationBar: NavigationBar(
-      height: 70, backgroundColor: Colors.white, indicatorColor: const Color(0xFFE1F5ED),
+      height: 70, backgroundColor: const Color(0xFF202930), indicatorColor: const Color(0xFF405B58),
       selectedIndex: _activeTab,
       onDestinationSelected: (index) => setState(() => _activeTab = index),
       destinations: const [
@@ -328,8 +328,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           onPressed: loadServers, icon: const Icon(Icons.sync_rounded, size: 19),
           label: const Text('به‌روزرسانی فهرست سرورها'),
           style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFF147D63), side: const BorderSide(color: Color(0xFFD5E5E0)),
-            backgroundColor: Colors.white, minimumSize: const Size.fromHeight(48),
+            foregroundColor: const Color(0xFF72CDB0), side: const BorderSide(color: Color(0xFF53636B)),
+            backgroundColor: const Color(0xFF35434C), minimumSize: const Size.fromHeight(48),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
         ),
@@ -341,12 +341,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Widget _durationSummary() => Container(
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(17), border: Border.all(color: const Color(0xFFE8EDF4))),
+    decoration: BoxDecoration(color: const Color(0xFF35434C), borderRadius: BorderRadius.circular(17), border: Border.all(color: const Color(0xFF46555E))),
     child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-      const Icon(Icons.schedule_rounded, color: Color(0xFF52647B), size: 21), const SizedBox(width: 10),
+      const Icon(Icons.schedule_rounded, color: Color(0xFFC5D0D5), size: 21), const SizedBox(width: 10),
       Column(children: [
         const Text('مدت زمان اتصال', style: TextStyle(color: Color(0xFF758297), fontSize: 11)),
-        Text(durationText(elapsed), style: const TextStyle(color: Color(0xFF17243B), fontSize: 17, fontWeight: FontWeight.w900, fontFeatures: [FontFeature.tabularFigures()])),
+        Text(durationText(elapsed), style: const TextStyle(color: Color(0xFFF0F3F4), fontSize: 17, fontWeight: FontWeight.w900, fontFeatures: [FontFeature.tabularFigures()])),
       ]),
     ]),
   );
@@ -354,13 +354,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget _homeServersSection() => Container(
     padding: const EdgeInsets.all(15),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: const Color(0xFF35434C),
       borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: const Color(0xFFE5EAF2)),
+      border: Border.all(color: const Color(0xFF46555E)),
     ),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
-        const Expanded(child: Text('انتخاب سرور', style: TextStyle(color: Color(0xFF17243B), fontSize: 15, fontWeight: FontWeight.w900))),
+        const Expanded(child: Text('انتخاب سرور', style: TextStyle(color: Color(0xFFF0F3F4), fontSize: 15, fontWeight: FontWeight.w900))),
         IconButton(onPressed: loadServers, icon: const Icon(Icons.refresh_rounded, size: 20), tooltip: 'به‌روزرسانی'),
       ]),
       TextField(
@@ -369,14 +369,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           hintText: 'جستجو در سرورها...',
           prefixIcon: const Icon(Icons.search_rounded, size: 20),
           filled: true,
-          fillColor: const Color(0xFFEEF1F7),
+          fillColor: const Color(0xFF293740),
           contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
         ),
       ),
       const SizedBox(height: 10),
       if (servers.isEmpty)
-        Text(loading ? 'در حال دریافت سرورها...' : 'سروری موجود نیست', style: const TextStyle(color: Color(0xFF74829A)))
+        Text(loading ? 'در حال دریافت سرورها...' : 'سروری موجود نیست', style: const TextStyle(color: Color(0xFFB5C0C6)))
       else
         ...servers.where((server) => server.name.toLowerCase().contains(_serverQuery.trim().toLowerCase())).map((server) {
           final active = server.id == selectedId;
@@ -384,7 +384,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           return Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Material(
-              color: active ? const Color(0xFFE7F5F0) : const Color(0xFFF9FAFC),
+              color: active ? const Color(0xFF405B58) : const Color(0xFF2D3942),
               borderRadius: BorderRadius.circular(15),
               child: InkWell(
                 onTap: !canSelect ? null : () => selectServer(server),
@@ -393,13 +393,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(15),
-                    border: Border.all(color: active ? const Color(0xFF159B78) : const Color(0xFFE8EDF4), width: active ? 1.4 : 1),
+                    border: Border.all(color: active ? const Color(0xFF39A98B) : const Color(0xFF46555E), width: active ? 1.4 : 1),
                   ),
                   child: Row(children: [
-                    Icon(active ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded, color: active ? const Color(0xFF087A60) : const Color(0xFFAAB3C0), size: 21),
+                    Icon(active ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded, color: active ? const Color(0xFF75D6B5) : const Color(0xFF9BAAB1), size: 21),
                     const SizedBox(width: 10),
                     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(server.name, style: const TextStyle(color: Color(0xFF17243B), fontSize: 14, fontWeight: FontWeight.w800)),
+                      Text(server.name, style: const TextStyle(color: Color(0xFFF0F3F4), fontSize: 14, fontWeight: FontWeight.w800)),
                       if (server.description != null)
                         Text(server.description!, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF168568), fontSize: 10)),
                     ])),
@@ -460,11 +460,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Widget _settingsPage() => ListView(padding: const EdgeInsets.fromLTRB(18, 12, 18, 24), children: [
     _topBar(), const SizedBox(height: 20),
-    const Text('تنظیمات اتصال', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF17243B), fontSize: 21, fontWeight: FontWeight.w900)),
+    const Text('تنظیمات اتصال', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFFF0F3F4), fontSize: 21, fontWeight: FontWeight.w900)),
     const SizedBox(height: 18),
-    Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFE5EAF2))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('Remote DNS (Xray)', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF17243B))),
-      const SizedBox(height: 8), const Text('درخواست‌های DNS پورت 53 از داخل تونل Xray و با TCP به این سرور ارسال می‌شوند. برای اعمال، اتصال را دوباره برقرار کنید.', style: TextStyle(fontSize: 11, color: Color(0xFF74829A))),
+    Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: const Color(0xFF35434C), borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFF46555E))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const Text('Remote DNS (Xray)', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFFF0F3F4))),
+      const SizedBox(height: 8), const Text('درخواست‌های DNS پورت 53 از داخل تونل Xray و با TCP به این سرور ارسال می‌شوند. برای اعمال، اتصال را دوباره برقرار کنید.', style: TextStyle(fontSize: 11, color: Color(0xFFB5C0C6))),
       const SizedBox(height: 12), DropdownButtonFormField<String>(key: ValueKey(dnsAddress), initialValue: dnsAddress, decoration: const InputDecoration(labelText: 'سرور DNS', border: OutlineInputBorder()), items: const [
         DropdownMenuItem(value: '1.1.1.1', child: Text('Cloudflare — 1.1.1.1')),
         DropdownMenuItem(value: '1.0.0.1', child: Text('Cloudflare — 1.0.0.1')),
@@ -479,14 +479,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       }),
     ])),
     const SizedBox(height: 12),
-    Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFE5EAF2))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('برنامه‌های خارج از VPN', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF17243B))),
-      const SizedBox(height: 8), const Text('ترافیک این برنامه‌ها از تونل VPN عبور نمی‌کند.', style: TextStyle(fontSize: 11, color: Color(0xFF74829A))),
+    Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: const Color(0xFF35434C), borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFF46555E))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const Text('برنامه‌های خارج از VPN', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFFF0F3F4))),
+      const SizedBox(height: 8), const Text('ترافیک این برنامه‌ها از تونل VPN عبور نمی‌کند.', style: TextStyle(fontSize: 11, color: Color(0xFFB5C0C6))),
       const SizedBox(height: 12), OutlinedButton.icon(onPressed: _chooseExcludedApps, icon: const Icon(Icons.apps_rounded), label: Text('انتخاب برنامه‌ها (${excludedApps.length})'), style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48))),
-      if (excludedApps.isNotEmpty) ...[const SizedBox(height: 8), Text(excludedApps.map((p) => installedApps.firstWhere((a) => a['package'] == p, orElse: () => {'label': p})['label']).join('، '), style: const TextStyle(fontSize: 12, color: Color(0xFF52647B)))],
+      if (excludedApps.isNotEmpty) ...[const SizedBox(height: 8), Text(excludedApps.map((p) => installedApps.firstWhere((a) => a['package'] == p, orElse: () => {'label': p})['label']).join('، '), style: const TextStyle(fontSize: 12, color: Color(0xFFC5D0D5)))],
     ])),
     const SizedBox(height: 14),
-    const Text('برای اعمال DNS و فهرست استثناها، اتصال فعلی را قطع و دوباره وصل کنید.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF74829A), fontSize: 11)),
+    const Text('برای اعمال DNS و فهرست استثناها، اتصال فعلی را قطع و دوباره وصل کنید.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFFB5C0C6), fontSize: 11)),
   ]);
 
 
@@ -499,7 +499,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَآلِ مُحَمَّدٍ',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Color(0xFF168B68),
+                color: Color(0xFF39A98B),
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 0.15,
@@ -537,9 +537,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: const Color(0xFF35434C),
               borderRadius: BorderRadius.circular(30),
-              border: Border.all(color: const Color(0xFFE5EAF2)),
+              border: Border.all(color: const Color(0xFF46555E)),
             ),
             child: Row(
               children: [
@@ -591,7 +591,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         borderRadius: BorderRadius.circular(27),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1B3150).withValues(alpha: 0.06),
+            color: const Color(0xFF10171C).withValues(alpha: 0.22),
             blurRadius: 22,
             offset: const Offset(0, 10),
           ),
@@ -602,12 +602,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           Row(
             children: [
               const Icon(Icons.lock_rounded,
-                  color: Color(0xFF168B68), size: 17),
+                  color: Color(0xFF39A98B), size: 17),
               const SizedBox(width: 7),
               const Text(
                 'وضعیت تونل',
                 style: TextStyle(
-                  color: Color(0xFF74829A),
+                  color: Color(0xFFB5C0C6),
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
@@ -617,7 +617,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 Text(
                   durationText(elapsed),
                   style: const TextStyle(
-                    color: Color(0xFF17243B),
+                    color: Color(0xFFF0F3F4),
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     fontFeatures: [FontFeature.tabularFigures()],
@@ -631,9 +631,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             height: 104,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: const Color(0xFFE8F7F1),
+              color: const Color(0xFF293D3C),
               border: Border.all(
-                color: (active ? const Color(0xFF159B78) : const Color(0xFFB8C7D7))
+                color: (active ? const Color(0xFF39A98B) : const Color(0xFF657780))
                     .withValues(alpha: 0.75),
                 width: 1.5,
               ),
@@ -644,11 +644,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 height: 78,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: active ? const Color(0xFF159B78) : const Color(0xFFB8E8D8),
+                  color: active ? const Color(0xFF39A98B) : const Color(0xFF405B58),
                 ),
                 child: Icon(
                   active ? Icons.shield_rounded : Icons.power_settings_new,
-                  color: active ? Colors.white : const Color(0xFF087A60),
+                  color: Colors.white,
                   size: 36,
                 ),
               ),
@@ -658,7 +658,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           Text(
             statusLabel,
             style: const TextStyle(
-              color: Color(0xFF17243B),
+              color: Color(0xFFF0F3F4),
               fontSize: 20,
               fontWeight: FontWeight.w800,
             ),
@@ -688,9 +688,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ? null
                   : (active ? disconnect : connect),
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF159B78),
+                backgroundColor: const Color(0xFF39A98B),
                 foregroundColor: Colors.white,
-                disabledBackgroundColor: const Color(0xFFB7DCCF),
+                disabledBackgroundColor: const Color(0xFF496D63),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -797,7 +797,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       Container(
         padding: const EdgeInsets.all(13),
         decoration: BoxDecoration(
-          color: const Color(0xFFF5F7FB),
+          color: const Color(0xFF2B3740),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -841,21 +841,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget _errorPanel(String details) => Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFF1F0),
+          color: const Color(0xFF49383A),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFF5D0CC)),
+          border: Border.all(color: const Color(0xFF805456)),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Icon(Icons.error_outline_rounded,
-                color: Color(0xFFFF8A80), size: 20),
+                color: Color(0xFFFFA39A), size: 20),
             const SizedBox(width: 9),
             Expanded(
               child: SelectableText(
                 details,
                 style: const TextStyle(
-                  color: Color(0xFF9F3028),
+                  color: Color(0xFFFFD5D0),
                   fontSize: 11,
                   height: 1.6,
                 ),
