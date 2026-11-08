@@ -181,7 +181,10 @@ class EngineRouter {
         <String, dynamic>{'action': 'direct'},
         ],
       },
-      if (proxyTag != null) 'proxySettings': <String, dynamic>{'tag': proxyTag},
+      if (proxyTag != null)
+        'streamSettings': <String, dynamic>{
+          'sockopt': <String, dynamic>{'dialerProxy': proxyTag},
+        },
     });
     config['outbounds'] = outbounds;
 
