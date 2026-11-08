@@ -100,7 +100,7 @@ class _AccessGateState extends State<_AccessGate> {
 
         final redirectUri = uri.resolve(location);
         streamed = await client
-            .get(redirectUri)
+            .send(http.Request('GET', redirectUri))
             .timeout(const Duration(seconds: 20));
       }
 
