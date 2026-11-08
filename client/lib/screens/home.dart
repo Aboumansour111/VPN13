@@ -39,7 +39,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   static const _ink = Color(0xFF17243B);
   static const _muted = Color(0xFF74829A);
   static const _blue = Color(0xFF4169E8);
@@ -80,6 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     statusSub = NativeXray.events.listen(
       _handleNativeEvent,
       onError: (Object e) {
@@ -135,17 +136,31 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && connected && connectedAt != null) {
+      timer?.cancel();
+      timer = Timer.periodic(const Duration(seconds: 5), (_) {
+        if (mounted && connectedAt != null) setState(() => elapsed = DateTime.now().difference(connectedAt!));
+      });
+      setState(() => elapsed = DateTime.now().difference(connectedAt!));
+    } else if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive || state == AppLifecycleState.hidden) {
+      timer?.cancel();
+      timer = null;
+    }
+  }
+
   void _handleStatus(_VpnStatus value) {
     if (value == _VpnStatus.connected && status != _VpnStatus.connected) {
       connectedAt = DateTime.now();
       elapsed = Duration.zero;
       connectionError = null;
       timer?.cancel();
-      timer = Timer.periodic(const Duration(seconds: 5), (_) {
-        if (mounted && connectedAt != null) {
-          setState(() => elapsed = DateTime.now().difference(connectedAt!));
-        }
-      });
+      if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
+        timer = Timer.periodic(const Duration(seconds: 5), (_) {
+          if (mounted && connectedAt != null) setState(() => elapsed = DateTime.now().difference(connectedAt!));
+        });
+      }
     } else if (value != _VpnStatus.connected) {
       timer?.cancel();
       connectedAt = null;
@@ -156,6 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     statusSub?.cancel();
     timer?.cancel();
     super.dispose();
