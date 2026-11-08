@@ -5,9 +5,9 @@
   "servers": [
     {
       "id": 1,
-      "name": "سوئد",
-      "description": "SHADOWSOCKS • sing-box",
-      "config": "{\"type\":\"shadowsocks\",\"tag\":\"vpn13-1\",\"server\":\"3.145.216.24\",\"server_port\":1718,\"method\":\"2022-blake3-aes-256-gcm\",\"password\":\"oRDno5NqoDNq8ueJM2RObDnVq1Fr7MGgwhWQdVa9lYQ=:abOgzP2qQhKmNB3Ao37WS/ghypXq5B3Vpzg7J8aUmAQ=\"}"
+      "name": "🏴 یاعلی",
+      "description": "VLESS • Xray",
+      "config": "{\"type\":\"vless\",\"tag\":\"vpn13-1\",\"server\":\"18.191.252.44\",\"server_port\":58628,\"uuid\":\"6f766db2-6cde-4602-89d1-09dc39176db8\",\"tls\":{\"enabled\":true,\"server_name\":\"android.clients.google.com\",\"utls\":{\"enabled\":true,\"fingerprint\":\"chrome\"},\"reality\":{\"enabled\":true,\"public_key\":\"TGckY52Cfku9oq0bhiqK0Ot7Vj9ycLbZJWO1B5o6tgQ\",\"short_id\":\"4704aa5a64c3\"}},\"transport\":{\"type\":\"xhttp\",\"path\":\"/\",\"mode\":\"auto\",\"extra\":{\"mode\":\"auto\",\"xPaddingBytes\":\"100-1000\"}}}"
     }
   ]
 }
