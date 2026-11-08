@@ -463,8 +463,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     const Text('تنظیمات اتصال', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF17243B), fontSize: 21, fontWeight: FontWeight.w900)),
     const SizedBox(height: 18),
     Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFE5EAF2))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('DNS', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF17243B))),
-      const SizedBox(height: 8), const Text('DNS انتخابی روی اتصال بعدی اعمال می‌شود.', style: TextStyle(fontSize: 11, color: Color(0xFF74829A))),
+      const Text('Remote DNS (Xray)', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF17243B))),
+      const SizedBox(height: 8), const Text('درخواست‌های DNS پورت 53 از داخل تونل Xray و با TCP به این سرور ارسال می‌شوند. برای اعمال، اتصال را دوباره برقرار کنید.', style: TextStyle(fontSize: 11, color: Color(0xFF74829A))),
       const SizedBox(height: 12), DropdownButtonFormField<String>(key: ValueKey(dnsAddress), initialValue: dnsAddress, decoration: const InputDecoration(labelText: 'سرور DNS', border: OutlineInputBorder()), items: const [
         DropdownMenuItem(value: '1.1.1.1', child: Text('Cloudflare — 1.1.1.1')),
         DropdownMenuItem(value: '1.0.0.1', child: Text('Cloudflare — 1.0.0.1')),
