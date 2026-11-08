@@ -140,6 +140,67 @@ class EngineRouter {
     });
     config['inbounds'] = inbounds;
 
+    // Remote DNS: send Xray's own DNS requests to the selected resolver over
+    // TCP. The DNS module traffic follows routing and therefore uses the
+    // profile's first (proxy) outbound instead of the phone's direct network.
+    final outbounds = config['outbounds'] is List
+        ? List<dynamic>.from(config['outbounds'] as List)
+        : <dynamic>[];
+    String? proxyTag;
+    for (final item in outbounds) {
+      if (item is Map<String, dynamic>) {
+        final tag = item['tag']?.toString();
+        final protocol = item['protocol']?.toString();
+        if (tag != null && tag.isNotEmpty &&
+            protocol != 'freedom' && protocol != 'blackhole' && protocol != 'dns') {
+          proxyTag = tag;
+          break;
+        }
+      }
+    }
+    proxyTag ??= outbounds.whereType<Map<String, dynamic>>()
+        .map((item) => item['tag']?.toString())
+        .whereType<String>().firstOrNull;
+
+    config['dns'] = <String, dynamic>{
+      'servers': ['tcp://1.1.1.1'],
+      'queryStrategy': 'UseIPv4',
+      'tag': 'vpn13-dns',
+    };
+    outbounds.removeWhere((item) =>
+        item is Map && (item['tag'] == 'vpn13-dns-out' || item['tag'] == 'vpn13-dns-direct'));
+    outbounds.add(<String, dynamic>{
+      'tag': 'vpn13-dns-out',
+      'protocol': 'dns',
+      'settings': <String, dynamic>{
+        'rules': <Map<String, dynamic>>[
+          <String, dynamic>{'action': 'hijack'},
+        <String, dynamic>{'action': 'direct'},
+        ],
+      },
+      if (proxyTag != null) 'proxySettings': <String, dynamic>{'tag': proxyTag},
+    });
+    config['outbounds'] = outbounds;
+
+    final routing = config['routing'] is Map
+        ? Map<String, dynamic>.from(config['routing'] as Map)
+        : <String, dynamic>{};
+    final rules = routing['rules'] is List
+        ? List<dynamic>.from(routing['rules'] as List)
+        : <dynamic>[];
+    rules.removeWhere((rule) =>
+        rule is Map && rule['ruleTag'] == 'VPN13 DNS interception');
+    rules.insert(0, <String, dynamic>{
+      'type': 'field',
+      'ruleTag': 'VPN13 DNS interception',
+      'inboundTag': ['tun'],
+      'network': 'tcp,udp',
+      'port': '53',
+      'outboundTag': 'vpn13-dns-out',
+    });
+    routing['rules'] = rules;
+    config['routing'] = routing;
+
     config['stats'] = config['stats'] is Map
         ? Map<String, dynamic>.from(config['stats'] as Map)
         : <String, dynamic>{};
