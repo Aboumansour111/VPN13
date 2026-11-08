@@ -163,7 +163,7 @@ class _LoginScreenState extends State<_LoginScreen> {
                   const Text(
                     'VPN13',
                     style: TextStyle(
-                      color: Color(0xFF10213D),
+                      color: Color(0xFFF0F3F4),
                       fontSize: 29,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 0.5,
@@ -199,7 +199,7 @@ class _LoginScreenState extends State<_LoginScreen> {
                         const Text(
                           'کد ورود',
                           style: TextStyle(
-                            color: Color(0xFF10213D),
+                            color: Color(0xFFF0F3F4),
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
                           ),
@@ -232,7 +232,7 @@ class _LoginScreenState extends State<_LoginScreen> {
                                 _obscure
                                     ? Icons.visibility_off_outlined
                                     : Icons.visibility_outlined,
-                                color: const Color(0xFF71809A),
+                                color: const Color(0xFFB5C0C6),
                               ),
                             ),
                             border: OutlineInputBorder(
