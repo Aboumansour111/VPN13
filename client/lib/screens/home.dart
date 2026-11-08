@@ -371,7 +371,71 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     ]),
   );
 
-  Widget _homeServersSection() => Container(\n    padding: const EdgeInsets.all(15),\n    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFE5EAF2))),\n    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [\n      Row(children: [const Expanded(child: Text('انتخاب سرور', style: TextStyle(color: Color(0xFF17243B), fontSize: 15, fontWeight: FontWeight.w900))), IconButton(onPressed: loadServers, icon: const Icon(Icons.refresh_rounded, size: 20), tooltip: 'به‌روزرسانی')]),\n      TextField(onChanged: (value) => setState(() => _serverQuery = value), decoration: InputDecoration(hintText: 'جستجو در سرورها...', prefixIcon: const Icon(Icons.search_rounded, size: 20), filled: true, fillColor: const Color(0xFFEEF1F7), contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12), border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none))),\n      const SizedBox(height: 10),\n      if (servers.isEmpty) Text(loading ? 'در حال دریافت سرورها...' : 'سروری موجود نیست', style: const TextStyle(color: Color(0xFF74829A)))\n      else ...servers.where((server) => server.name.toLowerCase().contains(_serverQuery.trim().toLowerCase())).map((server) {\n        final active = server.id == selectedId;\n        final canSelect = status == _VpnStatus.disconnected && !busy;\n        return Padding(padding: const EdgeInsets.only(bottom: 8), child: Material(color: active ? const Color(0xFFE7F5F0) : const Color(0xFFF9FAFC), borderRadius: BorderRadius.circular(15), child: InkWell(onTap: !canSelect ? null : () => selectServer(server), borderRadius: BorderRadius.circular(15), child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12), decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), border: Border.all(color: active ? const Color(0xFF159B78) : const Color(0xFFE8EDF4), width: active ? 1.4 : 1)), child: Row(children: [Icon(active ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded, color: active ? const Color(0xFF087A60) : const Color(0xFFAAB3C0), size: 21), const SizedBox(width: 10), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(server.name, style: const TextStyle(color: Color(0xFF17243B), fontSize: 14, fontWeight: FontWeight.w800)), if (server.description != null) Text(server.description!, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF168568), fontSize: 10))])), const Icon(Icons.dns_rounded, color: Color(0xFF159B78), size: 23)])))));\n      }),\n      if (connected) const Padding(padding: EdgeInsets.only(top: 4), child: Text('برای تغییر سرور، ابتدا اتصال را قطع کنید.', style: TextStyle(color: Color(0xFF77849A), fontSize: 10))),\n    ]),\n  );\n\n  Future<void> loadInstalledApps() async {
+  Widget _homeServersSection() => Container(
+    padding: const EdgeInsets.all(15),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: const Color(0xFFE5EAF2)),
+    ),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(children: [
+        const Expanded(child: Text('انتخاب سرور', style: TextStyle(color: Color(0xFF17243B), fontSize: 15, fontWeight: FontWeight.w900))),
+        IconButton(onPressed: loadServers, icon: const Icon(Icons.refresh_rounded, size: 20), tooltip: 'به‌روزرسانی'),
+      ]),
+      TextField(
+        onChanged: (value) => setState(() => _serverQuery = value),
+        decoration: InputDecoration(
+          hintText: 'جستجو در سرورها...',
+          prefixIcon: const Icon(Icons.search_rounded, size: 20),
+          filled: true,
+          fillColor: const Color(0xFFEEF1F7),
+          contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+        ),
+      ),
+      const SizedBox(height: 10),
+      if (servers.isEmpty)
+        Text(loading ? 'در حال دریافت سرورها...' : 'سروری موجود نیست', style: const TextStyle(color: Color(0xFF74829A)))
+      else
+        ...servers.where((server) => server.name.toLowerCase().contains(_serverQuery.trim().toLowerCase())).map((server) {
+          final active = server.id == selectedId;
+          final canSelect = status == _VpnStatus.disconnected && !busy;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Material(
+              color: active ? const Color(0xFFE7F5F0) : const Color(0xFFF9FAFC),
+              borderRadius: BorderRadius.circular(15),
+              child: InkWell(
+                onTap: !canSelect ? null : () => selectServer(server),
+                borderRadius: BorderRadius.circular(15),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: active ? const Color(0xFF159B78) : const Color(0xFFE8EDF4), width: active ? 1.4 : 1),
+                  ),
+                  child: Row(children: [
+                    Icon(active ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded, color: active ? const Color(0xFF087A60) : const Color(0xFFAAB3C0), size: 21),
+                    const SizedBox(width: 10),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(server.name, style: const TextStyle(color: Color(0xFF17243B), fontSize: 14, fontWeight: FontWeight.w800)),
+                      if (server.description != null)
+                        Text(server.description!, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF168568), fontSize: 10)),
+                    ])),
+                    const Icon(Icons.dns_rounded, color: Color(0xFF159B78), size: 23),
+                  ]),
+                ),
+              ),
+            ),
+          );
+        }),
+      if (connected)
+        const Padding(padding: EdgeInsets.only(top: 4), child: Text('برای تغییر سرور، ابتدا اتصال را قطع کنید.', style: TextStyle(color: Color(0xFF77849A), fontSize: 10))),
+    ]),
+  );
+
+  Future<void> loadInstalledApps() async {
     setState(() => appsLoading = true);
     try {
       final apps = await NativeXray.installedApps();
