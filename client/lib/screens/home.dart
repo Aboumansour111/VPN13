@@ -295,7 +295,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFF5F7FC),
+    backgroundColor: const Color(0xFF252F38),
     body: SafeArea(
       child: loading ? const Center(child: CircularProgressIndicator()) :
         IndexedStack(index: _activeTab, children: [_homePage(), _settingsPage()]),
@@ -733,9 +733,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget _trafficPanel() => Container(
         padding: const EdgeInsets.all(17),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: const Color(0xFF35434C),
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: const Color(0xFFE5EAF2)),
+          border: Border.all(color: const Color(0xFF46555E)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
