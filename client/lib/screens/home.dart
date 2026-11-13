@@ -590,7 +590,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           const Padding(
             padding: EdgeInsets.only(bottom: 11, top: 5),
             child: Text(
-              'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَآلِ مُحَمَّدٍ',
+              'اللهم صل علی محمد و آل محمد الائمه و المهدیین و سلم تسلیما',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Color(0xFF39A98B),
