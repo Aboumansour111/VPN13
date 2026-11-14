@@ -1,4 +1,4 @@
-name: VPN13 Universal APK
+name: VPN13 Universal APK - verified JNI
 
 on:
   workflow_dispatch:
