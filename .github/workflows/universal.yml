@@ -1,0 +1,151 @@
+name: VPN13 Universal APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - build/universal
+
+permissions:
+  contents: read
+
+jobs:
+  build-universal:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout VPN13
+        uses: actions/checkout@v4
+
+      - name: Checkout AndroidLibXrayLite source
+        uses: actions/checkout@v4
+        with:
+          repository: 2dust/AndroidLibXrayLite
+          ref: v26.10.31
+          path: AndroidLibXrayLite
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: AndroidLibXrayLite/go.mod
+          cache-dependency-path: AndroidLibXrayLite/go.sum
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.47.0"
+          channel: stable
+          cache: true
+
+      - name: Set up Android SDK and NDK
+        uses: android-actions/setup-android@v4
+        with:
+          log-accepted-android-sdk-licenses: false
+          cmdline-tools-version: "14742923"
+          packages: "platforms;android-37.0 build-tools;37.0.0 platform-tools"
+
+      - name: Install Android NDK
+        shell: bash
+        run: |
+          yes | sdkmanager --channel=0 --install "ndk;29.0.14206865"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> "$GITHUB_ENV"
+
+      - name: Build multi-ABI Xray AAR
+        working-directory: AndroidLibXrayLite
+        shell: bash
+        run: |
+          mkdir -p assets data
+          bash gen_assets.sh download
+          cp -v data/*.dat assets/
+          go install golang.org/x/mobile/cmd/gomobile@latest
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+          "$(go env GOPATH)/bin/gomobile" init
+          go mod tidy
+          "$(go env GOPATH)/bin/gomobile" bind -v \
+            -target=android/arm,android/arm64,android/386,android/amd64 \
+            -androidapi 24 \
+            -trimpath \
+            -ldflags="-s -w -buildid= -checklinkname=0" ./
+
+      - name: Verify Xray AAR contains all Android ABIs
+        shell: bash
+        run: |
+          AAR="AndroidLibXrayLite/libv2ray.aar"
+          test -f "$AAR"
+          for abi in armeabi-v7a arm64-v8a x86 x86_64; do
+            unzip -Z1 "$AAR" | grep -Fx "jni/$abi/libv2ray.so"
+          done
+          mkdir -p client/android/app/libs
+          cp "$AAR" client/android/app/libs/libv2ray.aar
+
+      - name: Ensure Flutter Android Gradle scaffold
+        shell: pwsh
+        run: ./scripts/ensure-client-android-scaffold.ps1
+
+      - name: Set Gradle wrapper permissions
+        run: chmod +x client/android/gradlew
+
+      - name: Configure Universal Android ABIs
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path("client/android/app/build.gradle.kts")
+          s = p.read_text()
+          s, count = re.subn(
+              r'abiFilters\\s*\\+=\\s*listOf\\([^)]*\\)',
+              'abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")',
+              s,
+              count=1,
+          )
+          if count != 1:
+              raise SystemExit("Could not safely locate the app ABI filter.")
+          s, count = re.subn(
+              r'packaging\\s*\\{\\s*jniLibs\\s*\\{\\s*excludes\\s*\\+=\\s*setOf\\([^)]*\\)\\s*\\}\\s*\\}',
+              '',
+              s,
+              count=1,
+              flags=re.S,
+          )
+          if count != 1:
+              raise SystemExit("Could not safely remove the ARM64-only JNI packaging exclusions.")
+          p.write_text(s)
+          print("Configured armeabi-v7a, arm64-v8a, x86 and x86_64.")
+          PY
+
+      - name: Resolve Flutter dependencies
+        working-directory: client
+        run: flutter pub get
+
+      - name: Generate Android launcher icons
+        working-directory: client
+        run: dart run flutter_launcher_icons
+
+      - name: Build Universal release APK
+        working-directory: client
+        run: flutter build apk --release --target-platform android-arm,android-arm64,android-x86,android-x64
+
+      - name: Verify Universal APK ABI contents
+        shell: bash
+        run: |
+          APK="client/build/app/outputs/flutter-apk/app-release.apk"
+          test -f "$APK"
+          for abi in armeabi-v7a arm64-v8a x86 x86_64; do
+            unzip -Z1 "$APK" | grep -q "^lib/$abi/"
+          done
+          echo "Universal APK ABI contents verified."
+
+      - name: Upload Universal APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: VPN13-Universal-Android
+          path: client/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 30
