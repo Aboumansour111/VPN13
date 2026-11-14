@@ -270,7 +270,7 @@ class _LoginScreenState extends State<_LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text(
-                    'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَآلِ مُحَمَّدٍ',
+                    'اللهم صل علی محمد و آل محمد الائمه و المهدیین و سلم تسلیما',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Color(0xFF39A98B),
