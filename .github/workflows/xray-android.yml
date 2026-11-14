@@ -60,6 +60,10 @@ jobs:
         working-directory: client
         run: flutter pub get
 
+      - name: Generate Android launcher icons
+        working-directory: client
+        run: dart run flutter_launcher_icons
+
       - name: Analyze Dart
         working-directory: client
         run: flutter analyze
