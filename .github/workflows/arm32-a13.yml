@@ -1,0 +1,110 @@
+name: VPN13 ARM32 APK (Samsung A13)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - build/arm32-a13
+
+permissions:
+  contents: read
+
+jobs:
+  build-arm32:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout ARM32 build branch
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.47.0"
+          channel: stable
+          cache: true
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools platforms;android-36 build-tools;36.0.0
+
+      - name: Ensure Flutter Android Gradle scaffold
+        shell: pwsh
+        run: ./scripts/ensure-client-android-scaffold.ps1
+
+      - name: Set Gradle wrapper permissions
+        run: chmod +x client/android/gradlew
+
+      - name: Download and verify Xray AAR
+        shell: bash
+        run: |
+          mkdir -p client/android/app/libs
+          curl --fail --location --retry 3 \
+            "https://github.com/2dust/AndroidLibXrayLite/releases/download/v26.10.31/libv2ray.aar" \
+            --output client/android/app/libs/libv2ray.aar
+          echo "2efdf731b1ed624eb1cb0d5a4d0aa95c0672e89f9702226d1ba2dc90308630b6  client/android/app/libs/libv2ray.aar" | sha256sum --check -
+          unzip -Z1 client/android/app/libs/libv2ray.aar | grep -Fx "jni/armeabi-v7a/libv2ray.so"
+
+      - name: Configure this build for ARM32 only
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("client/android/app/build.gradle.kts")
+          s = p.read_text()
+          old_abi = 'abiFilters += listOf("arm64-v8a")'
+          new_abi = 'abiFilters += listOf("armeabi-v7a")'
+          old_excludes = '''excludes += setOf(
+                          "lib/armeabi-v7a/**",
+                          "lib/x86/**",
+                          "lib/x86_64/**"
+                      )'''
+          new_excludes = '''excludes += setOf(
+                          "lib/arm64-v8a/**",
+                          "lib/armeabi/**",
+                          "lib/x86/**",
+                          "lib/x86_64/**"
+                      )'''
+          if old_abi not in s or old_excludes not in s:
+              raise SystemExit("Expected ARM64 Gradle configuration was not found; refusing an unsafe edit.")
+          s = s.replace(old_abi, new_abi, 1).replace(old_excludes, new_excludes, 1)
+          p.write_text(s)
+          print("Configured armeabi-v7a only for this CI build.")
+          PY
+
+      - name: Resolve Flutter dependencies
+        working-directory: client
+        run: flutter pub get
+
+      - name: Generate Android launcher icons
+        working-directory: client
+        run: dart run flutter_launcher_icons
+
+      - name: Build ARM32 release APK
+        working-directory: client
+        run: flutter build apk --release --target-platform android-arm
+
+      - name: Verify APK contains ARM32 native libraries
+        shell: bash
+        run: |
+          APK="client/build/app/outputs/flutter-apk/app-release.apk"
+          unzip -Z1 "$APK" | grep -q '^lib/armeabi-v7a/'
+          if unzip -Z1 "$APK" | grep -q '^lib/arm64-v8a/'; then
+            echo "Unexpected ARM64 libraries found in ARM32 APK."
+            exit 1
+          fi
+          echo "ARM32 APK ABI contents verified."
+
+      - name: Upload Samsung A13 ARM32 APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: VPN13-Samsung-A13-armeabi-v7a
+          path: client/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 30
