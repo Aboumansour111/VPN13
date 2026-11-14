@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 import 'config.dart';
@@ -56,6 +57,8 @@ class _AccessGate extends StatefulWidget {
 class _AccessGateState extends State<_AccessGate> {
   static const _storage = FlutterSecureStorage();
   static const _accessCodeKey = 'vpn13_access_code';
+  static const _accessCheckedAtKey = 'vpn13_access_checked_at';
+  static const _accessCheckInterval = Duration(days: 7);
 
   bool _checking = true;
   bool _authorized = false;
@@ -129,24 +132,40 @@ class _AccessGateState extends State<_AccessGate> {
   Future<void> _restoreAccess() async {
     try {
       final savedCode = await _storage.read(key: _accessCodeKey);
-      if (savedCode == null || savedCode.isEmpty) {
+      if (savedCode == null || savedCode.isEmpty) return;
+
+      final prefs = await SharedPreferences.getInstance();
+      final checkedAtMs = prefs.getInt(_accessCheckedAtKey);
+      final checkedAt = checkedAtMs == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(checkedAtMs);
+      final now = DateTime.now();
+
+      // Reuse the locally stored authorization for seven days.
+      if (checkedAt != null && now.difference(checkedAt) < _accessCheckInterval) {
+        _authorized = true;
         return;
       }
 
-      final valid = await _validateCode(savedCode);
-      if (valid) {
+      try {
+        final valid = await _validateCode(savedCode);
+        if (valid) {
+          await prefs.setInt(_accessCheckedAtKey, now.millisecondsSinceEpoch);
+          _authorized = true;
+        } else {
+          await _storage.delete(key: _accessCodeKey);
+          await prefs.remove(_accessCheckedAtKey);
+          _gateMessage = 'کد ذخیره‌شده دیگر معتبر نیست؛ کد جدید را وارد کنید.';
+        }
+      } catch (_) {
+        // Network failure must not lock out a previously authenticated user.
         _authorized = true;
-      } else {
-        await _storage.delete(key: _accessCodeKey);
-        _gateMessage = 'کد ذخیره‌شده دیگر معتبر نیست؛ کد جدید را وارد کنید.';
+        _gateMessage = 'بررسی دوره‌ای کد به اینترنت دسترسی نداشت؛ از کد ذخیره‌شده استفاده شد.';
       }
     } catch (_) {
-      _gateMessage =
-          'برای بررسی اعتبار کد، اتصال اینترنت لازم است. پس از اتصال دوباره تلاش کنید.';
+      _gateMessage = 'بازیابی اطلاعات ورود انجام نشد؛ دوباره برنامه را باز کنید.';
     } finally {
-      if (mounted) {
-        setState(() => _checking = false);
-      }
+      if (mounted) setState(() => _checking = false);
     }
   }
 
@@ -155,6 +174,8 @@ class _AccessGateState extends State<_AccessGate> {
     if (!valid) return false;
 
     await _storage.write(key: _accessCodeKey, value: code);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_accessCheckedAtKey, DateTime.now().millisecondsSinceEpoch);
     if (mounted) {
       setState(() => _authorized = true);
     }
