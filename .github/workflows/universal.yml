@@ -95,7 +95,6 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
           p = Path("client/android/app/build.gradle.kts")
           s = p.read_text()
           old_abi = 'abiFilters += listOf("arm64-v8a")'
@@ -103,10 +102,21 @@ jobs:
           if old_abi not in s:
               raise SystemExit("Could not safely locate the ARM64-only ABI filter.")
           s = s.replace(old_abi, new_abi, 1)
-          s, count = re.subn(r'(?ms)^    packaging \\{\\n.*?^    \\}\\n', '', s, count=1)
-          if count != 1:
-              raise SystemExit("Could not safely remove the ARM64-only JNI packaging exclusions.")
-          p.write_text(s)
+          lines = s.splitlines(keepends=True)
+          start = next((i for i, line in enumerate(lines) if line.strip() == "packaging {"), None)
+          if start is None:
+              raise SystemExit("Could not find the JNI packaging block.")
+          depth = 0
+          end = None
+          for i in range(start, len(lines)):
+              depth += lines[i].count("{") - lines[i].count("}")
+              if depth == 0:
+                  end = i + 1
+                  break
+          if end is None:
+              raise SystemExit("JNI packaging block is unbalanced.")
+          del lines[start:end]
+          p.write_text("".join(lines))
           print("Configured armeabi-v7a, arm64-v8a, x86 and x86_64.")
           PY
 
