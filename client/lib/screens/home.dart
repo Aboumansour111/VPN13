@@ -180,11 +180,64 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  Future<void> loadServers() async {
+  static const _serversCacheKey = 'vpn13_servers_cache_json';
+  static const _serversFetchedAtKey = 'vpn13_servers_fetched_at';
+  static const _serversRefreshInterval = Duration(hours: 24);
+
+  List<ServerItem> _parseServers(String raw) {
+    final document = jsonDecode(raw) as Map<String, dynamic>;
+    return (document['servers'] as List)
+        .map((item) => ServerItem.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<void> _showServers(List<ServerItem> list, SharedPreferences prefs) async {
+    var id = prefs.getInt('selectedServer');
+    if (id == null || !list.any((server) => server.id == id)) {
+      id = list.isEmpty ? null : list.first.id;
+      if (id == null) {
+        await prefs.remove('selectedServer');
+      } else {
+        await prefs.setInt('selectedServer', id);
+      }
+    }
+    if (!mounted) return;
     setState(() {
-      loading = true;
-      error = null;
+      servers = list;
+      selectedId = id;
+      loading = false;
     });
+  }
+
+  Future<void> loadServers({bool force = false}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final cachedRaw = prefs.getString(_serversCacheKey);
+    final cachedAtMs = prefs.getInt(_serversFetchedAtKey);
+    List<ServerItem>? cached;
+    if (cachedRaw != null) {
+      try {
+        cached = _parseServers(cachedRaw);
+      } catch (_) {
+        cached = null;
+      }
+    }
+
+    if (!force && cached != null) {
+      await _showServers(cached, prefs);
+      final fresh = cachedAtMs != null &&
+          DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(cachedAtMs)) <
+              _serversRefreshInterval;
+      if (fresh) {
+        if (mounted) setState(() => error = null);
+        return;
+      }
+    } else if (mounted) {
+      setState(() {
+        loading = cached == null;
+        error = null;
+      });
+    }
+
     try {
       final response = await http
           .get(
@@ -193,34 +246,26 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           )
           .timeout(const Duration(seconds: 20));
       if (response.statusCode != 200) {
-        throw Exception('HTTP ${response.statusCode}');
+        throw Exception('HTTP ' + response.statusCode.toString());
       }
       final document = jsonDecode(response.body) as Map<String, dynamic>;
       final list = (document['servers'] as List)
           .map((item) => ServerItem.fromJson(item as Map<String, dynamic>))
           .toList();
-      final prefs = await SharedPreferences.getInstance();
-      var id = prefs.getInt('selectedServer');
-      if (id == null || !list.any((server) => server.id == id)) {
-        id = list.isEmpty ? null : list.first.id;
-        if (id == null) {
-          await prefs.remove('selectedServer');
-        } else {
-          await prefs.setInt('selectedServer', id);
-        }
-      }
-      if (!mounted) return;
-      setState(() {
-        servers = list;
-        selectedId = id;
-      });
+
+      await prefs.setString(_serversCacheKey, response.body);
+      await prefs.setInt(_serversFetchedAtKey, DateTime.now().millisecondsSinceEpoch);
+      await _showServers(list, prefs);
+      if (mounted) setState(() => error = null);
     } catch (e) {
       if (mounted) {
-        setState(() => error =
-            'دریافت فهرست سرورها ناموفق بود. اتصال اینترنت را بررسی کنید.\n$e');
+        setState(() {
+          loading = false;
+          error = cached != null
+              ? 'به‌روزرسانی سرورها انجام نشد؛ فهرست ذخیره‌شده نمایش داده می‌شود.\n$e'
+              : 'دریافت فهرست سرورها ناموفق بود. اتصال اینترنت را بررسی کنید.\n$e';
+        });
       }
-    } finally {
-      if (mounted) setState(() => loading = false);
     }
   }
 
@@ -315,7 +360,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   );
 
   Widget _homePage() => RefreshIndicator(
-    onRefresh: loadServers,
+    onRefresh: () => loadServers(force: true),
     child: ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 24),
@@ -328,7 +373,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         if (error != null) ...[const SizedBox(height: 12), _errorPanel(error!)],
         const SizedBox(height: 14),
         OutlinedButton.icon(
-          onPressed: loadServers, icon: const Icon(Icons.sync_rounded, size: 19),
+          onPressed: () => loadServers(force: true), icon: const Icon(Icons.sync_rounded, size: 19),
           label: const Text('به‌روزرسانی فهرست سرورها'),
           style: OutlinedButton.styleFrom(
             foregroundColor: const Color(0xFF72CDB0), side: const BorderSide(color: Color(0xFF53636B)),
@@ -376,7 +421,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             padding: const EdgeInsets.symmetric(horizontal: 7),
           ),
         ),
-        IconButton(onPressed: loadServers, icon: const Icon(Icons.refresh_rounded, size: 20), tooltip: 'به‌روزرسانی'),
+        IconButton(onPressed: () => loadServers(force: true), icon: const Icon(Icons.refresh_rounded, size: 20), tooltip: 'به‌روزرسانی'),
       ]),
       TextField(
         onChanged: (value) => setState(() => _serverQuery = value),
