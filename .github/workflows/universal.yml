@@ -52,7 +52,11 @@ jobs:
       - name: Install Android NDK
         shell: bash
         run: |
+          set +o pipefail
           yes | sdkmanager --channel=0 --install "ndk;29.0.14206865"
+          sdk_status=${PIPESTATUS[1]}
+          set -o pipefail
+          test "$sdk_status" -eq 0
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> "$GITHUB_ENV"
 
       - name: Build multi-ABI Xray AAR
