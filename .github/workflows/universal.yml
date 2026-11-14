@@ -62,7 +62,7 @@ jobs:
           mkdir -p assets data
           bash gen_assets.sh download
           cp -v data/*.dat assets/
-          go install golang.org/x/mobile/cmd/gomobile@latest
+          go install golang.org/x/mobile/cmd/gomobile@v0.0.0-20261011034528-197770444867
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
           "$(go env GOPATH)/bin/gomobile" init
           go mod tidy
@@ -95,27 +95,26 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
-
           p = Path("client/android/app/build.gradle.kts")
           s = p.read_text()
-          s, count = re.subn(
-              r'abiFilters\\s*\\+=\\s*listOf\\([^)]*\\)',
-              'abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")',
-              s,
-              count=1,
-          )
-          if count != 1:
-              raise SystemExit("Could not safely locate the app ABI filter.")
-          s, count = re.subn(
-              r'packaging\\s*\\{\\s*jniLibs\\s*\\{\\s*excludes\\s*\\+=\\s*setOf\\([^)]*\\)\\s*\\}\\s*\\}',
-              '',
-              s,
-              count=1,
-              flags=re.S,
-          )
-          if count != 1:
-              raise SystemExit("Could not safely remove the ARM64-only JNI packaging exclusions.")
+          old_abi = 'abiFilters += listOf("arm64-v8a")'
+          new_abi = 'abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")'
+          if old_abi not in s:
+              raise SystemExit("Could not safely locate the ARM64-only ABI filter.")
+          s = s.replace(old_abi, new_abi, 1)
+          old_packaging = """    packaging {
+                  jniLibs {
+                      excludes += setOf(
+                          "lib/armeabi-v7a/**",
+                          "lib/x86/**",
+                          "lib/x86_64/**"
+                      )
+                  }
+              }
+          """
+          if old_packaging not in s:
+              raise SystemExit("Could not safely locate the ARM64-only JNI packaging exclusions.")
+          s = s.replace(old_packaging, "", 1)
           p.write_text(s)
           print("Configured armeabi-v7a, arm64-v8a, x86 and x86_64.")
           PY
