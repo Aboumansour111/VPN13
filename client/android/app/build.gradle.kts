@@ -20,6 +20,12 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // This app is distributed only to 64-bit ARM Android devices.
+        // Filter native AAR dependencies as well as Flutter's own libraries.
+        ndk {
+            abiFilters += listOf("arm64-v8a")
+        }
     }
 
     buildTypes {
