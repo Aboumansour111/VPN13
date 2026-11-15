@@ -116,9 +116,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final stateName = event['state']?.toString() ?? 'disconnected';
     final message = event['message']?.toString();
     if (stateName == 'error') {
-      setState(() => connectionError = message?.isNotEmpty == true
+      setState(() {
+        _connectionPingMs = null;
+        connectionError = message?.isNotEmpty == true
           ? message
-          : 'خطا در هسته Xray');
+          : 'خطا در هسته Xray';
+      });
       _handleStatus(_VpnStatus.disconnected);
       return;
     }
@@ -337,7 +340,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Future<void> disconnect() async {
     if (busy) return;
-    setState(() => busy = true);
+    setState(() {
+      busy = true;
+      _connectionPingMs = null;
+    });
     try {
       await NativeXray.disconnect();
     } catch (e) {
@@ -902,7 +908,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               fontSize: 11,
             ),
           ),
-          if (active && _connectionPingMs != null) ...[
+          if (_connectionPingMs != null) ...[
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
