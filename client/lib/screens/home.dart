@@ -70,6 +70,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final Map<int, int> _pingResults = {};
   final Set<int> _pingTesting = {};
   bool _testingAll = false;
+  bool _checkingHandshake = false;
+  int? _connectionPingMs;
 
   bool get connected => status == _VpnStatus.connected;
 
@@ -284,6 +286,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (server == null || busy) return;
     setState(() {
       busy = true;
+      _checkingHandshake = true;
+      _connectionPingMs = null;
       connectionError = null;
     });
     try {
@@ -292,14 +296,42 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       if (!await NativeXray.requestPermission()) {
         throw Exception('مجوز VPN صادر نشد.');
       }
-      await NativeXray.connect(config: xrayConfig, profileName: server.name, dnsAddress: dnsAddress, excludedApps: excludedApps.toList());
+
+      // Verify a real request through this server before starting the VPN UI state.
+      final delay = await NativeXray.measureOutboundDelay(xrayConfig)
+          .timeout(const Duration(seconds: 20));
+      if (delay < 0) {
+        throw Exception('سرور به درخواست آزمایشی پاسخ نداد.');
+      }
+      if (!mounted) return;
+      setState(() {
+        _connectionPingMs = delay;
+        _checkingHandshake = false;
+      });
+
+      await NativeXray.connect(
+        config: xrayConfig,
+        profileName: server.name,
+        dnsAddress: dnsAddress,
+        excludedApps: excludedApps.toList(),
+      );
     } catch (e) {
       if (mounted) {
-        setState(() => connectionError = e.toString());
-        message('اتصال برقرار نشد؛ جزئیات خطا در پایین صفحه آمده است.');
+        final detail = e is TimeoutException
+            ? 'مهلت بررسی سرور تمام شد؛ پاسخ پینگ دریافت نشد.'
+            : 'هندشیک یا پینگ سرور ناموفق بود؛ اتصال برقرار نشد.\n$e';
+        setState(() {
+          _checkingHandshake = false;
+          _connectionPingMs = null;
+          connectionError = detail;
+        });
+        message('سرور پاسخ نداد؛ اتصال انجام نشد.');
       }
     } finally {
-      if (mounted) setState(() => busy = false);
+      if (mounted) setState(() {
+        busy = false;
+        _checkingHandshake = false;
+      });
     }
   }
 
@@ -728,7 +760,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final active = connected;
     final statusLabel = active
         ? 'اتصال برقرار است'
-        : status == _VpnStatus.connecting
+        : _checkingHandshake
+            ? 'در حال بررسی هندشیک و پینگ…'
+            : status == _VpnStatus.connecting
             ? 'در حال اتصال…'
             : status == _VpnStatus.disconnecting
                 ? 'در حال قطع اتصال…'
@@ -868,6 +902,25 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               fontSize: 11,
             ),
           ),
+          if (active && _connectionPingMs != null) ...[
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.speed_rounded, color: Color(0xFF75D6B5), size: 16),
+                const SizedBox(width: 5),
+                Text(
+                  'پینگ اتصال: $_connectionPingMs ms',
+                  style: const TextStyle(
+                    color: Color(0xFF75D6B5),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 8),
           Text(
             busy || status == _VpnStatus.connecting || status == _VpnStatus.disconnecting
