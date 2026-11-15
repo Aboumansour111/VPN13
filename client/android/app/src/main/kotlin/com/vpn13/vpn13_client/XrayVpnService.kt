@@ -222,11 +222,13 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
             @Suppress("DEPRECATION")
             Notification.Builder(this)
         }
-        val speedText = "دریافت: ${formatSpeed(currentDownloadSpeed)}   ارسال: ${formatSpeed(currentUploadSpeed)}"
+        val totalText = "حجم اتصال فعلی — دریافت: ${formatDataSize(currentDownloadTotal)}   ارسال: ${formatDataSize(currentUploadTotal)}"
+        val speedText = "سرعت لحظه‌ای — دریافت: ${formatSpeed(currentDownloadSpeed)}   ارسال: ${formatSpeed(currentUploadSpeed)}"
+        val notificationText = "$totalText\n$speedText"
         return builder
             .setContentTitle(profileName)
-            .setContentText(speedText)
-            .setStyle(Notification.BigTextStyle().bigText(speedText).setBigContentTitle(profileName))
+            .setContentText(notificationText)
+            .setStyle(Notification.BigTextStyle().bigText(notificationText).setBigContentTitle(profileName))
             .setSmallIcon(applicationInfo.icon)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
@@ -300,6 +302,17 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
             speed >= 1_048_576.0 -> String.format(java.util.Locale.US, "%.2f MB/s", speed / 1_048_576.0)
             speed >= 1_024.0 -> String.format(java.util.Locale.US, "%.1f KB/s", speed / 1_024.0)
             else -> String.format(java.util.Locale.US, "%.0f B/s", speed)
+        }
+    }
+
+
+    private fun formatDataSize(bytes: Long): String {
+        val size = bytes.coerceAtLeast(0L).toDouble()
+        return when {
+            size >= 1_073_741_824.0 -> String.format(java.util.Locale.US, "%.2f GB", size / 1_073_741_824.0)
+            size >= 1_048_576.0 -> String.format(java.util.Locale.US, "%.2f MB", size / 1_048_576.0)
+            size >= 1_024.0 -> String.format(java.util.Locale.US, "%.1f KB", size / 1_024.0)
+            else -> String.format(java.util.Locale.US, "%.0f B", size)
         }
     }
 
