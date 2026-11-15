@@ -512,8 +512,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF102A36), Color(0xFF091923), Color(0xFF07141D)]),
       ),
       child: SafeArea(
-      child: loading ? const Center(child: CircularProgressIndicator()) :
-        AnimatedSwitcher(
+      child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 560),
           reverseDuration: const Duration(milliseconds: 440),
           switchInCurve: Curves.easeOutCubic,
@@ -566,11 +565,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 24),
       children: [
         _EntranceMotion(child: _topBar()),
-        const SizedBox(height: 18),
-        _EntranceMotion(delay: const Duration(milliseconds: 70), child: _connectionPanel()),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         _EntranceMotion(
-          delay: const Duration(milliseconds: 140),
+          delay: const Duration(milliseconds: 50),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -580,6 +577,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ],
           ),
         ),
+        const SizedBox(height: 12),
+        _EntranceMotion(delay: const Duration(milliseconds: 100), child: _connectionPanel()),
         const SizedBox(height: 12),
         _EntranceMotion(delay: const Duration(milliseconds: 280), child: _durationSummary()),
         if (connectionError != null) ...[const SizedBox(height: 12), _errorPanel(connectionError!)],
@@ -626,8 +625,25 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         Expanded(child: Text('سرور', maxLines: 1, style: TextStyle(color: Color(0xFFEAFBFB), fontSize: 12, fontWeight: FontWeight.w800))),
       ]),
       const SizedBox(height: 8),
-      DropdownButtonHideUnderline(
-        child: DropdownButton<int>(
+      if (loading)
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 10),
+          child: Row(
+            children: [
+              SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)),
+              SizedBox(width: 7),
+              Expanded(child: Text('در حال دریافت سرورها…', style: TextStyle(color: Color(0xFF9BB8C1), fontSize: 10))),
+            ],
+          ),
+        )
+      else if (servers.isEmpty)
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 10),
+          child: Text('سروری برای نمایش دریافت نشد', style: TextStyle(color: Color(0xFFFFC0B8), fontSize: 10)),
+        )
+      else
+        DropdownButtonHideUnderline(
+          child: DropdownButton<int>(
           value: servers.any((s) => s.id == selectedId) ? selectedId : null,
           isExpanded: true,
           dropdownColor: const Color(0xFF203640),
@@ -644,7 +660,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           },
         ),
       ),
-      if (selected != null && _pingResults.containsKey(selectedId)) ...[
+      if (!loading && servers.isNotEmpty && selected != null && _pingResults.containsKey(selectedId)) ...[
         const SizedBox(height: 4),
         Text(_pingResults[selectedId]! >= 0 ? '${_pingResults[selectedId]} ms' : 'پینگ ناموفق',
           style: const TextStyle(color: Color(0xFF80E5D4), fontSize: 10)),
