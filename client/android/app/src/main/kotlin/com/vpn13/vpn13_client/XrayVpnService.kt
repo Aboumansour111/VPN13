@@ -226,7 +226,7 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
         return builder
             .setContentTitle(profileName)
             .setContentText(speedText)
-            .setStyle(Notification.BigTextStyle().bigText(speedText).bigContentTitle(profileName))
+            .setStyle(Notification.BigTextStyle().bigText(speedText).setBigContentTitle(profileName))
             .setSmallIcon(applicationInfo.icon)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
