@@ -222,13 +222,15 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
             @Suppress("DEPRECATION")
             Notification.Builder(this)
         }
+        // Isolate Latin digits/units from Persian text to keep Android's RTL layout stable.
+        fun isolated(value: String) = "\u2068$value\u2069"
         val notificationText = listOf(
-            "حجم مصرفی این اتصال",
-            "دریافت: ${formatDataSize(currentDownloadTotal)}",
-            "ارسال: ${formatDataSize(currentUploadTotal)}",
+            "حجم اتصال",
+            "↓ دریافت  ${isolated(formatDataSize(currentDownloadTotal))}",
+            "↑ ارسال  ${isolated(formatDataSize(currentUploadTotal))}",
             "سرعت لحظه‌ای",
-            "دریافت: ${formatSpeed(currentDownloadSpeed)}",
-            "ارسال: ${formatSpeed(currentUploadSpeed)}"
+            "↓ دریافت  ${isolated(formatSpeed(currentDownloadSpeed))}",
+            "↑ ارسال  ${isolated(formatSpeed(currentUploadSpeed))}"
         ).joinToString("\\n")
         return builder
             .setContentTitle(profileName)
