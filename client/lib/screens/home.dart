@@ -177,7 +177,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Duration elapsed = Duration.zero;
   _VpnStatus status = _VpnStatus.disconnected;
   int _activeTab = 0;
-  String _serverQuery = '';
+
   String dnsAddress = '1.1.1.1';
   final Set<String> excludedApps = {};
   List<Map<String, String>> installedApps = [];
@@ -687,22 +687,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     await _runPingTest(server);
   }
 
-  Future<void> _testAllServers() async {
-    if (_testingAll || _pingTesting.isNotEmpty || servers.isEmpty) return;
-    setState(() {
-      _testingAll = true;
-      _pingResults.clear();
-    });
-    try {
-      // Two independent Xray test instances at a time keeps memory and CPU use bounded.
-      for (var i = 0; i < servers.length; i += 2) {
-        final batch = servers.skip(i).take(2).toList();
-        await Future.wait(batch.map(_runPingTest));
-      }
-    } finally {
-      if (mounted) setState(() => _testingAll = false);
-    }
-  }
 
   Future<void> loadInstalledApps() async {
     setState(() => appsLoading = true);
@@ -963,35 +947,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     ],
   );
 
-  Widget _trafficValue({
-    required IconData icon,
-    required String title,
-    required String speed,
-    required String total,
-    required Color color,
-  }) => Container(
-        padding: const EdgeInsets.all(13),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF203B45), Color(0xFF10232C)]),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: color.withValues(alpha: .32)),
-          boxShadow: [BoxShadow(color: color.withValues(alpha: .07), blurRadius: 12)],
-        ),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            Icon(icon, color: color, size: 19),
-            const SizedBox(width: 6),
-            Text(title, style: const TextStyle(color: Color(0xFFB5D0D3), fontSize: 12, fontWeight: FontWeight.w700)),
-          ]),
-          const SizedBox(height: 10),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 200),
-            child: Text(speed, key: ValueKey(speed), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900, fontFeatures: const [FontFeature.tabularFigures()])),
-          ),
-          const SizedBox(height: 5),
-          Text('حجم کل: $total', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF9BB8C1), fontSize: 10, fontWeight: FontWeight.w600)),
-        ]),
-      );
 
   Widget _errorPanel(String details) => Container(
         padding: const EdgeInsets.all(14),
