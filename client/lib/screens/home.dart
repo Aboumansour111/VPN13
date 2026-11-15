@@ -922,9 +922,48 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           Text('پینگ اتصال: $_connectionPingMs ms', style: const TextStyle(color: Color(0xFF83E8D8), fontSize: 11, fontWeight: FontWeight.w700)),
         ],
         const SizedBox(height: 8),
-        Text(selected == null ? 'ابتدا سرور را انتخاب کنید' : 'برای اتصال یا قطع، آیکون مرکزی را لمس کنید',
+        Text(selected == null ? 'ابتدا سرور را انتخاب کنید' : 'برای اتصال یا قطع، آیکون مرکزی یا دکمه زیر را لمس کنید',
           textAlign: TextAlign.center,
           style: const TextStyle(color: Color(0xFF8EADB7), fontSize: 10)),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: waiting || selected == null
+                ? null
+                : (active ? disconnect : connect),
+            icon: Icon(
+              waiting
+                  ? Icons.hourglass_top_rounded
+                  : active
+                      ? Icons.link_off_rounded
+                      : Icons.power_settings_new_rounded,
+            ),
+            label: Text(
+              waiting
+                  ? 'لطفاً صبر کنید…'
+                  : active
+                      ? 'قطع اتصال'
+                      : 'اتصال به VPN',
+            ),
+            style: FilledButton.styleFrom(
+              backgroundColor: active
+                  ? const Color(0xFF9B4545)
+                  : const Color(0xFF087F70),
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: const Color(0xFF344650),
+              disabledForegroundColor: const Color(0xFF9BB0B8),
+              minimumSize: const Size.fromHeight(50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              textStyle: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ),
       ]),
     );
   }
