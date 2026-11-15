@@ -38,6 +38,16 @@ class Vpn13ClientApp extends StatelessWidget {
           foregroundColor: navy,
           elevation: 0,
         ),
+        splashFactory: InkSparkle.splashFactory,
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
+            TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
+          },
+        ),
       ),
       home: const Directionality(
         textDirection: TextDirection.rtl,
@@ -183,19 +193,37 @@ class _AccessGateState extends State<_AccessGate> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    if (_checking) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-    return _authorized
-        ? const HomeScreen()
-        : _LoginScreen(
-            onSubmit: _authenticate,
-            initialMessage: _gateMessage,
+  Widget build(BuildContext context) => AnimatedSwitcher(
+        duration: const Duration(milliseconds: 420),
+        reverseDuration: const Duration(milliseconds: 260),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) {
+          final slide = Tween<Offset>(
+            begin: const Offset(0, 0.025),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+          ));
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(position: slide, child: child),
           );
-  }
+        },
+        child: _checking
+            ? const Scaffold(
+                key: ValueKey('access-checking'),
+                body: Center(child: CircularProgressIndicator()),
+              )
+            : _authorized
+                ? const HomeScreen(key: ValueKey('home-screen'))
+                : _LoginScreen(
+                    key: const ValueKey('login-screen'),
+                    onSubmit: _authenticate,
+                    initialMessage: _gateMessage,
+                  ),
+      );
 }
 
 class _LoginScreen extends StatefulWidget {
