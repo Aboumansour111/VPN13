@@ -394,7 +394,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     backgroundColor: const Color(0xFF10191F),
     body: SafeArea(
       child: loading ? const Center(child: CircularProgressIndicator()) :
-        IndexedStack(index: _activeTab, children: [_homePage(), _settingsPage()]),
+        AnimatedCrossFade(
+          firstChild: _homePage(),
+          secondChild: _settingsPage(),
+          crossFadeState: _activeTab == 0
+              ? CrossFadeState.showFirst
+              : CrossFadeState.showSecond,
+          duration: const Duration(milliseconds: 320),
+          reverseDuration: const Duration(milliseconds: 260),
+          firstCurve: Curves.easeOutCubic,
+          secondCurve: Curves.easeOutCubic,
+          sizeCurve: Curves.easeInOutCubic,
+          alignment: Alignment.topCenter,
+        ),
     ),
     bottomNavigationBar: NavigationBar(
       height: 70, backgroundColor: const Color(0xFF202930), indicatorColor: const Color(0xFF405B58),
@@ -887,12 +899,28 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ),
           ),
           const SizedBox(height: 13),
-          Text(
-            statusLabel,
-            style: const TextStyle(
-              color: Color(0xFFF0F3F4),
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 280),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.18),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              ),
+            ),
+            child: Text(
+              statusLabel,
+              key: ValueKey(statusLabel),
+              style: const TextStyle(
+                color: Color(0xFFF0F3F4),
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
           const SizedBox(height: 5),
@@ -910,25 +938,41 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               fontSize: 11,
             ),
           ),
-          if (_connectionPingMs != null) ...[
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.speed_rounded, color: Color(0xFF75D6B5), size: 16),
-                const SizedBox(width: 5),
-                Text(
-                  'پینگ اتصال: $_connectionPingMs ms',
-                  style: const TextStyle(
-                    color: Color(0xFF75D6B5),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    fontFeatures: [FontFeature.tabularFigures()],
-                  ),
-                ),
-              ],
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            switchInCurve: Curves.easeOutBack,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: ScaleTransition(scale: animation, child: child),
             ),
-          ],
+            child: _connectionPingMs == null
+                ? const SizedBox(
+                    key: ValueKey('no-connection-ping'),
+                    height: 0,
+                  )
+                : Padding(
+                    key: ValueKey('connection-ping-$_connectionPingMs'),
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.speed_rounded,
+                            color: Color(0xFF75D6B5), size: 16),
+                        const SizedBox(width: 5),
+                        Text(
+                          'پینگ اتصال: $_connectionPingMs ms',
+                          style: const TextStyle(
+                            color: Color(0xFF75D6B5),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            fontFeatures: [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+          ),
           const SizedBox(height: 8),
           Text(
             busy || status == _VpnStatus.connecting || status == _VpnStatus.disconnecting
@@ -1037,15 +1081,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               ],
             ),
             const SizedBox(height: 9),
-            Text(
-              speed,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: _ink,
-                fontSize: 17,
-                fontWeight: FontWeight.w900,
-                fontFeatures: const [FontFeature.tabularFigures()],
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 220),
+              switchInCurve: Curves.easeOut,
+              switchOutCurve: Curves.easeIn,
+              child: Text(
+                speed,
+                key: ValueKey(speed),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: _ink,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w900,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
               ),
             ),
             const SizedBox(height: 4),
