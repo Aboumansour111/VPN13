@@ -964,40 +964,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
 
-  Widget _trafficPanel() => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 12),
-    decoration: BoxDecoration(
-      color: const Color(0xFF1B303A),
-      borderRadius: BorderRadius.circular(18),
-      border: Border.all(color: const Color(0xFF35545E)),
-    ),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Row(children: [
-        Icon(Icons.swap_vert_rounded, color: Color(0xFF80E5D4), size: 17),
-        SizedBox(width: 6),
-        Expanded(child: Text('ترافیک', style: TextStyle(color: Color(0xFFEAFBFB), fontSize: 12, fontWeight: FontWeight.w800))),
-        Icon(Icons.circle, color: Color(0xFF52DDBB), size: 6),
-      ]),
-      const SizedBox(height: 10),
-      _miniTrafficLine(Icons.south_rounded, 'دریافت', speedText(downloadSpeed), bytesText(downloadTotal)),
-      const SizedBox(height: 7),
-      _miniTrafficLine(Icons.north_rounded, 'ارسال', speedText(uploadSpeed), bytesText(uploadTotal)),
-    ]),
-  );
-
-  Widget _miniTrafficLine(IconData icon, String label, String speed, String total) => Row(
-    children: [
-      Icon(icon, color: const Color(0xFF80E5D4), size: 14),
-      const SizedBox(width: 4),
-      Expanded(child: Text(label, style: const TextStyle(color: Color(0xFF9BB8C1), fontSize: 10))),
-      Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-        Text(speed, maxLines: 1, style: const TextStyle(color: Color(0xFFEAFBFB), fontSize: 10, fontWeight: FontWeight.w800, fontFeatures: [FontFeature.tabularFigures()])),
-        Text(total, maxLines: 1, style: const TextStyle(color: Color(0xFF80E5D4), fontSize: 9, fontFeatures: [FontFeature.tabularFigures()])),
-      ]),
-    ],
-  );
-
-
   Widget _errorPanel(String details) => Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
