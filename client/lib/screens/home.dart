@@ -68,7 +68,6 @@ class _EntranceMotion extends StatefulWidget {
   const _EntranceMotion({
     required this.child,
     this.delay = Duration.zero,
-    super.key,
   });
 
   final Widget child;
