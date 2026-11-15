@@ -510,8 +510,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFF10191F),
-    body: SafeArea(
+    backgroundColor: const Color(0xFF081923),
+    body: Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF102A36), Color(0xFF091923), Color(0xFF07141D)]),
+      ),
+      child: SafeArea(
       child: loading ? const Center(child: CircularProgressIndicator()) :
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 560),
@@ -545,9 +549,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             child: _activeTab == 0 ? _homePage() : _settingsPage(),
           ),
         ),
+      ),
     ),
     bottomNavigationBar: NavigationBar(
-      height: 70, backgroundColor: const Color(0xFF202930), indicatorColor: const Color(0xFF405B58),
+      height: 70, backgroundColor: const Color(0xFF10232D), indicatorColor: const Color(0xFF185D5C),
       selectedIndex: _activeTab,
       onDestinationSelected: (index) => setState(() => _activeTab = index),
       destinations: const [
@@ -835,367 +840,203 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
 
 
-  Widget _topBar() => Column(
-        children: [
-          const Padding(
-            padding: EdgeInsets.only(bottom: 11, top: 5),
-            child: Text(
-              'اللهم صل علی محمد و آل محمد الائمه و المهدیین و سلم تسلیما',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Color(0xFF39A98B),
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.15,
-              ),
+  Widget _topBar() => Container(
+        padding: const EdgeInsets.fromLTRB(16, 13, 16, 15),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topRight,
+            end: Alignment.bottomLeft,
+            colors: [Color(0xFF263F4B), Color(0xFF142832), Color(0xFF10212B)],
+          ),
+          borderRadius: BorderRadius.circular(25),
+          border: Border.all(color: const Color(0xFF4A7D82).withValues(alpha: .55)),
+          boxShadow: [
+            BoxShadow(color: const Color(0xFF36DCC5).withValues(alpha: .08), blurRadius: 24, spreadRadius: 1),
+          ],
+        ),
+        child: Column(children: [
+          const Text(
+            'اللهم صل علی محمد و آل محمد الائمه و المهدیین و سلم تسلیما',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Color(0xFF9BE9DF), fontSize: 12, fontWeight: FontWeight.w800, height: 1.6),
+          ),
+          const SizedBox(height: 12),
+          Row(children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(13),
+              child: Image.asset('assets/icon/vpn13_icon.jpg', width: 49, height: 49, fit: BoxFit.cover),
             ),
-          ),
-          Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(13),
-            child: Image.asset('assets/icon/vpn13_icon.jpg', width: 48, height: 48, fit: BoxFit.cover),
-          ),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Column(
+            const SizedBox(width: 11),
+            const Expanded(child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'VPN13',
-                  style: TextStyle(
-                    color: _ink,
-                    fontSize: 21,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.3,
-                  ),
-                ),
+                Text('VPN13', style: TextStyle(color: Color(0xFFF1FFFF), fontSize: 23, fontWeight: FontWeight.w900, letterSpacing: .4)),
                 SizedBox(height: 2),
-                Text(
-                  'اتصال پایدار، بدون پیچیدگی',
-                  style: TextStyle(color: _muted, fontSize: 12),
-                ),
+                Text('اتصال امن و پایدار', style: TextStyle(color: Color(0xFF9BB8C1), fontSize: 11)),
               ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFF35434C),
-              borderRadius: BorderRadius.circular(30),
-              border: Border.all(color: const Color(0xFF46555E)),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.circle,
-                  size: 8,
-                  color: connected
-                      ? _green
-                      : status == _VpnStatus.connecting || status == _VpnStatus.disconnecting
-                          ? const Color(0xFFFFC66D)
-                          : const Color(0xFF536A84),
-                ),
+            )),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
+              decoration: BoxDecoration(
+                color: connected ? const Color(0xFF0D604F).withValues(alpha: .55) : const Color(0xFF30424C),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: connected ? const Color(0xFF4CE0B5) : const Color(0xFF58717A)),
+              ),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.circle, size: 8, color: connected ? const Color(0xFF4CE0B5) : status == _VpnStatus.connecting || status == _VpnStatus.disconnecting ? const Color(0xFFFFC66D) : const Color(0xFF8499A2)),
                 const SizedBox(width: 7),
                 Text(
-                  connected
-                      ? 'آنلاین'
-                      : status == _VpnStatus.disconnecting
-                          ? 'در حال قطع'
-                          : status == _VpnStatus.connecting
-                              ? 'در حال اتصال'
-                              : 'آفلاین',
-                  style: const TextStyle(
-                    color: _ink,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  connected ? 'آنلاین' : status == _VpnStatus.connecting ? 'در حال اتصال' : status == _VpnStatus.disconnecting ? 'در حال قطع' : 'آفلاین',
+                  style: const TextStyle(color: Color(0xFFE8F7F6), fontSize: 11, fontWeight: FontWeight.w800),
                 ),
-              ],
+              ]),
             ),
-          ),
-        ],
-          ),
-        ],
+          ]),
+        ]),
       );
 
   Widget _connectionPanel() {
     final active = connected;
+    final waiting = busy || status == _VpnStatus.connecting || status == _VpnStatus.disconnecting;
+    final accent = active ? const Color(0xFF42E4C2) : const Color(0xFF36B8C5);
     final statusLabel = active
         ? 'اتصال برقرار است'
         : _checkingHandshake
-            ? 'در حال بررسی هندشیک و پینگ…'
+            ? 'در حال بررسی سرور…'
             : status == _VpnStatus.connecting
-            ? 'در حال اتصال…'
-            : status == _VpnStatus.disconnecting
-                ? 'در حال قطع اتصال…'
-                : 'آماده اتصال';
+                ? 'در حال اتصال…'
+                : status == _VpnStatus.disconnecting
+                    ? 'در حال قطع اتصال…'
+                    : 'آماده اتصال';
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 19, 18, 18),
+      padding: const EdgeInsets.fromLTRB(18, 20, 18, 19),
       decoration: BoxDecoration(
-        color: const Color(0xFF35434C),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF203B48), Color(0xFF142A35), Color(0xFF10232D)],
+        ),
         borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: const Color(0xFF3C7880).withValues(alpha: .55)),
         boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF10171C).withValues(alpha: 0.22),
-            blurRadius: 22,
-            offset: const Offset(0, 10),
-          ),
+          BoxShadow(color: accent.withValues(alpha: .09), blurRadius: 28, spreadRadius: 1),
+          const BoxShadow(color: Color(0x99000000), blurRadius: 18, offset: Offset(0, 10)),
         ],
       ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.lock_rounded,
-                  color: Color(0xFF39A98B), size: 17),
-              const SizedBox(width: 7),
-              const Text(
-                'وضعیت تونل',
-                style: TextStyle(
-                  color: Color(0xFFB5C0C6),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+      child: Column(children: [
+        Row(children: [
+          Icon(Icons.shield_outlined, color: accent, size: 19),
+          const SizedBox(width: 8),
+          const Text('وضعیت امنیت اتصال', style: TextStyle(color: Color(0xFFB5CED2), fontSize: 12, fontWeight: FontWeight.w700)),
+          const Spacer(),
+          if (active) Text(durationText(elapsed), style: const TextStyle(color: Color(0xFFE9FFFF), fontSize: 12, fontWeight: FontWeight.w800, fontFeatures: [FontFeature.tabularFigures()])),
+        ]),
+        const SizedBox(height: 19),
+        _ConnectionPulse(
+          active: active,
+          child: GestureDetector(
+            onTap: waiting || selected == null ? null : (active ? disconnect : connect),
+            child: SizedBox(
+              width: 190,
+              height: 190,
+              child: Stack(alignment: Alignment.center, children: [
+                Container(
+                  width: 188, height: 188,
+                  decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: accent.withValues(alpha: .22), width: 1), boxShadow: [BoxShadow(color: accent.withValues(alpha: .12), blurRadius: 26, spreadRadius: 3)]),
                 ),
-              ),
-              const Spacer(),
-              if (active)
-                Text(
-                  durationText(elapsed),
-                  style: const TextStyle(
-                    color: Color(0xFFF0F3F4),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    fontFeatures: [FontFeature.tabularFigures()],
+                Container(
+                  width: 164, height: 164,
+                  decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: accent.withValues(alpha: .38), width: 2)),
+                ),
+                Container(
+                  width: 138, height: 138,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(colors: [accent.withValues(alpha: .28), const Color(0xFF102832), const Color(0xFF0C1D27)]),
+                    border: Border.all(color: accent.withValues(alpha: .75), width: 1.5),
+                    boxShadow: [BoxShadow(color: accent.withValues(alpha: .22), blurRadius: 22, spreadRadius: 2)],
                   ),
+                  child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    if (waiting)
+                      const SizedBox(width: 43, height: 43, child: CircularProgressIndicator(strokeWidth: 3, color: Color(0xFF83F2E1)))
+                    else
+                      Icon(active ? Icons.shield_rounded : Icons.power_settings_new_rounded, color: const Color(0xFF79F0E0), size: 49),
+                    const SizedBox(height: 9),
+                    Text(active ? durationText(elapsed) : 'VPN13', style: const TextStyle(color: Color(0xFFE8FFFF), fontSize: 17, fontWeight: FontWeight.w900, fontFeatures: [FontFeature.tabularFigures()])),
+                  ]),
                 ),
-            ],
+                Positioned(top: 11, right: 39, child: Icon(Icons.circle, size: 5, color: accent.withValues(alpha: .8))),
+                Positioned(bottom: 20, left: 31, child: Icon(Icons.circle, size: 4, color: accent.withValues(alpha: .65))),
+              ]),
+            ),
           ),
-          const SizedBox(height: 17),
-          _ConnectionPulse(
-            active: active,
+        ),
+        const SizedBox(height: 12),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 250),
+          child: Text(statusLabel, key: ValueKey(statusLabel), style: const TextStyle(color: Color(0xFFF0FFFF), fontSize: 20, fontWeight: FontWeight.w900)),
+        ),
+        if (_connectionPingMs != null) ...[
+          const SizedBox(height: 5),
+          Text('پینگ اتصال: $_connectionPingMs ms', style: const TextStyle(color: Color(0xFF83E8D8), fontSize: 11, fontWeight: FontWeight.w700)),
+        ],
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          height: 58,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(19),
+              gradient: LinearGradient(colors: active ? const [Color(0xFF166B63), Color(0xFF123E4B)] : const [Color(0xFF167C82), Color(0xFF145064)]),
+              border: Border.all(color: const Color(0xFF70F0E1), width: 1.3),
+              boxShadow: [BoxShadow(color: accent.withValues(alpha: .22), blurRadius: 17, spreadRadius: 1)],
+            ),
             child: Material(
               color: Colors.transparent,
-              shape: const CircleBorder(),
               child: InkWell(
-              onTap: busy ||
-                      status == _VpnStatus.connecting ||
-                      status == _VpnStatus.disconnecting ||
-                      selected == null
-                  ? null
-                  : (active ? disconnect : connect),
-              customBorder: const CircleBorder(),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                width: 124,
-                height: 124,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: (active
-                          ? const Color(0xFF39C982)
-                          : const Color(0xFFD94B4B))
-                      .withValues(alpha: 0.13),
-                  border: Border.all(
-                    color: active
-                        ? const Color(0xFF39C982)
-                        : const Color(0xFFD94B4B),
-                    width: 2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (active
-                              ? const Color(0xFF39C982)
-                              : const Color(0xFFD94B4B))
-                          .withValues(alpha: 0.18),
-                      blurRadius: 18,
-                      spreadRadius: 2,
-                    ),
-                  ],
-                ),
+                borderRadius: BorderRadius.circular(19),
+                onTap: waiting || selected == null ? null : (active ? disconnect : connect),
                 child: Center(
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    width: 94,
-                    height: 94,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: active
-                          ? const Color(0xFF39C982)
-                          : const Color(0xFFD94B4B),
-                    ),
-                    child: busy ||
-                            status == _VpnStatus.connecting ||
-                            status == _VpnStatus.disconnecting
-                        ? const Padding(
-                            padding: EdgeInsets.all(31),
-                            child: CircularProgressIndicator(
-                              strokeWidth: 3,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Icon(
-                            active
-                                ? Icons.shield_rounded
-                                : Icons.power_settings_new_rounded,
-                            color: Colors.white,
-                            size: 46,
-                          ),
-                  ),
-                ),
+                  child: waiting
+                      ? const Text('لطفاً صبر کنید…', style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900))
+                      : Text(active ? 'قطع اتصال' : 'اتصال امن', style: const TextStyle(color: Color(0xFFE4FFFF), fontSize: 19, fontWeight: FontWeight.w900)),
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 13),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 280),
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
-            transitionBuilder: (child, animation) => FadeTransition(
-              opacity: animation,
-              child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, 0.18),
-                  end: Offset.zero,
-                ).animate(animation),
-                child: child,
-              ),
-            ),
-            child: Text(
-              statusLabel,
-              key: ValueKey(statusLabel),
-              style: const TextStyle(
-                color: Color(0xFFF0F3F4),
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            selected == null
-                ? 'ابتدا یک سرور انتخاب کنید'
-                : active
-                    ? 'تونل Xray فعال است؛ وضعیت ترافیک در پایین نمایش داده می‌شود'
-                    : _checkingHandshake
-                        ? 'در حال ارسال درخواست آزمایشی از طریق سرور…'
-                        : 'برای شروع، دکمه اتصال را بزنید',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Color(0xFF7D899B),
-              fontSize: 11,
-            ),
-          ),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            switchInCurve: Curves.easeOutBack,
-            switchOutCurve: Curves.easeInCubic,
-            transitionBuilder: (child, animation) => FadeTransition(
-              opacity: animation,
-              child: ScaleTransition(scale: animation, child: child),
-            ),
-            child: _connectionPingMs == null
-                ? const SizedBox(
-                    key: ValueKey('no-connection-ping'),
-                    height: 0,
-                  )
-                : Padding(
-                    key: ValueKey('connection-ping-$_connectionPingMs'),
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.speed_rounded,
-                            color: Color(0xFF75D6B5), size: 16),
-                        const SizedBox(width: 5),
-                        Text(
-                          'پینگ اتصال: $_connectionPingMs ms',
-                          style: const TextStyle(
-                            color: Color(0xFF75D6B5),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            fontFeatures: [FontFeature.tabularFigures()],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            busy || status == _VpnStatus.connecting || status == _VpnStatus.disconnecting
-                ? (_checkingHandshake ? 'در حال بررسی پاسخ سرور…' : 'لطفاً صبر کنید…')
-                : active
-                    ? 'برای قطع اتصال، آیکون را لمس کنید'
-                    : selected == null
-                        ? 'ابتدا یک سرور انتخاب کنید'
-                        : 'برای اتصال، آیکون را لمس کنید',
-            style: const TextStyle(
-              color: Color(0xFFB5C0C6),
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          selected == null ? 'ابتدا یک سرور انتخاب کنید' : active ? 'برای قطع اتصال از دکمه بالا استفاده کنید' : _checkingHandshake ? 'در حال ارسال درخواست آزمایشی از سرور…' : 'برای اتصال، دکمه را لمس کنید',
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Color(0xFF8EADB7), fontSize: 11),
+        ),
+      ]),
     );
   }
 
   Widget _trafficPanel() => Container(
-        padding: const EdgeInsets.all(17),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF35434C),
+          gradient: const LinearGradient(begin: Alignment.topRight, end: Alignment.bottomLeft, colors: [Color(0xFF233D49), Color(0xFF142A34)]),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFF34464F)),
+          border: Border.all(color: const Color(0xFF3D7079).withValues(alpha: .55)),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Row(
-              children: [
-                Icon(Icons.swap_vert_rounded, color: _blue, size: 19),
-                SizedBox(width: 7),
-                Text(
-                  'مصرف ترافیک',
-                  style: TextStyle(
-                    color: _ink,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                Spacer(),
-                Text(
-                  'لحظه‌ای',
-                  style: TextStyle(color: _muted, fontSize: 10),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: _trafficValue(
-                    icon: Icons.south_rounded,
-                    title: 'دریافت',
-                    speed: speedText(downloadSpeed),
-                    total: bytesText(downloadTotal),
-                    color: _green,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _trafficValue(
-                    icon: Icons.north_rounded,
-                    title: 'ارسال',
-                    speed: speedText(uploadSpeed),
-                    total: bytesText(uploadTotal),
-                    color: _blue,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+        child: Column(children: [
+          Row(children: [
+            const Icon(Icons.monitor_heart_rounded, color: Color(0xFF72E6D6), size: 19),
+            const SizedBox(width: 8),
+            const Text('آمار ترافیک', style: TextStyle(color: Color(0xFFEAFBFB), fontSize: 14, fontWeight: FontWeight.w900)),
+            const Spacer(),
+            Container(padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5), decoration: BoxDecoration(color: const Color(0xFF164C4C), borderRadius: BorderRadius.circular(20)), child: const Text('زنده', style: TextStyle(color: Color(0xFF8CEBDD), fontSize: 10, fontWeight: FontWeight.w800))),
+          ]),
+          const SizedBox(height: 13),
+          Row(children: [
+            Expanded(child: _trafficValue(icon: Icons.south_rounded, title: 'دریافت', speed: speedText(downloadSpeed), total: bytesText(downloadTotal), color: const Color(0xFF59E6D0))),
+            const SizedBox(width: 10),
+            Expanded(child: _trafficValue(icon: Icons.north_rounded, title: 'ارسال', speed: speedText(uploadSpeed), total: bytesText(uploadTotal), color: const Color(0xFF8BBEFF))),
+          ]),
+        ]),
       );
 
   Widget _trafficValue({
@@ -1204,55 +1045,28 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     required String speed,
     required String total,
     required Color color,
-  }) =>
-      Container(
+  }) => Container(
         padding: const EdgeInsets.all(13),
         decoration: BoxDecoration(
-          color: const Color(0xFF17252D),
-          borderRadius: BorderRadius.circular(16),
+          gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF203B45), Color(0xFF10232C)]),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: color.withValues(alpha: .32)),
+          boxShadow: [BoxShadow(color: color.withValues(alpha: .07), blurRadius: 12)],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: color, size: 17),
-                const SizedBox(width: 6),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: _muted,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 9),
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 220),
-              switchInCurve: Curves.easeOut,
-              switchOutCurve: Curves.easeIn,
-              child: Text(
-                speed,
-                key: ValueKey(speed),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: _ink,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w900,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'کل: $total',
-              style: const TextStyle(color: _muted, fontSize: 10),
-            ),
-          ],
-        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Icon(icon, color: color, size: 19),
+            const SizedBox(width: 6),
+            Text(title, style: const TextStyle(color: Color(0xFFB5D0D3), fontSize: 12, fontWeight: FontWeight.w700)),
+          ]),
+          const SizedBox(height: 10),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: Text(speed, key: ValueKey(speed), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900, fontFeatures: const [FontFeature.tabularFigures()])),
+          ),
+          const SizedBox(height: 5),
+          Text('حجم کل: $total', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF9BB8C1), fontSize: 10, fontWeight: FontWeight.w600)),
+        ]),
       );
 
   Widget _errorPanel(String details) => Container(
