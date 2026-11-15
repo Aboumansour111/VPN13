@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -227,7 +228,7 @@ class _AccessGateState extends State<_AccessGate> {
 }
 
 class _LoginScreen extends StatefulWidget {
-  const _LoginScreen({required this.onSubmit, this.initialMessage});
+  const _LoginScreen({super.key, required this.onSubmit, this.initialMessage});
 
   final Future<bool> Function(String code) onSubmit;
   final String? initialMessage;
