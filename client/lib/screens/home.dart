@@ -568,14 +568,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         const SizedBox(height: 12),
         _EntranceMotion(
           delay: const Duration(milliseconds: 50),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: _homeServersSection()),
-              const SizedBox(width: 10),
-              Expanded(child: _trafficPanel()),
-            ],
-          ),
+          child: _homeServersSection(),
+        ),
+        const SizedBox(height: 10),
+        _EntranceMotion(
+          delay: const Duration(milliseconds: 80),
+          child: _trafficPanel(),
         ),
         const SizedBox(height: 12),
         _EntranceMotion(delay: const Duration(milliseconds: 100), child: _connectionPanel()),
@@ -612,73 +610,114 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   );
 
   Widget _homeServersSection() => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 12),
+    width: double.infinity,
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
     decoration: BoxDecoration(
       color: const Color(0xFF1B303A),
       borderRadius: BorderRadius.circular(18),
       border: Border.all(color: const Color(0xFF35545E)),
     ),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Row(children: [
-        Icon(Icons.dns_rounded, color: Color(0xFF80E5D4), size: 17),
-        SizedBox(width: 6),
-        Expanded(child: Text('سرور', maxLines: 1, style: TextStyle(color: Color(0xFFEAFBFB), fontSize: 12, fontWeight: FontWeight.w800))),
-      ]),
-      const SizedBox(height: 8),
-      if (loading)
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 10),
-          child: Row(
-            children: [
-              SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)),
-              SizedBox(width: 7),
-              Expanded(child: Text('در حال دریافت سرورها…', style: TextStyle(color: Color(0xFF9BB8C1), fontSize: 10))),
-            ],
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(children: [
+          const Icon(Icons.dns_rounded, color: Color(0xFF80E5D4), size: 18),
+          const SizedBox(width: 7),
+          const Expanded(
+            child: Text('فهرست سرورها',
+              style: TextStyle(color: Color(0xFFEAFBFB), fontSize: 13, fontWeight: FontWeight.w900)),
           ),
-        )
-      else if (servers.isEmpty)
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 10),
-          child: Text('سروری برای نمایش دریافت نشد', style: TextStyle(color: Color(0xFFFFC0B8), fontSize: 10)),
-        )
-      else
-        DropdownButtonHideUnderline(
-          child: DropdownButton<int>(
-          value: servers.any((s) => s.id == selectedId) ? selectedId : null,
-          isExpanded: true,
-          dropdownColor: const Color(0xFF203640),
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF80E5D4), size: 18),
-          style: const TextStyle(color: Color(0xFFEAFBFB), fontSize: 11, fontWeight: FontWeight.w700),
-          hint: const Text('انتخاب سرور', style: TextStyle(color: Color(0xFF9BB8C1), fontSize: 11)),
-          items: servers.map((server) => DropdownMenuItem<int>(
-            value: server.id,
-            child: Text(server.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-          )).toList(),
-          onChanged: status != _VpnStatus.disconnected || busy ? null : (id) {
-            final server = servers.where((s) => s.id == id).firstOrNull;
-            if (server != null) selectServer(server);
-          },
-        ),
-      ),
-      if (!loading && servers.isNotEmpty && selected != null && _pingResults.containsKey(selectedId)) ...[
-        const SizedBox(height: 4),
-        Text(_pingResults[selectedId]! >= 0 ? '${_pingResults[selectedId]} ms' : 'پینگ ناموفق',
-          style: const TextStyle(color: Color(0xFF80E5D4), fontSize: 10)),
+          if (!loading)
+            Text('${servers.length} سرور',
+              style: const TextStyle(color: Color(0xFF9BB8C1), fontSize: 10, fontWeight: FontWeight.w700)),
+        ]),
+        const SizedBox(height: 10),
+        if (loading)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          )
+        else if (servers.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Text('سروری برای نمایش دریافت نشد',
+              style: TextStyle(color: Color(0xFFFFC0B8), fontSize: 11)),
+          )
+        else
+          ...servers.map((server) {
+            final isSelected = server.id == selectedId;
+            final isTesting = _pingTesting.contains(server.id);
+            final ping = _pingResults[server.id];
+            final canSelect = status == _VpnStatus.disconnected && !busy;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 7),
+              child: Material(
+                color: isSelected
+                    ? const Color(0xFF164B49)
+                    : const Color(0xFF243943),
+                borderRadius: BorderRadius.circular(13),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(13),
+                  onTap: canSelect ? () => selectServer(server) : null,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    child: Row(
+                      children: [
+                        Icon(
+                          isSelected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
+                          color: isSelected ? const Color(0xFF80E5D4) : const Color(0xFF78909A),
+                          size: 21,
+                        ),
+                        const SizedBox(width: 9),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(server.name,
+                                maxLines: 3,
+                                softWrap: true,
+                                overflow: TextOverflow.visible,
+                                style: TextStyle(
+                                  color: isSelected ? const Color(0xFFE8FFFF) : const Color(0xFFD1E0E4),
+                                  fontSize: 12,
+                                  fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
+                                  height: 1.45,
+                                )),
+                              if (server.description?.trim().isNotEmpty == true) ...[
+                                const SizedBox(height: 3),
+                                Text(server.description!,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(color: Color(0xFF9BB8C1), fontSize: 10)),
+                              ],
+                              if (ping != null) ...[
+                                const SizedBox(height: 4),
+                                Text(ping >= 0 ? 'پینگ: $ping ms' : 'پینگ ناموفق',
+                                  style: const TextStyle(color: Color(0xFF80E5D4), fontSize: 10, fontWeight: FontWeight.w700)),
+                              ],
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        IconButton(
+                          visualDensity: VisualDensity.compact,
+                          tooltip: 'تست پینگ',
+                          onPressed: isTesting ? null : () => _testServer(server),
+                          icon: isTesting
+                              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                              : const Icon(Icons.speed_rounded, color: Color(0xFF80E5D4), size: 19),
+                        ),
+                        if (isSelected)
+                          const Icon(Icons.check_circle_rounded, color: Color(0xFF80E5D4), size: 17),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
       ],
-      Align(
-        alignment: Alignment.centerLeft,
-        child: IconButton(
-          visualDensity: VisualDensity.compact,
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-          tooltip: 'تست پینگ سرور',
-          onPressed: selected == null || _pingTesting.contains(selectedId) ? null : () => _testServer(selected!),
-          icon: _pingTesting.contains(selectedId)
-            ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
-            : const Icon(Icons.speed_rounded, color: Color(0xFF80E5D4), size: 17),
-        ),
-      ),
-    ]),
+    ),
   );
 
   Future<void> _runPingTest(ServerItem server) async {
