@@ -13,6 +13,57 @@ enum _VpnStatus { disconnected, connecting, connected, disconnecting }
 
 // Entrance motion is deliberately visible but runs only when a section is
 // inserted, not on every parent rebuild (such as live traffic updates).
+class _ConnectionPulse extends StatefulWidget {
+  const _ConnectionPulse({required this.active, required this.child});
+
+  final bool active;
+  final Widget child;
+
+  @override
+  State<_ConnectionPulse> createState() => _ConnectionPulseState();
+}
+
+class _ConnectionPulseState extends State<_ConnectionPulse>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1050),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.active) _controller.repeat(reverse: true);
+  }
+
+  @override
+  void didUpdateWidget(covariant _ConnectionPulse oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.active && !_controller.isAnimating) {
+      _controller.repeat(reverse: true);
+    } else if (!widget.active && _controller.isAnimating) {
+      _controller.stop();
+      _controller.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+        animation: _controller,
+        child: widget.child,
+        builder: (context, child) => Transform.scale(
+          scale: widget.active ? 1 + (_controller.value * 0.045) : 1,
+          child: child,
+        ),
+      );
+}
+
 class _EntranceMotion extends StatefulWidget {
   const _EntranceMotion({
     required this.child,
@@ -922,10 +973,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ],
           ),
           const SizedBox(height: 17),
-          Material(
-            color: Colors.transparent,
-            shape: const CircleBorder(),
-            child: InkWell(
+          _ConnectionPulse(
+            active: active,
+            child: Material(
+              color: Colors.transparent,
+              shape: const CircleBorder(),
+              child: InkWell(
               onTap: busy ||
                       status == _VpnStatus.connecting ||
                       status == _VpnStatus.disconnecting ||
@@ -989,6 +1042,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             size: 46,
                           ),
                   ),
+                ),
                 ),
               ),
             ),
