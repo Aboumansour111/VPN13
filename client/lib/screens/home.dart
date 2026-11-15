@@ -901,7 +901,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ? 'ابتدا یک سرور انتخاب کنید'
                 : active
                     ? 'تونل Xray فعال است؛ وضعیت ترافیک در پایین نمایش داده می‌شود'
-                    : 'برای شروع، دکمه اتصال را بزنید',
+                    : _checkingHandshake
+                        ? 'در حال ارسال درخواست آزمایشی از طریق سرور…'
+                        : 'برای شروع، دکمه اتصال را بزنید',
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Color(0xFF7D899B),
@@ -930,7 +932,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           const SizedBox(height: 8),
           Text(
             busy || status == _VpnStatus.connecting || status == _VpnStatus.disconnecting
-                ? 'لطفاً صبر کنید…'
+                ? (_checkingHandshake ? 'در حال بررسی پاسخ سرور…' : 'لطفاً صبر کنید…')
                 : active
                     ? 'برای قطع اتصال، آیکون را لمس کنید'
                     : selected == null
