@@ -622,9 +622,29 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             child: Text('فهرست سرورها',
               style: TextStyle(color: Color(0xFFEAFBFB), fontSize: 13, fontWeight: FontWeight.w900)),
           ),
-          if (!loading)
+          if (!loading) ...[
             Text('${servers.length} سرور',
               style: const TextStyle(color: Color(0xFF9BB8C1), fontSize: 10, fontWeight: FontWeight.w700)),
+            const SizedBox(width: 5),
+            IconButton(
+              visualDensity: VisualDensity.compact,
+              tooltip: 'تست پینگ همه سرورها',
+              onPressed: servers.isEmpty || _testingAll
+                  ? null
+                  : _testAllServers,
+              icon: _testingAll
+                  ? const SizedBox(
+                      width: 17,
+                      height: 17,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(
+                      Icons.speed_rounded,
+                      color: Color(0xFF80E5D4),
+                      size: 19,
+                    ),
+            ),
+          ],
         ]),
         const SizedBox(height: 10),
         if (loading)
@@ -735,6 +755,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _testServer(ServerItem server) async {
     if (_testingAll || _pingTesting.contains(server.id)) return;
     await _runPingTest(server);
+  }
+
+  Future<void> _testAllServers() async {
+    if (_testingAll || servers.isEmpty) return;
+    setState(() => _testingAll = true);
+    try {
+      for (final server in servers) {
+        if (!mounted) return;
+        await _runPingTest(server);
+      }
+    } finally {
+      if (mounted) setState(() => _testingAll = false);
+    }
   }
 
 
