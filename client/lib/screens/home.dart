@@ -353,7 +353,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFF252F38),
+    backgroundColor: const Color(0xFF10191F),
     body: SafeArea(
       child: loading ? const Center(child: CircularProgressIndicator()) :
         IndexedStack(index: _activeTab, children: [_homePage(), _settingsPage()]),
@@ -399,7 +399,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Widget _durationSummary() => Container(
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-    decoration: BoxDecoration(color: const Color(0xFF35434C), borderRadius: BorderRadius.circular(17), border: Border.all(color: const Color(0xFF46555E))),
+    decoration: BoxDecoration(color: const Color(0xFF202E37), borderRadius: BorderRadius.circular(17), border: Border.all(color: const Color(0xFF46555E))),
     child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
       const Icon(Icons.schedule_rounded, color: Color(0xFFC5D0D5), size: 21), const SizedBox(width: 10),
       Column(children: [
@@ -413,8 +413,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     padding: const EdgeInsets.all(15),
     decoration: BoxDecoration(
       color: const Color(0xFF35434C),
-      borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: const Color(0xFF46555E)),
+      borderRadius: BorderRadius.circular(24),
+      border: Border.all(color: const Color(0xFF34464F)),
     ),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
@@ -737,7 +737,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       padding: const EdgeInsets.fromLTRB(18, 19, 18, 18),
       decoration: BoxDecoration(
         color: const Color(0xFF35434C),
-        borderRadius: BorderRadius.circular(27),
+        borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF10171C).withValues(alpha: 0.22),
@@ -776,8 +776,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ),
           const SizedBox(height: 17),
           Container(
-            width: 104,
-            height: 104,
+            width: 124,
+            height: 124,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: const Color(0xFF293D3C),
@@ -789,8 +789,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ),
             child: Center(
               child: Container(
-                width: 78,
-                height: 78,
+                width: 94,
+                height: 94,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: active ? const Color(0xFF39A98B) : const Color(0xFF405B58),
@@ -798,7 +798,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 child: Icon(
                   active ? Icons.shield_rounded : Icons.power_settings_new,
                   color: Colors.white,
-                  size: 36,
+                  size: 42,
                 ),
               ),
             ),
@@ -828,7 +828,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           const SizedBox(height: 17),
           SizedBox(
             width: double.infinity,
-            height: 52,
+            height: 58,
             child: FilledButton(
               onPressed: busy ||
                       status == _VpnStatus.connecting ||
@@ -841,9 +841,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 foregroundColor: Colors.white,
                 disabledBackgroundColor: const Color(0xFF496D63),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(19),
                 ),
-                elevation: 0,
+                elevation: active ? 0 : 5,
+                shadowColor: const Color(0xFF39A98B).withValues(alpha: 0.25),
               ),
               child: busy ||
                       status == _VpnStatus.connecting ||
@@ -883,8 +884,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         padding: const EdgeInsets.all(17),
         decoration: BoxDecoration(
           color: const Color(0xFF35434C),
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: const Color(0xFF46555E)),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFF34464F)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -946,7 +947,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       Container(
         padding: const EdgeInsets.all(13),
         decoration: BoxDecoration(
-          color: const Color(0xFF2B3740),
+          color: const Color(0xFF17252D),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
