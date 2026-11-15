@@ -422,6 +422,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget _homePage() => RefreshIndicator(
     onRefresh: () => loadServers(force: true),
     child: ListView(
+      primary: false,
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 24),
       children: [
@@ -657,7 +658,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     ));
   }
 
-  Widget _settingsPage() => ListView(padding: const EdgeInsets.fromLTRB(18, 12, 18, 24), children: [
+  Widget _settingsPage() => ListView(primary: false, padding: const EdgeInsets.fromLTRB(18, 12, 18, 24), children: [
     _topBar(), const SizedBox(height: 20),
     const Text('تنظیمات اتصال', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFFF0F3F4), fontSize: 21, fontWeight: FontWeight.w900)),
     const SizedBox(height: 18),
