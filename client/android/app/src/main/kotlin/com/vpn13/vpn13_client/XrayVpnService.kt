@@ -222,9 +222,11 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
             @Suppress("DEPRECATION")
             Notification.Builder(this)
         }
+        val speedText = "دریافت: ${formatSpeed(currentDownloadSpeed)}   ارسال: ${formatSpeed(currentUploadSpeed)}"
         return builder
             .setContentTitle(profileName)
-            .setContentText("تونل VPN فعال است")
+            .setContentText(speedText)
+            .setStyle(Notification.BigTextStyle().bigText(speedText).bigContentTitle(profileName))
             .setSmallIcon(applicationInfo.icon)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
@@ -255,7 +257,8 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
             lastDownloadSample = 0L
         }
         lastStatsSampleNanos = System.nanoTime()
-        val intervalSeconds = if (uiForeground) 5L else 30L
+        // Refresh once per second so notification speeds reflect live traffic.
+        val intervalSeconds = 1L
         statsTask = statsWorker.scheduleWithFixedDelay({
             if (controller !== core || !core.isRunning) return@scheduleWithFixedDelay
             try {
@@ -283,10 +286,26 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
                 lastUploadSample = uploaded
                 lastDownloadSample = downloaded
                 publishEvent(currentState, currentMessage)
+                updateNotification()
             } catch (_: Exception) {
                 // Stats polling must not interrupt an active VPN session.
             }
         }, intervalSeconds, intervalSeconds, TimeUnit.SECONDS)
+    }
+
+    private fun formatSpeed(bytesPerSecond: Long): String {
+        val speed = bytesPerSecond.coerceAtLeast(0L).toDouble()
+        return when {
+            speed >= 1_073_741_824.0 -> String.format(java.util.Locale.US, "%.2f GB/s", speed / 1_073_741_824.0)
+            speed >= 1_048_576.0 -> String.format(java.util.Locale.US, "%.2f MB/s", speed / 1_048_576.0)
+            speed >= 1_024.0 -> String.format(java.util.Locale.US, "%.1f KB/s", speed / 1_024.0)
+            else -> String.format(java.util.Locale.US, "%.0f B/s", speed)
+        }
+    }
+
+    private fun updateNotification() {
+        if (currentState != "connected") return
+        getSystemService(NotificationManager::class.java).notify(NOTIFICATION_ID, buildNotification())
     }
 
     private fun updateUiVisibility(foreground: Boolean) {
