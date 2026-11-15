@@ -569,7 +569,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         _EntranceMotion(
           delay: const Duration(milliseconds: 50),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(child: _homeServersSection()),
               const SizedBox(width: 10),
