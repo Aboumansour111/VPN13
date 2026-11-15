@@ -143,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && connected && connectedAt != null) {
       timer?.cancel();
-      timer = Timer.periodic(const Duration(seconds: 5), (_) {
+      timer = Timer.periodic(const Duration(seconds: 1), (_) {
         if (mounted && connectedAt != null) setState(() => elapsed = DateTime.now().difference(connectedAt!));
       });
       setState(() => elapsed = DateTime.now().difference(connectedAt!));
@@ -160,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       connectionError = null;
       timer?.cancel();
       if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
-        timer = Timer.periodic(const Duration(seconds: 5), (_) {
+        timer = Timer.periodic(const Duration(seconds: 1), (_) {
           if (mounted && connectedAt != null) setState(() => elapsed = DateTime.now().difference(connectedAt!));
         });
       }
@@ -239,10 +239,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
 
     try {
+      final baseUri = Uri.parse(AppConfig.serversJsonUrl);
+      final requestUri = force
+          ? baseUri.replace(queryParameters: {
+              ...baseUri.queryParameters,
+              '_refresh': DateTime.now().microsecondsSinceEpoch.toString(),
+            })
+          : baseUri;
       final response = await http
           .get(
-            Uri.parse(AppConfig.serversJsonUrl),
-            headers: const {'Cache-Control': 'no-cache'},
+            requestUri,
+            headers: const {
+              'Cache-Control': 'no-cache, no-store, max-age=0',
+              'Pragma': 'no-cache',
+            },
           )
           .timeout(const Duration(seconds: 20));
       if (response.statusCode != 200) {
