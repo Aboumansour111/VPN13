@@ -930,10 +930,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
 
-      ]),
-    );
-  }
-
   Widget _trafficPanel() => Container(
     padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 12),
     decoration: BoxDecoration(
@@ -949,20 +945,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         Icon(Icons.circle, color: Color(0xFF52DDBB), size: 6),
       ]),
       const SizedBox(height: 10),
-      _miniTrafficLine(Icons.south_rounded, 'دانلود', downloadSpeed, downloadTotal),
+      _miniTrafficLine(Icons.south_rounded, 'دریافت', speedText(downloadSpeed), bytesText(downloadTotal)),
       const SizedBox(height: 7),
-      _miniTrafficLine(Icons.north_rounded, 'آپلود', uploadSpeed, uploadTotal),
+      _miniTrafficLine(Icons.north_rounded, 'ارسال', speedText(uploadSpeed), bytesText(uploadTotal)),
     ]),
   );
 
-  Widget _miniTrafficLine(IconData icon, String label, num speed, num total) => Row(
+  Widget _miniTrafficLine(IconData icon, String label, String speed, String total) => Row(
     children: [
       Icon(icon, color: const Color(0xFF80E5D4), size: 14),
       const SizedBox(width: 4),
       Expanded(child: Text(label, style: const TextStyle(color: Color(0xFF9BB8C1), fontSize: 10))),
       Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-        Text(speedText(speed), maxLines: 1, style: const TextStyle(color: Color(0xFFEAFBFB), fontSize: 10, fontWeight: FontWeight.w800, fontFeatures: [FontFeature.tabularFigures()])),
-        Text(bytesText(total), maxLines: 1, style: const TextStyle(color: Color(0xFF80E5D4), fontSize: 9, fontFeatures: [FontFeature.tabularFigures()])),
+        Text(speed, maxLines: 1, style: const TextStyle(color: Color(0xFFEAFBFB), fontSize: 10, fontWeight: FontWeight.w800, fontFeatures: [FontFeature.tabularFigures()])),
+        Text(total, maxLines: 1, style: const TextStyle(color: Color(0xFF80E5D4), fontSize: 9, fontFeatures: [FontFeature.tabularFigures()])),
       ]),
     ],
   );
