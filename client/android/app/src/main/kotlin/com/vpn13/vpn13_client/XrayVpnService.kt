@@ -231,7 +231,7 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
             "سرعت لحظه‌ای",
             "↓ دریافت  ${isolated(formatSpeed(currentDownloadSpeed))}",
             "↑ ارسال  ${isolated(formatSpeed(currentUploadSpeed))}"
-        ).joinToString("\\n")
+        ).joinToString("\n")
         return builder
             .setContentTitle(profileName)
             .setContentText(notificationText)
