@@ -159,10 +159,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
-  static const _ink = Color(0xFFF0F3F4);
-  static const _muted = Color(0xFFB5C0C6);
-  static const _blue = Color(0xFF8FA9B5);
-  static const _green = Color(0xFF39A98B);
 
   List<ServerItem> servers = [];
   int? selectedId;
