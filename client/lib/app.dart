@@ -20,7 +20,7 @@ class Vpn13ClientApp extends StatelessWidget {
     final scheme = ColorScheme.fromSeed(
       seedColor: blue,
       brightness: Brightness.dark,
-      surface: const Color(0xFF35434C),
+      surface: const Color(0xFF202E37),
     );
 
     return MaterialApp(
@@ -29,8 +29,8 @@ class Vpn13ClientApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: scheme,
-        scaffoldBackgroundColor: const Color(0xFF252F38),
-        cardColor: const Color(0xFF35434C),
+        scaffoldBackgroundColor: const Color(0xFF10191F),
+        cardColor: const Color(0xFF202E37),
         dividerColor: const Color(0xFF46555E),
         fontFamily: 'Roboto',
         appBarTheme: const AppBarTheme(
@@ -312,9 +312,9 @@ class _LoginScreenState extends State<_LoginScreen> {
                   Container(
                     padding: const EdgeInsets.all(22),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF35434C),
+                      color: const Color(0xFF202E37),
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: const Color(0xFF46555E)),
+                      border: Border.all(color: const Color(0xFF34464F)),
                       boxShadow: [
                         BoxShadow(
                           color: const Color(0xFF10171C).withValues(alpha: 0.22),
@@ -350,7 +350,7 @@ class _LoginScreenState extends State<_LoginScreen> {
                               fontSize: 13,
                             ),
                             filled: true,
-                            fillColor: const Color(0xFF293740),
+                            fillColor: const Color(0xFF17252D),
                             prefixIcon: const Icon(
                               Icons.key_rounded,
                               color: Color(0xFFB5C0C6),
