@@ -775,30 +775,73 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ],
           ),
           const SizedBox(height: 17),
-          Container(
-            width: 124,
-            height: 124,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFF293D3C),
-              border: Border.all(
-                color: (active ? const Color(0xFF39A98B) : const Color(0xFF657780))
-                    .withValues(alpha: 0.75),
-                width: 1.5,
-              ),
-            ),
-            child: Center(
-              child: Container(
-                width: 94,
-                height: 94,
+          Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            child: InkWell(
+              onTap: busy ||
+                      status == _VpnStatus.connecting ||
+                      status == _VpnStatus.disconnecting ||
+                      selected == null
+                  ? null
+                  : (active ? disconnect : connect),
+              customBorder: const CircleBorder(),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                width: 124,
+                height: 124,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: active ? const Color(0xFF39A98B) : const Color(0xFF405B58),
+                  color: (active
+                          ? const Color(0xFF39C982)
+                          : const Color(0xFFD94B4B))
+                      .withValues(alpha: 0.13),
+                  border: Border.all(
+                    color: active
+                        ? const Color(0xFF39C982)
+                        : const Color(0xFFD94B4B),
+                    width: 2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (active
+                              ? const Color(0xFF39C982)
+                              : const Color(0xFFD94B4B))
+                          .withValues(alpha: 0.18),
+                      blurRadius: 18,
+                      spreadRadius: 2,
+                    ),
+                  ],
                 ),
-                child: Icon(
-                  active ? Icons.shield_rounded : Icons.power_settings_new,
-                  color: Colors.white,
-                  size: 42,
+                child: Center(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    width: 94,
+                    height: 94,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: active
+                          ? const Color(0xFF39C982)
+                          : const Color(0xFFD94B4B),
+                    ),
+                    child: busy ||
+                            status == _VpnStatus.connecting ||
+                            status == _VpnStatus.disconnecting
+                        ? const Padding(
+                            padding: EdgeInsets.all(31),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 3,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Icon(
+                            active
+                                ? Icons.shield_rounded
+                                : Icons.power_settings_new_rounded,
+                            color: Colors.white,
+                            size: 46,
+                          ),
+                  ),
                 ),
               ),
             ),
@@ -825,54 +868,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               fontSize: 11,
             ),
           ),
-          const SizedBox(height: 17),
-          SizedBox(
-            width: double.infinity,
-            height: 58,
-            child: FilledButton(
-              onPressed: busy ||
-                      status == _VpnStatus.connecting ||
-                      status == _VpnStatus.disconnecting ||
-                      selected == null
-                  ? null
-                  : (active ? disconnect : connect),
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF39A98B),
-                foregroundColor: Colors.white,
-                disabledBackgroundColor: const Color(0xFF496D63),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(19),
-                ),
-                elevation: active ? 0 : 5,
-                shadowColor: const Color(0xFF39A98B).withValues(alpha: 0.25),
-              ),
-              child: busy ||
-                      status == _VpnStatus.connecting ||
-                      status == _VpnStatus.disconnecting
-                  ? const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(active
-                            ? Icons.stop_rounded
-                            : Icons.power_settings_new_rounded),
-                        const SizedBox(width: 8),
-                        Text(
-                          active ? 'قطع اتصال' : 'اتصال به VPN',
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ],
-                    ),
+          const SizedBox(height: 8),
+          Text(
+            busy || status == _VpnStatus.connecting || status == _VpnStatus.disconnecting
+                ? 'لطفاً صبر کنید…'
+                : active
+                    ? 'برای قطع اتصال، آیکون را لمس کنید'
+                    : selected == null
+                        ? 'ابتدا یک سرور انتخاب کنید'
+                        : 'برای اتصال، آیکون را لمس کنید',
+            style: const TextStyle(
+              color: Color(0xFFB5C0C6),
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
