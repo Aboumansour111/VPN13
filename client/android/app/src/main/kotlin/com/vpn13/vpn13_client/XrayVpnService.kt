@@ -222,9 +222,14 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
             @Suppress("DEPRECATION")
             Notification.Builder(this)
         }
-        val totalText = "حجم اتصال فعلی — دریافت: ${formatDataSize(currentDownloadTotal)}   ارسال: ${formatDataSize(currentUploadTotal)}"
-        val speedText = "سرعت لحظه‌ای — دریافت: ${formatSpeed(currentDownloadSpeed)}   ارسال: ${formatSpeed(currentUploadSpeed)}"
-        val notificationText = "$totalText\n$speedText"
+        val notificationText = listOf(
+            "حجم مصرفی این اتصال",
+            "دریافت: ${formatDataSize(currentDownloadTotal)}",
+            "ارسال: ${formatDataSize(currentUploadTotal)}",
+            "سرعت لحظه‌ای",
+            "دریافت: ${formatSpeed(currentDownloadSpeed)}",
+            "ارسال: ${formatSpeed(currentUploadSpeed)}"
+        ).joinToString("\\n")
         return builder
             .setContentTitle(profileName)
             .setContentText(notificationText)
@@ -276,17 +281,15 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
                         "downlink" -> downloaded += bytes
                     }
                 }
-                // Xray reports cumulative byte counters. Derive per-second
-                // rates from the difference instead of treating totals as rates.
+                // QueryAllOutboundTrafficStats atomically READS AND RESETS counters.
+                // Values returned here are bytes since the previous poll, not lifetime totals.
                 val nowNanos = System.nanoTime()
                 val elapsedSeconds = ((nowNanos - lastStatsSampleNanos).coerceAtLeast(1L)) / 1_000_000_000.0
-                currentUploadSpeed = ((uploaded - lastUploadSample).coerceAtLeast(0L) / elapsedSeconds).toLong()
-                currentDownloadSpeed = ((downloaded - lastDownloadSample).coerceAtLeast(0L) / elapsedSeconds).toLong()
+                currentUploadSpeed = (uploaded / elapsedSeconds).toLong()
+                currentDownloadSpeed = (downloaded / elapsedSeconds).toLong()
                 lastStatsSampleNanos = nowNanos
-                currentUploadTotal = uploaded
-                currentDownloadTotal = downloaded
-                lastUploadSample = uploaded
-                lastDownloadSample = downloaded
+                currentUploadTotal += uploaded
+                currentDownloadTotal += downloaded
                 publishEvent(currentState, currentMessage)
                 updateNotification()
             } catch (_: Exception) {
@@ -295,24 +298,30 @@ class XrayVpnService : VpnService(), CoreCallbackHandler {
         }, intervalSeconds, intervalSeconds, TimeUnit.SECONDS)
     }
 
+    private fun localizedNumber(value: Double, fractionDigits: Int): String {
+        return java.text.NumberFormat.getNumberInstance(java.util.Locale("fa")).apply {
+            minimumFractionDigits = fractionDigits
+            maximumFractionDigits = fractionDigits
+        }.format(value)
+    }
+
     private fun formatSpeed(bytesPerSecond: Long): String {
         val speed = bytesPerSecond.coerceAtLeast(0L).toDouble()
         return when {
-            speed >= 1_073_741_824.0 -> String.format(java.util.Locale.US, "%.2f GB/s", speed / 1_073_741_824.0)
-            speed >= 1_048_576.0 -> String.format(java.util.Locale.US, "%.2f MB/s", speed / 1_048_576.0)
-            speed >= 1_024.0 -> String.format(java.util.Locale.US, "%.1f KB/s", speed / 1_024.0)
-            else -> String.format(java.util.Locale.US, "%.0f B/s", speed)
+            speed >= 1_073_741_824.0 -> "${localizedNumber(speed / 1_073_741_824.0, 2)} گیگابایت بر ثانیه"
+            speed >= 1_048_576.0 -> "${localizedNumber(speed / 1_048_576.0, 2)} مگابایت بر ثانیه"
+            speed >= 1_024.0 -> "${localizedNumber(speed / 1_024.0, 1)} کیلوبایت بر ثانیه"
+            else -> "${localizedNumber(speed, 0)} بایت بر ثانیه"
         }
     }
-
 
     private fun formatDataSize(bytes: Long): String {
         val size = bytes.coerceAtLeast(0L).toDouble()
         return when {
-            size >= 1_073_741_824.0 -> String.format(java.util.Locale.US, "%.2f GB", size / 1_073_741_824.0)
-            size >= 1_048_576.0 -> String.format(java.util.Locale.US, "%.2f MB", size / 1_048_576.0)
-            size >= 1_024.0 -> String.format(java.util.Locale.US, "%.1f KB", size / 1_024.0)
-            else -> String.format(java.util.Locale.US, "%.0f B", size)
+            size >= 1_073_741_824.0 -> "${localizedNumber(size / 1_073_741_824.0, 2)} گیگابایت"
+            size >= 1_048_576.0 -> "${localizedNumber(size / 1_048_576.0, 2)} مگابایت"
+            size >= 1_024.0 -> "${localizedNumber(size / 1_024.0, 1)} کیلوبایت"
+            else -> "${localizedNumber(size, 0)} بایت"
         }
     }
 
