@@ -11,6 +11,75 @@ import '../services/native_xray.dart';
 
 enum _VpnStatus { disconnected, connecting, connected, disconnecting }
 
+// Entrance motion is deliberately visible but runs only when a section is
+// inserted, not on every parent rebuild (such as live traffic updates).
+class _EntranceMotion extends StatefulWidget {
+  const _EntranceMotion({
+    required this.child,
+    this.delay = Duration.zero,
+    super.key,
+  });
+
+  final Widget child;
+  final Duration delay;
+
+  @override
+  State<_EntranceMotion> createState() => _EntranceMotionState();
+}
+
+class _EntranceMotionState extends State<_EntranceMotion>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 620),
+  );
+  late final Animation<double> _opacity = CurvedAnimation(
+    parent: _controller,
+    curve: Curves.easeOutCubic,
+  );
+  late final Animation<Offset> _slide = Tween<Offset>(
+    begin: const Offset(0, 0.12),
+    end: Offset.zero,
+  ).animate(CurvedAnimation(
+    parent: _controller,
+    curve: Curves.easeOutBack,
+  ));
+  late final Animation<double> _scale = Tween<double>(
+    begin: 0.94,
+    end: 1,
+  ).animate(CurvedAnimation(
+    parent: _controller,
+    curve: Curves.easeOutCubic,
+  ));
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.delay == Duration.zero) {
+      _controller.forward();
+    } else {
+      Future<void>.delayed(widget.delay, () {
+        if (mounted) _controller.forward();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => FadeTransition(
+        opacity: _opacity,
+        child: SlideTransition(
+          position: _slide,
+          child: ScaleTransition(scale: _scale, child: widget.child),
+        ),
+      );
+}
+
 class ServerItem {
   const ServerItem({
     required this.id,
@@ -394,18 +463,37 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     backgroundColor: const Color(0xFF10191F),
     body: SafeArea(
       child: loading ? const Center(child: CircularProgressIndicator()) :
-        AnimatedCrossFade(
-          firstChild: _homePage(),
-          secondChild: _settingsPage(),
-          crossFadeState: _activeTab == 0
-              ? CrossFadeState.showFirst
-              : CrossFadeState.showSecond,
-          duration: const Duration(milliseconds: 320),
-          reverseDuration: const Duration(milliseconds: 260),
-          firstCurve: Curves.easeOutCubic,
-          secondCurve: Curves.easeOutCubic,
-          sizeCurve: Curves.easeInOutCubic,
-          alignment: Alignment.topCenter,
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 560),
+          reverseDuration: const Duration(milliseconds: 440),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
+          transitionBuilder: (child, animation) {
+            final settingsPage = child.key == const ValueKey<int>(1);
+            final slide = Tween<Offset>(
+              begin: Offset(settingsPage ? 0.16 : -0.16, 0.025),
+              end: Offset.zero,
+            ).animate(CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOutCubic,
+            ));
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: slide,
+                child: ScaleTransition(
+                  scale: Tween<double>(begin: 0.965, end: 1).animate(
+                    CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+                  ),
+                  child: child,
+                ),
+              ),
+            );
+          },
+          child: KeyedSubtree(
+            key: ValueKey<int>(_activeTab),
+            child: _activeTab == 0 ? _homePage() : _settingsPage(),
+          ),
         ),
     ),
     bottomNavigationBar: NavigationBar(
@@ -426,10 +514,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 24),
       children: [
-        _topBar(), const SizedBox(height: 18), _connectionPanel(),
-        const SizedBox(height: 16), _homeServersSection(),
-        const SizedBox(height: 12), _trafficPanel(),
-        const SizedBox(height: 12), _durationSummary(),
+        _EntranceMotion(child: _topBar()),
+        const SizedBox(height: 18),
+        _EntranceMotion(delay: const Duration(milliseconds: 70), child: _connectionPanel()),
+        const SizedBox(height: 16),
+        _EntranceMotion(delay: const Duration(milliseconds: 140), child: _homeServersSection()),
+        const SizedBox(height: 12),
+        _EntranceMotion(delay: const Duration(milliseconds: 210), child: _trafficPanel()),
+        const SizedBox(height: 12),
+        _EntranceMotion(delay: const Duration(milliseconds: 280), child: _durationSummary()),
         if (connectionError != null) ...[const SizedBox(height: 12), _errorPanel(connectionError!)],
         if (error != null) ...[const SizedBox(height: 12), _errorPanel(error!)],
         const SizedBox(height: 14),
@@ -659,10 +752,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Widget _settingsPage() => ListView(primary: false, padding: const EdgeInsets.fromLTRB(18, 12, 18, 24), children: [
-    _topBar(), const SizedBox(height: 20),
-    const Text('تنظیمات اتصال', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFFF0F3F4), fontSize: 21, fontWeight: FontWeight.w900)),
+    _EntranceMotion(child: _topBar()),
+    const SizedBox(height: 20),
+    _EntranceMotion(delay: const Duration(milliseconds: 70), child: const Text('تنظیمات اتصال', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFFF0F3F4), fontSize: 21, fontWeight: FontWeight.w900))),
     const SizedBox(height: 18),
-    Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: const Color(0xFF35434C), borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFF46555E))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    _EntranceMotion(delay: const Duration(milliseconds: 140), child: Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: const Color(0xFF35434C), borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFF46555E))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Text('Remote DNS (Xray)', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFFF0F3F4))),
       const SizedBox(height: 8), const Text('درخواست‌های DNS پورت 53 از داخل تونل Xray و با TCP به این سرور ارسال می‌شوند. برای اعمال، اتصال را دوباره برقرار کنید.', style: TextStyle(fontSize: 11, color: Color(0xFFB5C0C6))),
       const SizedBox(height: 12), DropdownButtonFormField<String>(key: ValueKey(dnsAddress), initialValue: dnsAddress, decoration: const InputDecoration(labelText: 'سرور DNS', border: OutlineInputBorder()), items: const [
@@ -677,16 +771,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         final p = await SharedPreferences.getInstance();
         await p.setString('dnsAddress', v);
       }),
-    ])),
+    ]))),
     const SizedBox(height: 12),
-    Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: const Color(0xFF35434C), borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFF46555E))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    _EntranceMotion(delay: const Duration(milliseconds: 230), child: Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: const Color(0xFF35434C), borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFF46555E))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Text('برنامه‌های خارج از VPN', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFFF0F3F4))),
       const SizedBox(height: 8), const Text('ترافیک این برنامه‌ها از تونل VPN عبور نمی‌کند.', style: TextStyle(fontSize: 11, color: Color(0xFFB5C0C6))),
       const SizedBox(height: 12), OutlinedButton.icon(onPressed: _chooseExcludedApps, icon: const Icon(Icons.apps_rounded), label: Text('انتخاب برنامه‌ها (${excludedApps.length})'), style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48))),
       if (excludedApps.isNotEmpty) ...[const SizedBox(height: 8), Text(excludedApps.map((p) => installedApps.firstWhere((a) => a['package'] == p, orElse: () => {'label': p})['label']).join('، '), style: const TextStyle(fontSize: 12, color: Color(0xFFC5D0D5)))],
-    ])),
+    ]))),
     const SizedBox(height: 14),
-    const Text('برای اعمال DNS و فهرست استثناها، اتصال فعلی را قطع و دوباره وصل کنید.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFFB5C0C6), fontSize: 11)),
+    _EntranceMotion(delay: const Duration(milliseconds: 310), child: const Text('برای اعمال DNS و فهرست استثناها، اتصال فعلی را قطع و دوباره وصل کنید.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFFB5C0C6), fontSize: 11))),
   ]);
 
 
