@@ -16,7 +16,7 @@ jobs:
     env:
       # Keep Pub plugin sources on the same drive as the checked-out project.
       # Kotlin incremental compilation on Windows fails when source roots span C: and D:.
-      PUB_CACHE: ${{ github.workspace }}\\.pub-cache
+      PUB_CACHE: ${{ github.workspace }}\.pub-cache
     steps:
       - name: Checkout
         uses: actions/checkout@v4
