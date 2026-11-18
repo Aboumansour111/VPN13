@@ -173,6 +173,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   num uploadTotal = 0;
   num downloadTotal = 0;
   Timer? timer;
+  Timer? _serversRefreshTimer;
   DateTime? connectedAt;
   Duration elapsed = Duration.zero;
   _VpnStatus status = _VpnStatus.disconnected;
@@ -212,6 +213,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       if (mounted) setState(() => connectionError = e.toString());
     });
     loadServers();
+    _serversRefreshTimer = Timer.periodic(_serversRefreshInterval, (_) {
+      if (mounted && WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
+        loadServers();
+      }
+    });
     _loadConnectionSettings();
   }
 
@@ -298,12 +304,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     statusSub?.cancel();
     timer?.cancel();
+    _serversRefreshTimer?.cancel();
     super.dispose();
   }
 
   static const _serversCacheKey = 'vpn13_servers_cache_json';
   static const _serversFetchedAtKey = 'vpn13_servers_fetched_at';
-  static const _serversRefreshInterval = Duration(hours: 24);
+  static const _serversRefreshInterval = Duration(hours: 4);
 
   List<ServerItem> _parseServers(String raw) {
     final document = jsonDecode(raw) as Map<String, dynamic>;
@@ -387,7 +394,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       await prefs.setString(_serversCacheKey, response.body);
       await prefs.setInt(_serversFetchedAtKey, DateTime.now().millisecondsSinceEpoch);
       await _showServers(list, prefs);
-      if (mounted) setState(() => error = null);
+      if (mounted) {
+        setState(() => error = null);
+        if (force) message('سرورها به‌روز شدند');
+      }
     } catch (e) {
       if (mounted) {
         setState(() {
