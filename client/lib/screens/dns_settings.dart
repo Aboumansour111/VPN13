@@ -43,7 +43,11 @@ String applyDnsSettings(String rawConfig, SharedPreferences prefs) {
     servers.add({
       'tag': i == 0 ? 'vpn13-dns-primary' : 'vpn13-dns-secondary',
       'address': useHttps
-          ? 'https://dns.google/dns-query'
+          ? (mode == 'quad9'
+              ? 'https://dns.quad9.net/dns-query'
+              : mode == 'google'
+                  ? 'https://dns.google/dns-query'
+                  : 'https://cloudflare-dns.com/dns-query')
           : 'udp://$address',
     });
   }
@@ -182,7 +186,9 @@ class _DnsSettingsSheetState extends State<_DnsSettingsSheet> {
                 const SizedBox(height: 12),
                 SwitchListTile(
                   value: _secure,
-                  onChanged: (value) => setState(() => _secure = value),
+                  onChanged: _mode == 'custom'
+                      ? null
+                      : (value) => setState(() => _secure = value),
                   activeColor: _teal,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 4),
                   title: const Text('DNS رمزگذاری‌شده (DoH)',
@@ -190,8 +196,11 @@ class _DnsSettingsSheetState extends State<_DnsSettingsSheet> {
                           color: _ink,
                           fontSize: 13,
                           fontWeight: FontWeight.w800)),
-                  subtitle: const Text('ارسال درخواست DNS از طریق HTTPS',
-                      style: TextStyle(
+                  subtitle: Text(
+                      _mode == 'custom'
+                          ? 'برای DNS سفارشی، DoH را از حالت سفارشی خارج کنید.'
+                          : 'ارسال درخواست DNS از طریق HTTPS',
+                      style: const TextStyle(
                           color: Color(0xFF71809A), fontSize: 10)),
                 ),
                 const SizedBox(height: 10),
