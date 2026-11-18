@@ -709,33 +709,82 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     child: ListView(
       primary: false,
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 24),
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 26),
       children: [
         _EntranceMotion(child: _topBar()),
+        const SizedBox(height: 15),
+        _EntranceMotion(
+          delay: const Duration(milliseconds: 70),
+          child: _connectionPanel(),
+        ),
         const SizedBox(height: 12),
         _EntranceMotion(
-          delay: const Duration(milliseconds: 50),
-          child: _homeServersSection(),
+          delay: const Duration(milliseconds: 130),
+          child: _selectedServerCard(),
         ),
-        const SizedBox(height: 10),
-        _EntranceMotion(delay: const Duration(milliseconds: 100), child: _connectionPanel()),
         const SizedBox(height: 12),
-        _EntranceMotion(delay: const Duration(milliseconds: 280), child: _durationSummary()),
-        if (connectionError != null) ...[const SizedBox(height: 12), _errorPanel(connectionError!)],
-        if (error != null) ...[const SizedBox(height: 12), _errorPanel(error!)],
+        _EntranceMotion(
+          delay: const Duration(milliseconds: 190),
+          child: _durationSummary(),
+        ),
+        const SizedBox(height: 12),
+        Row(children: [
+          Expanded(child: _statTile('دانلود', speedText(downloadSpeed), bytesText(downloadTotal), Icons.south_rounded)),
+          const SizedBox(width: 10),
+          Expanded(child: _statTile('آپلود', speedText(uploadSpeed), bytesText(uploadTotal), Icons.north_rounded)),
+        ]),
+        if (connectionError != null) ...[
+          const SizedBox(height: 12),
+          _errorPanel(connectionError!),
+        ],
+        if (error != null) ...[
+          const SizedBox(height: 12),
+          _errorPanel(error!),
+        ],
         const SizedBox(height: 14),
         OutlinedButton.icon(
-          onPressed: () => loadServers(force: true), icon: const Icon(Icons.sync_rounded, size: 19),
+          onPressed: () => loadServers(force: true),
+          icon: const Icon(Icons.sync_rounded, size: 19),
           label: const Text('به‌روزرسانی فهرست سرورها'),
           style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFF72CDB0), side: const BorderSide(color: Color(0xFF53636B)),
-            backgroundColor: const Color(0xFF35434C), minimumSize: const Size.fromHeight(48),
+            foregroundColor: const Color(0xFF72CDB0),
+            side: const BorderSide(color: Color(0xFF53636B)),
+            backgroundColor: const Color(0xFF35434C),
+            minimumSize: const Size.fromHeight(48),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
         ),
         const SizedBox(height: 10),
-        const Center(child: Text('VPN13  •  اتصال امن و ساده', style: TextStyle(color: Color(0xFF8A96A8), fontSize: 11))),
+        const Center(child: Text('VPN13  •  Xray Core', style: TextStyle(color: Color(0xFF8A96A8), fontSize: 11))),
       ],
+    ),
+  );
+
+  Widget _selectedServerCard() => Material(
+    color: const Color(0xFF1B303A),
+    borderRadius: BorderRadius.circular(19),
+    child: InkWell(
+      borderRadius: BorderRadius.circular(19),
+      onTap: () => setState(() => _activeTab = 1),
+      child: Padding(
+        padding: const EdgeInsets.all(15),
+        child: Row(children: [
+          Container(
+            width: 43,
+            height: 43,
+            decoration: BoxDecoration(color: const Color(0xFF29454F), borderRadius: BorderRadius.circular(13)),
+            child: const Icon(Icons.public_rounded, color: Color(0xFF80E5D4), size: 23),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('مسیر اتصال شما', style: TextStyle(color: Color(0xFF8FAEB6), fontSize: 10)),
+            const SizedBox(height: 4),
+            Text(selected?.name ?? 'هنوز سروری انتخاب نشده', maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFFE8FFFF), fontSize: 13, fontWeight: FontWeight.w800)),
+            Text(_connectionPingMs == null ? 'برای مشاهده سرورها لمس کنید' : 'پینگ اتصال: $_connectionPingMs ms', style: const TextStyle(color: Color(0xFF80E5D4), fontSize: 10)),
+          ])),
+          const Icon(Icons.chevron_left_rounded, color: Color(0xFF80E5D4)),
+        ]),
+      ),
     ),
   );
 
