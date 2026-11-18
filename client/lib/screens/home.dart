@@ -582,7 +582,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       ),
       const SizedBox(height: 12),
       Row(children: [
-        Expanded(child: Text('\${servers.length} سرور در فهرست', style: const TextStyle(color: Color(0xFFB5CED2), fontSize: 11, fontWeight: FontWeight.w700))),
+        Expanded(child: Text('${servers.length} سرور در فهرست', style: const TextStyle(color: Color(0xFFB5CED2), fontSize: 11, fontWeight: FontWeight.w700))),
         TextButton.icon(
           onPressed: _testingAll || servers.isEmpty ? null : _testAllServers,
           icon: _testingAll ? const SizedBox(width: 15, height: 15, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.speed_rounded, size: 17),
@@ -677,7 +677,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           const Divider(color: Color(0xFF35545E), height: 22),
           _statLine('سرور انتخاب‌شده', selected?.name ?? 'انتخاب نشده', const Color(0xFFE8FFFF)),
           const Divider(color: Color(0xFF35545E), height: 22),
-          _statLine('پینگ آخرین اتصال', _connectionPingMs == null ? '—' : '\$_connectionPingMs ms', const Color(0xFF80E5D4)),
+          _statLine('پینگ آخرین اتصال', _connectionPingMs == null ? '—' : '$_connectionPingMs ms', const Color(0xFF80E5D4)),
         ]),
       ),
       const SizedBox(height: 12),
