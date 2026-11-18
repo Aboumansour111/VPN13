@@ -1014,7 +1014,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         Row(children: [
           Icon(Icons.shield_outlined, color: accent, size: 19),
           const SizedBox(width: 8),
-          const Text('وضعیت امنیت اتصال', style: TextStyle(color: Color(0xFF82879B), fontSize: 12, fontWeight: FontWeight.w700)),
+          const Text('وضعیت امنیت اتصال', style: TextStyle(color: Color(0xFFBFC4E8), fontSize: 12, fontWeight: FontWeight.w700)),
           const Spacer(),
           if (active) Text(durationText(elapsed), style: const TextStyle(color: Color(0xFFE9FFFF), fontSize: 12, fontWeight: FontWeight.w800, fontFeatures: [FontFeature.tabularFigures()])),
         ]),
@@ -1049,7 +1049,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     else
                       Icon(active ? Icons.shield_rounded : Icons.power_settings_new_rounded, color: const Color(0xFF0E7C86), size: 49),
                     const SizedBox(height: 9),
-                    Text(active ? durationText(elapsed) : 'VPN13', style: const TextStyle(color: Color(0xFF0F1F22), fontSize: 17, fontWeight: FontWeight.w900, fontFeatures: [FontFeature.tabularFigures()])),
+                    Text(active ? durationText(elapsed) : 'VPN13', style: const TextStyle(color: Color(0xFFF0FFFF), fontSize: 17, fontWeight: FontWeight.w900, fontFeatures: [FontFeature.tabularFigures()])),
                   ]),
                 ),
                 Positioned(top: 11, right: 39, child: Icon(Icons.circle, size: 5, color: accent.withValues(alpha: .8))),
@@ -1061,7 +1061,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         const SizedBox(height: 12),
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 250),
-          child: Text(statusLabel, key: ValueKey(statusLabel), style: const TextStyle(color: Color(0xFF0F1F22), fontSize: 20, fontWeight: FontWeight.w900)),
+          child: Text(statusLabel, key: ValueKey(statusLabel), style: const TextStyle(color: Color(0xFFF0FFFF), fontSize: 20, fontWeight: FontWeight.w900)),
         ),
         if (_connectionPingMs != null) ...[
           const SizedBox(height: 5),
@@ -1070,7 +1070,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         const SizedBox(height: 8),
         Text(selected == null ? 'ابتدا سرور را انتخاب کنید' : 'برای اتصال یا قطع، آیکون مرکزی را لمس کنید',
           textAlign: TextAlign.center,
-          style: const TextStyle(color: Color(0xFF82879B), fontSize: 10)),
+          style: const TextStyle(color: Color(0xFFBFC4E8), fontSize: 10)),
       ]),
     );
   }
