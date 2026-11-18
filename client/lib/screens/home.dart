@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sing_box/sing_box.dart';
 
 import '../config.dart';
+import 'dns_settings.dart';
 
 class ServerItem {
   const ServerItem({
@@ -166,7 +167,9 @@ class _HomeScreenState extends State<HomeScreen> {
         await SingBox.instance.disconnect();
       }
       await SingBox.instance.requestNotificationPermission();
-      await SingBox.instance.connect(server.config);
+      final prefs = await SharedPreferences.getInstance();
+      final configWithDns = applyDnsSettings(server.config, prefs);
+      await SingBox.instance.connect(configWithDns);
     } catch (e) {
       if (mounted) {
         setState(() => connectionError = e.toString());
@@ -371,6 +374,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ],
+            ),
+          ),
+          const SizedBox(width: 7),
+          Material(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            child: IconButton(
+              tooltip: 'تنظیمات DNS',
+              onPressed: () => showDnsSettings(context),
+              icon: const Icon(Icons.tune_rounded, color: _blue, size: 21),
+              visualDensity: VisualDensity.compact,
             ),
           ),
         ],
