@@ -177,6 +177,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Duration elapsed = Duration.zero;
   _VpnStatus status = _VpnStatus.disconnected;
   int _activeTab = 0;
+  String _serverQuery = '';
 
   String dnsAddress = '1.1.1.1';
   final Set<String> excludedApps = {};
@@ -509,53 +510,199 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     backgroundColor: const Color(0xFF081923),
     body: Container(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF102A36), Color(0xFF091923), Color(0xFF07141D)]),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF102A36), Color(0xFF091923), Color(0xFF07141D)],
+        ),
       ),
       child: SafeArea(
-      child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 560),
-          reverseDuration: const Duration(milliseconds: 440),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 360),
           switchInCurve: Curves.easeOutCubic,
           switchOutCurve: Curves.easeInCubic,
-          transitionBuilder: (child, animation) {
-            final settingsPage = child.key == const ValueKey<int>(1);
-            final slide = Tween<Offset>(
-              begin: Offset(settingsPage ? 0.16 : -0.16, 0.025),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeOutCubic,
-            ));
-            return FadeTransition(
-              opacity: animation,
-              child: SlideTransition(
-                position: slide,
-                child: ScaleTransition(
-                  scale: Tween<double>(begin: 0.965, end: 1).animate(
-                    CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
-                  ),
-                  child: child,
-                ),
-              ),
-            );
-          },
           child: KeyedSubtree(
             key: ValueKey<int>(_activeTab),
-            child: _activeTab == 0 ? _homePage() : _settingsPage(),
+            child: switch (_activeTab) {
+              0 => _homePage(),
+              1 => _serversPage(),
+              2 => _statsPage(),
+              _ => _settingsPage(),
+            },
           ),
         ),
       ),
     ),
     bottomNavigationBar: NavigationBar(
-      height: 70, backgroundColor: const Color(0xFF10232D), indicatorColor: const Color(0xFF185D5C),
+      height: 72,
+      backgroundColor: const Color(0xFF10232D),
+      indicatorColor: const Color(0xFF185D5C),
       selectedIndex: _activeTab,
       onDestinationSelected: (index) => setState(() => _activeTab = index),
       destinations: const [
         NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home_rounded), label: 'خانه'),
-        NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings_rounded), label: 'تنظیمات'),
+        NavigationDestination(icon: Icon(Icons.public_outlined), selectedIcon: Icon(Icons.public_rounded), label: 'سرورها'),
+        NavigationDestination(icon: Icon(Icons.query_stats_outlined), selectedIcon: Icon(Icons.query_stats_rounded), label: 'آمار'),
+        NavigationDestination(icon: Icon(Icons.tune_outlined), selectedIcon: Icon(Icons.tune_rounded), label: 'تنظیمات'),
       ],
     ),
   );
+
+  Widget _pageHeader(String eyebrow, String title, String subtitle) => Padding(
+    padding: const EdgeInsets.fromLTRB(4, 8, 4, 18),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(eyebrow, style: const TextStyle(color: Color(0xFF65D8C8), fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1)),
+      const SizedBox(height: 7),
+      Text(title, style: const TextStyle(color: Color(0xFFF0FFFF), fontSize: 25, fontWeight: FontWeight.w900)),
+      const SizedBox(height: 5),
+      Text(subtitle, style: const TextStyle(color: Color(0xFF9BB8C1), fontSize: 12, height: 1.6)),
+    ]),
+  );
+
+  Widget _serversPage() => ListView(
+    primary: false,
+    physics: const AlwaysScrollableScrollPhysics(),
+    padding: const EdgeInsets.fromLTRB(18, 14, 18, 26),
+    children: [
+      _topBar(),
+      _pageHeader('نقاط دسترسی', 'سرور موردنظرت را انتخاب کن', 'فهرست زنده از مخزن VPN13؛ پینگ با درخواست واقعی از هسته Xray اندازه‌گیری می‌شود.'),
+      Container(
+        decoration: BoxDecoration(color: const Color(0xFF1B303A), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFF35545E))),
+        child: TextField(
+          onChanged: (value) => setState(() => _serverQuery = value.trim().toLowerCase()),
+          style: const TextStyle(color: Color(0xFFE8FFFF), fontSize: 13),
+          decoration: const InputDecoration(
+            hintText: 'جستجوی کشور یا نام سرور…',
+            hintStyle: TextStyle(color: Color(0xFF829DA5), fontSize: 12),
+            prefixIcon: Icon(Icons.search_rounded, color: Color(0xFF80E5D4)),
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.symmetric(vertical: 15),
+          ),
+        ),
+      ),
+      const SizedBox(height: 12),
+      Row(children: [
+        Expanded(child: Text('\${servers.length} سرور در فهرست', style: const TextStyle(color: Color(0xFFB5CED2), fontSize: 11, fontWeight: FontWeight.w700))),
+        TextButton.icon(
+          onPressed: _testingAll || servers.isEmpty ? null : _testAllServers,
+          icon: _testingAll ? const SizedBox(width: 15, height: 15, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.speed_rounded, size: 17),
+          label: const Text('تست همه'),
+          style: TextButton.styleFrom(foregroundColor: const Color(0xFF80E5D4)),
+        ),
+        IconButton(
+          tooltip: 'به‌روزرسانی',
+          onPressed: loading ? null : () => loadServers(force: true),
+          icon: const Icon(Icons.refresh_rounded, color: Color(0xFF80E5D4)),
+        ),
+      ]),
+      if (loading && servers.isEmpty)
+        const Center(child: Padding(padding: EdgeInsets.all(28), child: CircularProgressIndicator()))
+      else if (servers.where((s) => s.name.toLowerCase().contains(_serverQuery) || (s.description ?? '').toLowerCase().contains(_serverQuery)).isEmpty)
+        const Padding(padding: EdgeInsets.all(24), child: Center(child: Text('سروری با این عبارت پیدا نشد.', style: TextStyle(color: Color(0xFF9BB8C1)))))
+      else
+        ...servers.where((s) => s.name.toLowerCase().contains(_serverQuery) || (s.description ?? '').toLowerCase().contains(_serverQuery)).map((server) {
+          final chosen = server.id == selectedId;
+          final testing = _pingTesting.contains(server.id);
+          final ping = _pingResults[server.id];
+          return Container(
+            margin: const EdgeInsets.only(bottom: 9),
+            decoration: BoxDecoration(
+              color: chosen ? const Color(0xFF164B49) : const Color(0xFF1B303A),
+              borderRadius: BorderRadius.circular(17),
+              border: Border.all(color: chosen ? const Color(0xFF43CDB6) : const Color(0xFF35545E)),
+            ),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(17),
+              onTap: status == _VpnStatus.disconnected && !busy ? () => selectServer(server) : null,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 13),
+                child: Row(children: [
+                  Container(width: 39, height: 39, decoration: BoxDecoration(color: const Color(0xFF29454F), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.dns_rounded, color: Color(0xFF80E5D4))),
+                  const SizedBox(width: 11),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(server.name, style: TextStyle(color: chosen ? const Color(0xFFE8FFFF) : const Color(0xFFD1E0E4), fontSize: 12, fontWeight: FontWeight.w800)),
+                    if (server.description?.isNotEmpty == true) Text(server.description!, style: const TextStyle(color: Color(0xFF9BB8C1), fontSize: 10)),
+                    Text(ping == null ? 'پینگ اندازه‌گیری نشده' : ping < 0 ? 'پاسخی دریافت نشد' : 'پینگ واقعی: $ping ms', style: const TextStyle(color: Color(0xFF80E5D4), fontSize: 10)),
+                  ])),
+                  IconButton(
+                    tooltip: 'تست پینگ',
+                    onPressed: testing || _testingAll ? null : () => _testServer(server),
+                    icon: testing ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.speed_rounded, color: Color(0xFF80E5D4)),
+                  ),
+                  Icon(chosen ? Icons.check_circle_rounded : Icons.circle_outlined, color: chosen ? const Color(0xFF80E5D4) : const Color(0xFF607C86), size: 20),
+                ]),
+              ),
+            ),
+          );
+        }),
+      if (error != null) ...[const SizedBox(height: 10), _errorPanel(error!)],
+    ],
+  );
+
+  Widget _statsPage() => ListView(
+    primary: false,
+    padding: const EdgeInsets.fromLTRB(18, 14, 18, 26),
+    children: [
+      _topBar(),
+      _pageHeader('مرکز داده‌ها', 'مصرف و عملکرد', 'آمار از رویدادهای واقعی سرویس Xray دریافت می‌شود؛ هنگام قطع اتصال سرعت زنده صفر است.'),
+      Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(begin: Alignment.topRight, end: Alignment.bottomLeft, colors: [Color(0xFF1C4A4D), Color(0xFF17333D), Color(0xFF142832)]),
+          borderRadius: BorderRadius.circular(23),
+          border: Border.all(color: const Color(0xFF397A79)),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('مجموع ترافیک این نشست', style: TextStyle(color: Color(0xFFB5D4D2), fontSize: 11)),
+          const SizedBox(height: 7),
+          Text(bytesText(uploadTotal + downloadTotal), style: const TextStyle(color: Color(0xFFE8FFFF), fontSize: 29, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 4),
+          Text(connected ? 'در حال دریافت آمار زنده' : 'برای مشاهده آمار زنده به Xray متصل شوید', style: const TextStyle(color: Color(0xFF8FB8B8), fontSize: 10)),
+        ]),
+      ),
+      const SizedBox(height: 12),
+      Row(children: [
+        Expanded(child: _statTile('دانلود', speedText(downloadSpeed), bytesText(downloadTotal), Icons.south_rounded)),
+        const SizedBox(width: 10),
+        Expanded(child: _statTile('آپلود', speedText(uploadSpeed), bytesText(uploadTotal), Icons.north_rounded)),
+      ]),
+      const SizedBox(height: 12),
+      Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: const Color(0xFF1B303A), borderRadius: BorderRadius.circular(19), border: Border.all(color: const Color(0xFF35545E))),
+        child: Column(children: [
+          _statLine('وضعیت تونل', connected ? 'متصل' : status == _VpnStatus.connecting ? 'در حال اتصال' : 'قطع', connected ? const Color(0xFF62E0BB) : const Color(0xFF9BB8C1)),
+          const Divider(color: Color(0xFF35545E), height: 22),
+          _statLine('مدت اتصال', durationText(elapsed), const Color(0xFFE8FFFF)),
+          const Divider(color: Color(0xFF35545E), height: 22),
+          _statLine('سرور انتخاب‌شده', selected?.name ?? 'انتخاب نشده', const Color(0xFFE8FFFF)),
+          const Divider(color: Color(0xFF35545E), height: 22),
+          _statLine('پینگ آخرین اتصال', _connectionPingMs == null ? '—' : '\$_connectionPingMs ms', const Color(0xFF80E5D4)),
+        ]),
+      ),
+      const SizedBox(height: 12),
+      if (connected) OutlinedButton.icon(onPressed: () => NativeXray.status().then(_handleNativeEvent), icon: const Icon(Icons.sync_rounded), label: const Text('به‌روزرسانی وضعیت')),
+      if (connectionError != null) ...[const SizedBox(height: 10), _errorPanel(connectionError!)],
+    ],
+  );
+
+  Widget _statTile(String title, String speed, String total, IconData icon) => Container(
+    padding: const EdgeInsets.all(15),
+    decoration: BoxDecoration(color: const Color(0xFF1B303A), borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFF35545E))),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Icon(icon, color: const Color(0xFF80E5D4), size: 21),
+      const SizedBox(height: 12),
+      Text(title, style: const TextStyle(color: Color(0xFF9BB8C1), fontSize: 11)),
+      const SizedBox(height: 4),
+      FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight, child: Text(speed, style: const TextStyle(color: Color(0xFFE8FFFF), fontSize: 19, fontWeight: FontWeight.w900))),
+      Text('کل: $total', style: const TextStyle(color: Color(0xFF80E5D4), fontSize: 10)),
+    ]),
+  );
+
+  Widget _statLine(String label, String value, Color valueColor) => Row(children: [
+    Expanded(child: Text(label, style: const TextStyle(color: Color(0xFF9BB8C1), fontSize: 11))),
+    Flexible(child: Text(value, textAlign: TextAlign.end, style: TextStyle(color: valueColor, fontSize: 11, fontWeight: FontWeight.w800))),
+  ]);
 
   Widget _homePage() => RefreshIndicator(
     onRefresh: () => loadServers(force: true),
