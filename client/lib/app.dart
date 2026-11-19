@@ -8,20 +8,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 import 'config.dart';
+import 'flag_asset.dart';
 import 'screens/home.dart';
 
 class Vpn13ClientApp extends StatelessWidget {
   const Vpn13ClientApp({super.key});
 
-  static const navy = Color(0xFFF0F3F4);
-  static const blue = Color(0xFF39A98B);
+  static const navy = Color(0xFF0F1F22);
+  static const blue = Color(0xFF0E7C86);
 
   @override
   Widget build(BuildContext context) {
     final scheme = ColorScheme.fromSeed(
       seedColor: blue,
-      brightness: Brightness.dark,
-      surface: const Color(0xFF202E37),
+      brightness: Brightness.light,
+      surface: const Color(0xFFFFFFFF),
     );
 
     return MaterialApp(
@@ -30,10 +31,12 @@ class Vpn13ClientApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: scheme,
-        scaffoldBackgroundColor: const Color(0xFF10191F),
-        cardColor: const Color(0xFF202E37),
-        dividerColor: const Color(0xFF46555E),
+        scaffoldBackgroundColor: const Color(0xFFF3F6F6),
+        cardColor: const Color(0xFFFFFFFF),
+        dividerColor: const Color(0xFFE9EAF1),
         fontFamily: 'Roboto',
+        textTheme: ThemeData.light().textTheme.apply(bodyColor: const Color(0xFF0F1F22), displayColor: const Color(0xFF0F1F22)),
+        inputDecorationTheme: InputDecorationTheme(labelStyle: const TextStyle(color: Color(0xFF0F1F22)), hintStyle: const TextStyle(color: Color(0xFF82879B)), filled: true, fillColor: const Color(0xFFF8FBFB)),
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.transparent,
           foregroundColor: navy,
@@ -288,254 +291,146 @@ class _LoginScreenState extends State<_LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    const ink = Color(0xFF0F1F22);
+    const muted = Color(0xFF7B8790);
+    const teal = Color(0xFF14919B);
+    const deepTeal = Color(0xFF0A5F6B);
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
-            colors: [
-              Color(0xFF142B36),
-              Color(0xFF101F28),
-              Color(0xFF0B171F),
-            ],
+      backgroundColor: const Color(0xFFF3F6F6),
+      body: Stack(
+        children: [
+          Container(
+            decoration: const BoxDecoration(
+              gradient: RadialGradient(
+                center: Alignment.topCenter,
+                radius: 1.15,
+                colors: [Color(0xFFD4EFEB), Color(0xFFF3F6F6), Color(0xFFF3F6F6)],
+                stops: [0, .48, 1],
+              ),
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 410),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.fromLTRB(18, 17, 18, 19),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          begin: Alignment.topRight,
-                          end: Alignment.bottomLeft,
-                          colors: [
-                            Color(0xFF263F4B),
-                            Color(0xFF142832),
-                            Color(0xFF10212B),
+          Positioned(
+            top: 12,
+            left: 14,
+            child: SafeArea(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(5),
+                child: Image.memory(base64Decode(vpn13FlagBase64), width: 44, fit: BoxFit.contain),
+              ),
+            ),
+          ),
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(22, 66, 22, 24),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 410),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 86,
+                        height: 86,
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(colors: [teal, deepTeal]),
+                          borderRadius: BorderRadius.circular(27),
+                          boxShadow: [BoxShadow(color: deepTeal.withValues(alpha: .24), blurRadius: 26, offset: const Offset(0, 10))],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(23),
+                          child: Image.asset('assets/icon/vpn13_icon.jpg', fit: BoxFit.cover),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text('VPN13', style: TextStyle(color: ink, fontSize: 27, fontWeight: FontWeight.w900, letterSpacing: -.6)),
+                      const SizedBox(height: 4),
+                      const Text('اتصال امن و پایدار', style: TextStyle(color: muted, fontSize: 12, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 30),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.fromLTRB(20, 23, 20, 22),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(28),
+                          border: Border.all(color: const Color(0xFFE1E8E7)),
+                          boxShadow: const [BoxShadow(color: Color(0x190F2A2E), blurRadius: 34, offset: Offset(0, 13))],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const Text('ورود به برنامه', textAlign: TextAlign.center, style: TextStyle(color: ink, fontSize: 19, fontWeight: FontWeight.w900)),
+                            const SizedBox(height: 7),
+                            const Text('برای ادامه، کد دسترسی خود را وارد کنید', textAlign: TextAlign.center, style: TextStyle(color: muted, fontSize: 11, height: 1.8)),
+                            const SizedBox(height: 23),
+                            const Text('کد ورود', style: TextStyle(color: ink, fontSize: 12, fontWeight: FontWeight.w800)),
+                            const SizedBox(height: 9),
+                            TextField(
+                              controller: _controller,
+                              obscureText: _obscure,
+                              autocorrect: false,
+                              enableSuggestions: false,
+                              textDirection: TextDirection.ltr,
+                              textAlign: TextAlign.center,
+                              onSubmitted: (_) => _submit(),
+                              style: const TextStyle(color: ink, fontSize: 16, letterSpacing: 2),
+                              decoration: InputDecoration(
+                                hintText: 'کد دسترسی را وارد کنید',
+                                hintStyle: const TextStyle(color: Color(0xFF9AA5AD), fontSize: 12, letterSpacing: 0),
+                                prefixIcon: const Icon(Icons.key_rounded, color: teal, size: 20),
+                                suffixIcon: IconButton(
+                                  onPressed: () => setState(() => _obscure = !_obscure),
+                                  icon: Icon(_obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: muted, size: 19),
+                                ),
+                                filled: true,
+                                fillColor: const Color(0xFFF8FBFB),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 17),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: const BorderSide(color: Color(0xFFDFE6E5))),
+                                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: const BorderSide(color: Color(0xFFDFE6E5))),
+                                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: const BorderSide(color: teal, width: 1.6)),
+                              ),
+                            ),
+                            if (_error != null) ...[
+                              const SizedBox(height: 11),
+                              Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFFD9485F), fontSize: 11, fontWeight: FontWeight.w700, height: 1.6)),
+                            ],
+                            const SizedBox(height: 18),
+                            SizedBox(
+                              height: 54,
+                              child: FilledButton(
+                                onPressed: _busy ? null : _submit,
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: teal,
+                                  foregroundColor: Colors.white,
+                                  disabledBackgroundColor: const Color(0xFF8ABFC0),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                                  elevation: 2,
+                                ),
+                                child: _busy
+                                    ? const SizedBox(width: 21, height: 21, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                    : const Text('ورود به برنامه', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900)),
+                              ),
+                            ),
                           ],
                         ),
-                        borderRadius: BorderRadius.circular(25),
-                        border: Border.all(color: Color(0xFF4A7D82)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Color(0xFF36DCC5).withValues(alpha: .08),
-                            blurRadius: 24,
-                            spreadRadius: 1,
-                          ),
-                        ],
                       ),
-                      child: Column(
-                        children: [
-                          const Text(
-                            'اللهم صل علی محمد و آل محمد الائمه و المهدیین و سلم تسلیما',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Color(0xFF9BE9DF),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
-                              height: 1.7,
-                            ),
-                          ),
-                          const SizedBox(height: 17),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(17),
-                            child: Image.asset(
-                              'assets/icon/vpn13_icon.jpg',
-                              width: 76,
-                              height: 76,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'VPN13',
-                            style: TextStyle(
-                              color: Color(0xFFF1FFFF),
-                              fontSize: 27,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: .5,
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          const Text(
-                            'اتصال امن و پایدار',
-                            style: TextStyle(
-                              color: Color(0xFF9BB8C1),
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
+                      const SizedBox(height: 22),
+                      const Text(
+                        'اللهم صل علی محمد و آل محمد الائمه و المهدیین و سلم تسلیما',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Color(0xFF0E7C86), fontSize: 12, fontWeight: FontWeight.w800, height: 2),
                       ),
-                    ),
-                    const SizedBox(height: 18),
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1B303A),
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(color: const Color(0xFF35545E)),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const Text(
-                            'ورود به برنامه',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Color(0xFFEAFBFB),
-                              fontSize: 17,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          const Text(
-                            'برای ادامه، کد دسترسی خود را وارد کنید',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Color(0xFF9BB8C1),
-                              fontSize: 11,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          const Text(
-                            'کد ورود',
-                            style: TextStyle(
-                              color: Color(0xFFEAFBFB),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 9),
-                          TextField(
-                            controller: _controller,
-                            obscureText: _obscure,
-                            autocorrect: false,
-                            enableSuggestions: false,
-                            textDirection: TextDirection.ltr,
-                            textAlign: TextAlign.center,
-                            onSubmitted: (_) => _submit(),
-                            style: const TextStyle(
-                              color: Color(0xFFEAFBFB),
-                              fontSize: 15,
-                              letterSpacing: 1.2,
-                            ),
-                            decoration: InputDecoration(
-                              hintText: 'کد دسترسی را وارد کنید',
-                              hintStyle: const TextStyle(
-                                color: Color(0xFF91AAB2),
-                                fontSize: 12,
-                                letterSpacing: 0,
-                              ),
-                              filled: true,
-                              fillColor: const Color(0xFF12232C),
-                              prefixIcon: const Icon(
-                                Icons.key_rounded,
-                                color: Color(0xFF80E5D4),
-                                size: 19,
-                              ),
-                              suffixIcon: IconButton(
-                                onPressed: () => setState(
-                                  () => _obscure = !_obscure,
-                                ),
-                                icon: Icon(
-                                  _obscure
-                                      ? Icons.visibility_off_outlined
-                                      : Icons.visibility_outlined,
-                                  color: const Color(0xFF9BB8C1),
-                                  size: 19,
-                                ),
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(14),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFF45636D),
-                                ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(14),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFF45636D),
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(14),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFF80E5D4),
-                                  width: 1.5,
-                                ),
-                              ),
-                            ),
-                          ),
-                          if (_error != null) ...[
-                            const SizedBox(height: 11),
-                            Text(
-                              _error!,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                color: Color(0xFFFFA39A),
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                          const SizedBox(height: 17),
-                          SizedBox(
-                            height: 50,
-                            child: FilledButton(
-                              onPressed: _busy ? null : _submit,
-                              style: FilledButton.styleFrom(
-                                backgroundColor: const Color(0xFF168F79),
-                                foregroundColor: Colors.white,
-                                disabledBackgroundColor: const Color(0xFF31534F),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                              ),
-                              child: _busy
-                                  ? const SizedBox(
-                                      width: 21,
-                                      height: 21,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : const Text(
-                                      'ورود به برنامه',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                    ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 17),
-                    const Text(
-                      'دسترسی خصوصی  •  VPN13',
-                      style: TextStyle(
-                        color: Color(0xFF819BA4),
-                        fontSize: 10,
-                      ),
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      const Text('دسترسی خصوصی  •  VPN13', style: TextStyle(color: Color(0xFF9AA5AD), fontSize: 10)),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
+}
 }
