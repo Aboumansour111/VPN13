@@ -12,6 +12,9 @@ import '../services/native_xray.dart';
 
 enum _VpnStatus { disconnected, connecting, connected, disconnecting }
 
+// Reuse one decoded image provider; HomeScreen rebuilds frequently for live stats.
+final ImageProvider _vpn13FlagImage = MemoryImage(base64Decode(vpn13FlagBase64));
+
 // Entrance motion is deliberately visible but runs only when a section is
 // inserted, not on every parent rebuild (such as live traffic updates).
 class _ConnectionPulse extends StatefulWidget {
@@ -518,13 +521,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFF3F6F6),
+    backgroundColor: const Color(0xFFF4F7F8),
     body: Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFFF3F6F6), Color(0xFFF3F6F6), Color(0xFFF3F6F6)],
+          colors: [Color(0xFFF4F7F8), Color(0xFFF4F7F8), Color(0xFFF4F7F8)],
         ),
       ),
       child: SafeArea(
@@ -547,7 +550,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     bottomNavigationBar: NavigationBar(
       height: 72,
       backgroundColor: const Color(0xFFFFFFFF),
-      indicatorColor: const Color(0xFFE3F2F1),
+      indicatorColor: const Color(0xFFDDF1EE),
       selectedIndex: _activeTab,
       onDestinationSelected: (index) => setState(() => _activeTab = index),
       destinations: const [
@@ -562,11 +565,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget _pageHeader(String eyebrow, String title, String subtitle) => Padding(
     padding: const EdgeInsets.fromLTRB(4, 8, 4, 18),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(eyebrow, style: const TextStyle(color: Color(0xFF0E7C86), fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1)),
+      Text(eyebrow, style: const TextStyle(color: Color(0xFF167D86), fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1)),
       const SizedBox(height: 7),
-      Text(title, style: const TextStyle(color: Color(0xFF0F1F22), fontSize: 25, fontWeight: FontWeight.w900)),
+      Text(title, style: const TextStyle(color: Color(0xFF142A30), fontSize: 25, fontWeight: FontWeight.w900)),
       const SizedBox(height: 5),
-      Text(subtitle, style: const TextStyle(color: Color(0xFF82879B), fontSize: 12, height: 1.6)),
+      Text(subtitle, style: const TextStyle(color: Color(0xFF71808A), fontSize: 12, height: 1.6)),
     ]),
   );
 
@@ -578,14 +581,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _topBar(),
       _pageHeader('نقاط دسترسی', 'سرور موردنظرت را انتخاب کن', 'فهرست زنده از مخزن VPN13؛ پینگ با درخواست واقعی از هسته Xray اندازه‌گیری می‌شود.'),
       Container(
-        decoration: BoxDecoration(color: const Color(0xFFFFFFFF), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFF35545E))),
+        decoration: BoxDecoration(color: const Color(0xFFFFFFFF), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFDCE7E8))),
         child: TextField(
           onChanged: (value) => setState(() => _serverQuery = value.trim().toLowerCase()),
-          style: const TextStyle(color: Color(0xFF0F1F22), fontSize: 13),
+          style: const TextStyle(color: Color(0xFF142A30), fontSize: 13),
           decoration: const InputDecoration(
             hintText: 'جستجوی کشور یا نام سرور…',
-            hintStyle: TextStyle(color: Color(0xFF82879B), fontSize: 12),
-            prefixIcon: Icon(Icons.search_rounded, color: Color(0xFF0E7C86)),
+            hintStyle: TextStyle(color: Color(0xFF71808A), fontSize: 12),
+            prefixIcon: Icon(Icons.search_rounded, color: Color(0xFF167D86)),
             border: InputBorder.none,
             contentPadding: EdgeInsets.symmetric(vertical: 15),
           ),
@@ -593,23 +596,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       ),
       const SizedBox(height: 12),
       Row(children: [
-        Expanded(child: Text('${servers.length} سرور در فهرست', style: const TextStyle(color: Color(0xFF82879B), fontSize: 11, fontWeight: FontWeight.w700))),
+        Expanded(child: Text('${servers.length} سرور در فهرست', style: const TextStyle(color: Color(0xFF71808A), fontSize: 11, fontWeight: FontWeight.w700))),
         TextButton.icon(
           onPressed: _testingAll || servers.isEmpty ? null : _testAllServers,
           icon: _testingAll ? const SizedBox(width: 15, height: 15, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.speed_rounded, size: 17),
           label: const Text('تست همه'),
-          style: TextButton.styleFrom(foregroundColor: const Color(0xFF0E7C86)),
+          style: TextButton.styleFrom(foregroundColor: const Color(0xFF167D86)),
         ),
         IconButton(
           tooltip: 'به‌روزرسانی',
           onPressed: loading ? null : () => loadServers(force: true),
-          icon: const Icon(Icons.refresh_rounded, color: Color(0xFF0E7C86)),
+          icon: const Icon(Icons.refresh_rounded, color: Color(0xFF167D86)),
         ),
       ]),
       if (loading && servers.isEmpty)
         const Center(child: Padding(padding: EdgeInsets.all(28), child: CircularProgressIndicator()))
       else if (servers.where((s) => s.name.toLowerCase().contains(_serverQuery) || (s.description ?? '').toLowerCase().contains(_serverQuery)).isEmpty)
-        const Padding(padding: EdgeInsets.all(24), child: Center(child: Text('سروری با این عبارت پیدا نشد.', style: TextStyle(color: Color(0xFF82879B)))))
+        const Padding(padding: EdgeInsets.all(24), child: Center(child: Text('سروری با این عبارت پیدا نشد.', style: TextStyle(color: Color(0xFF71808A)))))
       else
         ...servers.where((s) => s.name.toLowerCase().contains(_serverQuery) || (s.description ?? '').toLowerCase().contains(_serverQuery)).map((server) {
           final chosen = server.id == selectedId;
@@ -620,7 +623,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             decoration: BoxDecoration(
               color: chosen ? const Color(0xFF164B49) : const Color(0xFFFFFFFF),
               borderRadius: BorderRadius.circular(17),
-              border: Border.all(color: chosen ? const Color(0xFF43CDB6) : const Color(0xFF35545E)),
+              border: Border.all(color: chosen ? const Color(0xFF43CDB6) : const Color(0xFFDCE7E8)),
             ),
             child: InkWell(
               borderRadius: BorderRadius.circular(17),
@@ -628,19 +631,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 13),
                 child: Row(children: [
-                  Container(width: 39, height: 39, decoration: BoxDecoration(color: const Color(0xFFE6F4F3), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.dns_rounded, color: Color(0xFF0E7C86))),
+                  Container(width: 39, height: 39, decoration: BoxDecoration(color: const Color(0xFFE6F4F3), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.dns_rounded, color: Color(0xFF167D86))),
                   const SizedBox(width: 11),
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(server.name, style: TextStyle(color: chosen ? const Color(0xFF0F1F22) : const Color(0xFFD1E0E4), fontSize: 12, fontWeight: FontWeight.w800)),
-                    if (server.description?.isNotEmpty == true) Text(server.description!, style: const TextStyle(color: Color(0xFF82879B), fontSize: 10)),
-                    Text(ping == null ? 'پینگ اندازه‌گیری نشده' : ping < 0 ? 'پاسخی دریافت نشد' : 'پینگ واقعی: $ping ms', style: const TextStyle(color: Color(0xFF0E7C86), fontSize: 10)),
+                    Text(server.name, style: TextStyle(color: chosen ? const Color(0xFF142A30) : const Color(0xFFD1E0E4), fontSize: 12, fontWeight: FontWeight.w800)),
+                    if (server.description?.isNotEmpty == true) Text(server.description!, style: const TextStyle(color: Color(0xFF71808A), fontSize: 10)),
+                    Text(ping == null ? 'پینگ اندازه‌گیری نشده' : ping < 0 ? 'پاسخی دریافت نشد' : 'پینگ واقعی: $ping ms', style: const TextStyle(color: Color(0xFF167D86), fontSize: 10)),
                   ])),
                   IconButton(
                     tooltip: 'تست پینگ',
                     onPressed: testing || _testingAll ? null : () => _testServer(server),
-                    icon: testing ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.speed_rounded, color: Color(0xFF0E7C86)),
+                    icon: testing ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.speed_rounded, color: Color(0xFF167D86)),
                   ),
-                  Icon(chosen ? Icons.check_circle_rounded : Icons.circle_outlined, color: chosen ? const Color(0xFF0E7C86) : const Color(0xFF607C86), size: 20),
+                  Icon(chosen ? Icons.check_circle_rounded : Icons.circle_outlined, color: chosen ? const Color(0xFF167D86) : const Color(0xFF607C86), size: 20),
                 ]),
               ),
             ),
@@ -666,7 +669,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('مجموع ترافیک این نشست', style: TextStyle(color: Color(0xFFB5D4D2), fontSize: 11)),
           const SizedBox(height: 7),
-          Text(bytesText(uploadTotal + downloadTotal), style: const TextStyle(color: Color(0xFF0F1F22), fontSize: 29, fontWeight: FontWeight.w900)),
+          Text(bytesText(uploadTotal + downloadTotal), style: const TextStyle(color: Color(0xFF142A30), fontSize: 29, fontWeight: FontWeight.w900)),
           const SizedBox(height: 4),
           Text(connected ? 'در حال دریافت آمار زنده' : 'برای مشاهده آمار زنده به Xray متصل شوید', style: const TextStyle(color: Color(0xFF8FB8B8), fontSize: 10)),
         ]),
@@ -680,15 +683,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       const SizedBox(height: 12),
       Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: const Color(0xFFFFFFFF), borderRadius: BorderRadius.circular(19), border: Border.all(color: const Color(0xFF35545E))),
+        decoration: BoxDecoration(color: const Color(0xFFFFFFFF), borderRadius: BorderRadius.circular(19), border: Border.all(color: const Color(0xFFDCE7E8))),
         child: Column(children: [
-          _statLine('وضعیت تونل', connected ? 'متصل' : status == _VpnStatus.connecting ? 'در حال اتصال' : 'قطع', connected ? const Color(0xFF62E0BB) : const Color(0xFF82879B)),
-          const Divider(color: Color(0xFF35545E), height: 22),
-          _statLine('مدت اتصال', durationText(elapsed), const Color(0xFF0F1F22)),
-          const Divider(color: Color(0xFF35545E), height: 22),
-          _statLine('سرور انتخاب‌شده', selected?.name ?? 'انتخاب نشده', const Color(0xFF0F1F22)),
-          const Divider(color: Color(0xFF35545E), height: 22),
-          _statLine('پینگ آخرین اتصال', _connectionPingMs == null ? '—' : '$_connectionPingMs ms', const Color(0xFF0E7C86)),
+          _statLine('وضعیت تونل', connected ? 'متصل' : status == _VpnStatus.connecting ? 'در حال اتصال' : 'قطع', connected ? const Color(0xFF62E0BB) : const Color(0xFF71808A)),
+          const Divider(color: Color(0xFFDCE7E8), height: 22),
+          _statLine('مدت اتصال', durationText(elapsed), const Color(0xFF142A30)),
+          const Divider(color: Color(0xFFDCE7E8), height: 22),
+          _statLine('سرور انتخاب‌شده', selected?.name ?? 'انتخاب نشده', const Color(0xFF142A30)),
+          const Divider(color: Color(0xFFDCE7E8), height: 22),
+          _statLine('پینگ آخرین اتصال', _connectionPingMs == null ? '—' : '$_connectionPingMs ms', const Color(0xFF167D86)),
         ]),
       ),
       const SizedBox(height: 12),
@@ -699,19 +702,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Widget _statTile(String title, String speed, String total, IconData icon) => Container(
     padding: const EdgeInsets.all(15),
-    decoration: BoxDecoration(color: const Color(0xFFFFFFFF), borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFF35545E))),
+    decoration: BoxDecoration(color: const Color(0xFFFFFFFF), borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFFDCE7E8))),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Icon(icon, color: const Color(0xFF0E7C86), size: 21),
+      Icon(icon, color: const Color(0xFF167D86), size: 21),
       const SizedBox(height: 12),
-      Text(title, style: const TextStyle(color: Color(0xFF82879B), fontSize: 11)),
+      Text(title, style: const TextStyle(color: Color(0xFF71808A), fontSize: 11)),
       const SizedBox(height: 4),
-      FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight, child: Text(speed, style: const TextStyle(color: Color(0xFF0F1F22), fontSize: 19, fontWeight: FontWeight.w900))),
-      Text('کل: $total', style: const TextStyle(color: Color(0xFF0E7C86), fontSize: 10)),
+      FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight, child: Text(speed, style: const TextStyle(color: Color(0xFF142A30), fontSize: 19, fontWeight: FontWeight.w900))),
+      Text('کل: $total', style: const TextStyle(color: Color(0xFF167D86), fontSize: 10)),
     ]),
   );
 
   Widget _statLine(String label, String value, Color valueColor) => Row(children: [
-    Expanded(child: Text(label, style: const TextStyle(color: Color(0xFF82879B), fontSize: 11))),
+    Expanded(child: Text(label, style: const TextStyle(color: Color(0xFF71808A), fontSize: 11))),
     Flexible(child: Text(value, textAlign: TextAlign.end, style: TextStyle(color: valueColor, fontSize: 11, fontWeight: FontWeight.w800))),
   ]);
 
@@ -731,7 +734,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             borderRadius: BorderRadius.circular(18),
           ),
           child: const Row(children: [
-            Icon(Icons.format_quote_rounded, color: Color(0xFF0E7C86), size: 20),
+            Icon(Icons.format_quote_rounded, color: Color(0xFF167D86), size: 20),
             SizedBox(width: 9),
             Expanded(child: Text(
               'اللهم صل علی محمد و آل محمد الائمه و المهدیین و سلم تسلیما',
@@ -775,7 +778,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           icon: const Icon(Icons.sync_rounded, size: 19),
           label: const Text('به‌روزرسانی فهرست سرورها'),
           style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFF0E7C86),
+            foregroundColor: const Color(0xFF167D86),
             side: const BorderSide(color: Color(0xFFE1E8E7)),
             backgroundColor: const Color(0xFFFFFFFF),
             minimumSize: const Size.fromHeight(48),
@@ -783,7 +786,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ),
         ),
         const SizedBox(height: 10),
-        const Center(child: Text('VPN13  •  Xray Core', style: TextStyle(color: Color(0xFF82879B), fontSize: 11))),
+        const Center(child: Text('VPN13  •  Xray Core', style: TextStyle(color: Color(0xFF71808A), fontSize: 11))),
       ],
     ),
   );
@@ -801,16 +804,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             width: 43,
             height: 43,
             decoration: BoxDecoration(color: const Color(0xFFE6F4F3), borderRadius: BorderRadius.circular(13)),
-            child: const Icon(Icons.public_rounded, color: Color(0xFF0E7C86), size: 23),
+            child: const Icon(Icons.public_rounded, color: Color(0xFF167D86), size: 23),
           ),
           const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('مسیر اتصال شما', style: TextStyle(color: Color(0xFF82879B), fontSize: 10)),
+            const Text('مسیر اتصال شما', style: TextStyle(color: Color(0xFF71808A), fontSize: 10)),
             const SizedBox(height: 4),
-            Text(selected?.name ?? 'هنوز سروری انتخاب نشده', maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF0F1F22), fontSize: 13, fontWeight: FontWeight.w800)),
-            Text(_connectionPingMs == null ? 'برای مشاهده سرورها لمس کنید' : 'پینگ اتصال: $_connectionPingMs ms', style: const TextStyle(color: Color(0xFF0E7C86), fontSize: 10)),
+            Text(selected?.name ?? 'هنوز سروری انتخاب نشده', maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF142A30), fontSize: 13, fontWeight: FontWeight.w800)),
+            Text(_connectionPingMs == null ? 'برای مشاهده سرورها لمس کنید' : 'پینگ اتصال: $_connectionPingMs ms', style: const TextStyle(color: Color(0xFF167D86), fontSize: 10)),
           ])),
-          const Icon(Icons.chevron_left_rounded, color: Color(0xFF0E7C86)),
+          const Icon(Icons.chevron_left_rounded, color: Color(0xFF167D86)),
         ]),
       ),
     ),
@@ -820,10 +823,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
     decoration: BoxDecoration(color: const Color(0xFFFFFFFF), borderRadius: BorderRadius.circular(17), border: Border.all(color: const Color(0xFFE9EAF2))),
     child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-      const Icon(Icons.schedule_rounded, color: Color(0xFF0E7C86), size: 21), const SizedBox(width: 10),
+      const Icon(Icons.schedule_rounded, color: Color(0xFF167D86), size: 21), const SizedBox(width: 10),
       Column(children: [
-        const Text('مدت زمان اتصال', style: TextStyle(color: Color(0xFF82879B), fontSize: 11)),
-        Text(durationText(elapsed), style: const TextStyle(color: Color(0xFF0F1F22), fontSize: 17, fontWeight: FontWeight.w900, fontFeatures: [FontFeature.tabularFigures()])),
+        const Text('مدت زمان اتصال', style: TextStyle(color: Color(0xFF71808A), fontSize: 11)),
+        Text(durationText(elapsed), style: const TextStyle(color: Color(0xFF142A30), fontSize: 17, fontWeight: FontWeight.w900, fontFeatures: [FontFeature.tabularFigures()])),
       ]),
     ]),
   );
@@ -910,11 +913,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget _settingsPage() => ListView(primary: false, padding: const EdgeInsets.fromLTRB(18, 12, 18, 24), children: [
     _EntranceMotion(child: _topBar()),
     const SizedBox(height: 20),
-    _EntranceMotion(delay: const Duration(milliseconds: 70), child: const Text('تنظیمات اتصال', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF0F1F22), fontSize: 21, fontWeight: FontWeight.w900))),
+    _EntranceMotion(delay: const Duration(milliseconds: 70), child: const Text('تنظیمات اتصال', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF142A30), fontSize: 21, fontWeight: FontWeight.w900))),
     const SizedBox(height: 18),
     _EntranceMotion(delay: const Duration(milliseconds: 140), child: Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: const Color(0xFFFFFFFF), borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFE9EAF2))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('Remote DNS (Xray)', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF0F1F22))),
-      const SizedBox(height: 8), const Text('درخواست‌های DNS پورت 53 از داخل تونل Xray و با TCP به این سرور ارسال می‌شوند. برای اعمال، اتصال را دوباره برقرار کنید.', style: TextStyle(fontSize: 11, color: Color(0xFF82879B))),
+      const Text('Remote DNS (Xray)', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF142A30))),
+      const SizedBox(height: 8), const Text('درخواست‌های DNS پورت 53 از داخل تونل Xray و با TCP به این سرور ارسال می‌شوند. برای اعمال، اتصال را دوباره برقرار کنید.', style: TextStyle(fontSize: 11, color: Color(0xFF71808A))),
       const SizedBox(height: 12), DropdownButtonFormField<String>(key: ValueKey(dnsAddress), initialValue: dnsAddress, decoration: const InputDecoration(labelText: 'سرور DNS', border: OutlineInputBorder()), items: const [
         DropdownMenuItem(value: '1.1.1.1', child: Text('Cloudflare — 1.1.1.1')),
         DropdownMenuItem(value: '1.0.0.1', child: Text('Cloudflare — 1.0.0.1')),
@@ -930,13 +933,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     ]))),
     const SizedBox(height: 12),
     _EntranceMotion(delay: const Duration(milliseconds: 230), child: Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: const Color(0xFFFFFFFF), borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFE9EAF2))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('برنامه‌های خارج از VPN', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF0F1F22))),
-      const SizedBox(height: 8), const Text('ترافیک این برنامه‌ها از تونل VPN عبور نمی‌کند.', style: TextStyle(fontSize: 11, color: Color(0xFF82879B))),
+      const Text('برنامه‌های خارج از VPN', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF142A30))),
+      const SizedBox(height: 8), const Text('ترافیک این برنامه‌ها از تونل VPN عبور نمی‌کند.', style: TextStyle(fontSize: 11, color: Color(0xFF71808A))),
       const SizedBox(height: 12), OutlinedButton.icon(onPressed: _chooseExcludedApps, icon: const Icon(Icons.apps_rounded), label: Text('انتخاب برنامه‌ها (${excludedApps.length})'), style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48))),
-      if (excludedApps.isNotEmpty) ...[const SizedBox(height: 8), Text(excludedApps.map((p) => installedApps.firstWhere((a) => a['package'] == p, orElse: () => {'label': p})['label']).join('، '), style: const TextStyle(fontSize: 12, color: Color(0xFF82879B)))],
+      if (excludedApps.isNotEmpty) ...[const SizedBox(height: 8), Text(excludedApps.map((p) => installedApps.firstWhere((a) => a['package'] == p, orElse: () => {'label': p})['label']).join('، '), style: const TextStyle(fontSize: 12, color: Color(0xFF71808A)))],
     ]))),
     const SizedBox(height: 14),
-    _EntranceMotion(delay: const Duration(milliseconds: 310), child: const Text('برای اعمال DNS و فهرست استثناها، اتصال فعلی را قطع و دوباره وصل کنید.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF82879B), fontSize: 11))),
+    _EntranceMotion(delay: const Duration(milliseconds: 310), child: const Text('برای اعمال DNS و فهرست استثناها، اتصال فعلی را قطع و دوباره وصل کنید.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF71808A), fontSize: 11))),
   ]);
 
 
@@ -952,9 +955,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       const Expanded(child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('VPN13', style: TextStyle(color: Color(0xFF0F1F22), fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: -.5)),
+          Text('VPN13', style: TextStyle(color: Color(0xFF142A30), fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: -.5)),
           SizedBox(height: 2),
-          Text('اتصال امن و پایدار', style: TextStyle(color: Color(0xFF82879B), fontSize: 10, fontWeight: FontWeight.w600)),
+          Text('اتصال امن و پایدار', style: TextStyle(color: Color(0xFF71808A), fontSize: 10, fontWeight: FontWeight.w600)),
         ],
       )),
       Container(
@@ -965,11 +968,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           border: Border.all(color: const Color(0xFFE9EAF2)),
         ),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.circle, size: 7, color: connected ? const Color(0xFF27B68C) : status == _VpnStatus.connecting || status == _VpnStatus.disconnecting ? const Color(0xFFFFC66D) : const Color(0xFF9AA5AD)),
+          Icon(Icons.circle, size: 7, color: connected ? const Color(0xFF32B68A) : status == _VpnStatus.connecting || status == _VpnStatus.disconnecting ? const Color(0xFFFFC66D) : const Color(0xFF9AA5AD)),
           const SizedBox(width: 6),
           Text(
             connected ? 'آنلاین' : status == _VpnStatus.connecting ? 'در حال اتصال' : status == _VpnStatus.disconnecting ? 'در حال قطع' : 'آفلاین',
-            style: const TextStyle(color: Color(0xFF0F1F22), fontSize: 10, fontWeight: FontWeight.w800),
+            style: const TextStyle(color: Color(0xFF142A30), fontSize: 10, fontWeight: FontWeight.w800),
           ),
         ]),
       ),
@@ -984,7 +987,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget _connectionPanel() {
     final active = connected;
     final waiting = busy || status == _VpnStatus.connecting || status == _VpnStatus.disconnecting;
-    final accent = active ? const Color(0xFF27B68C) : const Color(0xFF14919B);
+    final accent = active ? const Color(0xFF32B68A) : const Color(0xFF20A39A);
     final statusLabel = active
         ? 'اتصال برقرار است'
         : _checkingHandshake
@@ -1000,7 +1003,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF1A4A4F), Color(0xFF0F2A2E), Color(0xFF16403F)],
+          colors: [Color(0xFF164B50), Color(0xFF102F38), Color(0xFF174B46)],
         ),
         borderRadius: BorderRadius.circular(30),
         border: Border.all(color: const Color(0xFF3C7880).withValues(alpha: .55)),
@@ -1013,7 +1016,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         Row(children: [
           Icon(Icons.shield_outlined, color: accent, size: 19),
           const SizedBox(width: 8),
-          const Text('وضعیت امنیت اتصال', style: TextStyle(color: Color(0xFFBFC4E8), fontSize: 12, fontWeight: FontWeight.w700)),
+          const Text('وضعیت امنیت اتصال', style: TextStyle(color: Color(0xFFC5D9DE), fontSize: 12, fontWeight: FontWeight.w700)),
           const Spacer(),
           if (active) Text(durationText(elapsed), style: const TextStyle(color: Color(0xFFE9FFFF), fontSize: 12, fontWeight: FontWeight.w800, fontFeatures: [FontFeature.tabularFigures()])),
         ]),
@@ -1038,15 +1041,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   width: 138, height: 138,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: RadialGradient(colors: [accent.withValues(alpha: .28), const Color(0xFF102832), const Color(0xFF0C1D27)]),
+                    gradient: RadialGradient(colors: [accent.withValues(alpha: .28), const Color(0xFF17343D), const Color(0xFF102832)]),
                     border: Border.all(color: accent.withValues(alpha: .75), width: 1.5),
                     boxShadow: [BoxShadow(color: accent.withValues(alpha: .22), blurRadius: 22, spreadRadius: 2)],
                   ),
                   child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                     if (waiting)
-                      const SizedBox(width: 43, height: 43, child: CircularProgressIndicator(strokeWidth: 3, color: Color(0xFF14919B)))
+                      const SizedBox(width: 43, height: 43, child: CircularProgressIndicator(strokeWidth: 3, color: Color(0xFF20A39A)))
                     else
-                      Icon(active ? Icons.shield_rounded : Icons.power_settings_new_rounded, color: const Color(0xFF9FE8CF), size: 49),
+                      Icon(active ? Icons.shield_rounded : Icons.power_settings_new_rounded, color: const Color(0xFF9DE8D2), size: 49),
                     const SizedBox(height: 9),
                     Text(active ? durationText(elapsed) : 'VPN13', style: const TextStyle(color: Color(0xFFF0FFFF), fontSize: 17, fontWeight: FontWeight.w900, fontFeatures: [FontFeature.tabularFigures()])),
                   ]),
@@ -1064,12 +1067,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ),
         if (_connectionPingMs != null) ...[
           const SizedBox(height: 5),
-          Text('پینگ اتصال: $_connectionPingMs ms', style: const TextStyle(color: Color(0xFF9FE8CF), fontSize: 11, fontWeight: FontWeight.w700)),
+          Text('پینگ اتصال: $_connectionPingMs ms', style: const TextStyle(color: Color(0xFF9DE8D2), fontSize: 11, fontWeight: FontWeight.w700)),
         ],
         const SizedBox(height: 8),
         Text(selected == null ? 'ابتدا سرور را انتخاب کنید' : 'برای اتصال یا قطع، آیکون مرکزی را لمس کنید',
           textAlign: TextAlign.center,
-          style: const TextStyle(color: Color(0xFFBFC4E8), fontSize: 10)),
+          style: const TextStyle(color: Color(0xFFC5D9DE), fontSize: 10)),
       ]),
     );
   }
