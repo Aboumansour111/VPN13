@@ -117,6 +117,12 @@ class _AccessGateState extends State<_AccessGate> {
   void initState() {
     super.initState();
     _restoreAccess();
+    _restoreTheme();
+  }
+
+  Future<void> _restoreTheme() async {
+    final prefs = await SharedPreferences.getInstance();
+    vpn13DarkMode.value = prefs.getBool('vpn13_dark_mode') ?? false;
   }
 
   Future<bool> _validateCode(String code) async {
