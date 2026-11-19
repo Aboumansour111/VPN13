@@ -439,10 +439,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         setState(() {
           loading = false;
           error = cached != null
-              ? 'به‌روزرسانی سرورها انجام نشد؛ فهرست ذخیره‌شده نمایش داده می‌شود.
-$e'
-              : 'دریافت فهرست سرورها ناموفق بود. اتصال اینترنت را بررسی کنید.
-$e';
+              ? 'به‌روزرسانی سرورها انجام نشد؛ فهرست ذخیره‌شده نمایش داده می‌شود.\\n$e'
+              : 'دریافت فهرست سرورها ناموفق بود. اتصال اینترنت را بررسی کنید.\\n$e';
         });
       }
     }
@@ -486,8 +484,7 @@ $e';
       if (mounted) {
         final detail = e is TimeoutException
             ? 'مهلت بررسی سرور تمام شد؛ پاسخ پینگ دریافت نشد.'
-            : 'هندشیک یا پینگ سرور ناموفق بود؛ اتصال برقرار نشد.
-$e';
+            : 'هندشیک یا پینگ سرور ناموفق بود؛ اتصال برقرار نشد.\\n$e';
         setState(() {
           _checkingHandshake = false;
           _connectionPingMs = null;
