@@ -28,9 +28,40 @@ class Vpn13ClientApp extends StatelessWidget {
       surface: const Color(0xFFFFFFFF),
     );
 
-    return MaterialApp(
+    return ValueListenableBuilder<bool>(
+      valueListenable: vpn13DarkMode,
+      builder: (context, isDark, _) => MaterialApp(
       title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
+      themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.dark,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF39B9A8),
+          brightness: Brightness.dark,
+          surface: const Color(0xFF171F28),
+        ),
+        scaffoldBackgroundColor: const Color(0xFF0D1218),
+        cardColor: const Color(0xFF171F28),
+        dividerColor: const Color(0xFF2D3B45),
+        fontFamily: 'Roboto',
+        textTheme: ThemeData.dark().textTheme.apply(
+          bodyColor: const Color(0xFFE8EEF2),
+          displayColor: const Color(0xFFE8EEF2),
+        ),
+        inputDecorationTheme: const InputDecorationTheme(
+          filled: true,
+          fillColor: Color(0xFF202A34),
+          hintStyle: TextStyle(color: Color(0xFF9AA8B3)),
+          labelStyle: TextStyle(color: Color(0xFFE8EEF2)),
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.transparent,
+          foregroundColor: Color(0xFFE8EEF2),
+          elevation: 0,
+        ),
+      ),
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: scheme,
@@ -60,6 +91,7 @@ class Vpn13ClientApp extends StatelessWidget {
         textDirection: TextDirection.rtl,
         child: _AccessGate(),
       ),
+    ),
     );
   }
 }
