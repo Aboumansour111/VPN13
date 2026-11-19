@@ -11,11 +11,14 @@ import 'config.dart';
 import 'flag_asset.dart';
 import 'screens/home.dart';
 
+// Keep the header flag decoded and cached instead of rebuilding it on every state update.
+final ImageProvider _loginFlagImage = MemoryImage(base64Decode(vpn13FlagBase64));
+
 class Vpn13ClientApp extends StatelessWidget {
   const Vpn13ClientApp({super.key});
 
-  static const navy = Color(0xFF0F1F22);
-  static const blue = Color(0xFF0E7C86);
+  static const navy = Color(0xFF142A30);
+  static const blue = Color(0xFF167D86);
 
   @override
   Widget build(BuildContext context) {
@@ -31,12 +34,12 @@ class Vpn13ClientApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: scheme,
-        scaffoldBackgroundColor: const Color(0xFFF3F6F6),
+        scaffoldBackgroundColor: const Color(0xFFF4F7F8),
         cardColor: const Color(0xFFFFFFFF),
-        dividerColor: const Color(0xFFE9EAF1),
+        dividerColor: const Color(0xFFE5ECEE),
         fontFamily: 'Roboto',
-        textTheme: ThemeData.light().textTheme.apply(bodyColor: const Color(0xFF0F1F22), displayColor: const Color(0xFF0F1F22)),
-        inputDecorationTheme: InputDecorationTheme(labelStyle: const TextStyle(color: Color(0xFF0F1F22)), hintStyle: const TextStyle(color: Color(0xFF82879B)), filled: true, fillColor: const Color(0xFFF8FBFB)),
+        textTheme: ThemeData.light().textTheme.apply(bodyColor: const Color(0xFF142A30), displayColor: const Color(0xFF142A30)),
+        inputDecorationTheme: InputDecorationTheme(labelStyle: const TextStyle(color: Color(0xFF142A30)), hintStyle: const TextStyle(color: Color(0xFF71808A)), filled: true, fillColor: const Color(0xFFF7FAFA)),
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.transparent,
           foregroundColor: navy,
@@ -291,12 +294,12 @@ class _LoginScreenState extends State<_LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const ink = Color(0xFF0F1F22);
+    const ink = Color(0xFF142A30);
     const muted = Color(0xFF7B8790);
-    const teal = Color(0xFF14919B);
-    const deepTeal = Color(0xFF0A5F6B);
+    const teal = Color(0xFF20A39A);
+    const deepTeal = Color(0xFF155F68);
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F6F6),
+      backgroundColor: const Color(0xFFF4F7F8),
       body: Stack(
         children: [
           Container(
@@ -304,7 +307,7 @@ class _LoginScreenState extends State<_LoginScreen> {
               gradient: RadialGradient(
                 center: Alignment.topCenter,
                 radius: 1.15,
-                colors: [Color(0xFFD4EFEB), Color(0xFFF3F6F6), Color(0xFFF3F6F6)],
+                colors: [Color(0xFFD8F0EC), Color(0xFFF4F7F8), Color(0xFFF4F7F8)],
                 stops: [0, .48, 1],
               ),
             ),
@@ -313,9 +316,11 @@ class _LoginScreenState extends State<_LoginScreen> {
             top: 12,
             left: 14,
             child: SafeArea(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(5),
-                child: Image.memory(base64Decode(vpn13FlagBase64), width: 44, fit: BoxFit.contain),
+              child: RepaintBoundary(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(5),
+                  child: Image(image: _loginFlagImage, width: 44, height: 27, fit: BoxFit.contain, gaplessPlayback: true),
+                ),
               ),
             ),
           ),
@@ -353,7 +358,7 @@ class _LoginScreenState extends State<_LoginScreen> {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(28),
-                          border: Border.all(color: const Color(0xFFE1E8E7)),
+                          border: Border.all(color: const Color(0xFFDCE7E8)),
                           boxShadow: const [BoxShadow(color: Color(0x190F2A2E), blurRadius: 34, offset: Offset(0, 13))],
                         ),
                         child: Column(
@@ -376,17 +381,17 @@ class _LoginScreenState extends State<_LoginScreen> {
                               style: const TextStyle(color: ink, fontSize: 16, letterSpacing: 2),
                               decoration: InputDecoration(
                                 hintText: 'کد دسترسی را وارد کنید',
-                                hintStyle: const TextStyle(color: Color(0xFF9AA5AD), fontSize: 12, letterSpacing: 0),
+                                hintStyle: const TextStyle(color: Color(0xFF87969D), fontSize: 12, letterSpacing: 0),
                                 prefixIcon: const Icon(Icons.key_rounded, color: teal, size: 20),
                                 suffixIcon: IconButton(
                                   onPressed: () => setState(() => _obscure = !_obscure),
                                   icon: Icon(_obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: muted, size: 19),
                                 ),
                                 filled: true,
-                                fillColor: const Color(0xFFF8FBFB),
+                                fillColor: const Color(0xFFF7FAFA),
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 17),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: const BorderSide(color: Color(0xFFDFE6E5))),
-                                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: const BorderSide(color: Color(0xFFDFE6E5))),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: const BorderSide(color: Color(0xFFDCE7E8))),
+                                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: const BorderSide(color: Color(0xFFDCE7E8))),
                                 focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: const BorderSide(color: teal, width: 1.6)),
                               ),
                             ),
@@ -402,7 +407,7 @@ class _LoginScreenState extends State<_LoginScreen> {
                                 style: FilledButton.styleFrom(
                                   backgroundColor: teal,
                                   foregroundColor: Colors.white,
-                                  disabledBackgroundColor: const Color(0xFF8ABFC0),
+                                  disabledBackgroundColor: const Color(0xFF83BDB9),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                                   elevation: 2,
                                 ),
@@ -418,10 +423,10 @@ class _LoginScreenState extends State<_LoginScreen> {
                       const Text(
                         'اللهم صل علی محمد و آل محمد الائمه و المهدیین و سلم تسلیما',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Color(0xFF0E7C86), fontSize: 12, fontWeight: FontWeight.w800, height: 2),
+                        style: TextStyle(color: Color(0xFF167D86), fontSize: 12, fontWeight: FontWeight.w800, height: 2),
                       ),
                       const SizedBox(height: 8),
-                      const Text('دسترسی خصوصی  •  VPN13', style: TextStyle(color: Color(0xFF9AA5AD), fontSize: 10)),
+                      const Text('دسترسی خصوصی  •  VPN13', style: TextStyle(color: Color(0xFF87969D), fontSize: 10)),
                     ],
                   ),
                 ),
