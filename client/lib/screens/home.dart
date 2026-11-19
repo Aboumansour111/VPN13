@@ -977,9 +977,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ]),
       ),
       const SizedBox(width: 9),
-      ClipRRect(
-        borderRadius: BorderRadius.circular(5),
-        child: Image.memory(base64Decode(vpn13FlagBase64), width: 39, height: 24, fit: BoxFit.cover),
+      RepaintBoundary(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(5),
+          child: Image(image: _vpn13FlagImage, width: 39, height: 24, fit: BoxFit.cover, gaplessPlayback: true),
+        ),
       ),
     ]),
   );
