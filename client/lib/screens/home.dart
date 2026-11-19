@@ -439,8 +439,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         setState(() {
           loading = false;
           error = cached != null
-              ? 'به‌روزرسانی سرورها انجام نشد؛ فهرست ذخیره‌شده نمایش داده می‌شود.\n$e'
-              : 'دریافت فهرست سرورها ناموفق بود. اتصال اینترنت را بررسی کنید.\n$e';
+              ? 'به‌روزرسانی سرورها انجام نشد؛ فهرست ذخیره‌شده نمایش داده می‌شود.
+$e'
+              : 'دریافت فهرست سرورها ناموفق بود. اتصال اینترنت را بررسی کنید.
+$e';
         });
       }
     }
@@ -484,7 +486,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       if (mounted) {
         final detail = e is TimeoutException
             ? 'مهلت بررسی سرور تمام شد؛ پاسخ پینگ دریافت نشد.'
-            : 'هندشیک یا پینگ سرور ناموفق بود؛ اتصال برقرار نشد.\n$e';
+            : 'هندشیک یا پینگ سرور ناموفق بود؛ اتصال برقرار نشد.
+$e';
         setState(() {
           _checkingHandshake = false;
           _connectionPingMs = null;
@@ -552,7 +555,25 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   String speedText(num n) => '${bytesText(n)}/s';
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => Theme(
+    data: _darkMode
+        ? ThemeData.dark(useMaterial3: true).copyWith(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Color(0xFF39B9A8),
+              brightness: Brightness.dark,
+              surface: Color(0xFF171F28),
+            ),
+            scaffoldBackgroundColor: Color(0xFF0D1218),
+            dividerColor: Color(0xFF2D3B45),
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              fillColor: Color(0xFF202A34),
+              hintStyle: TextStyle(color: Color(0xFF9AA8B3)),
+              labelStyle: TextStyle(color: Color(0xFFE8EEF2)),
+            ),
+          )
+        : Theme.of(context),
+    child: Scaffold(
     backgroundColor: Color(0xFFF4F7F8),
     body: Container(
       decoration: BoxDecoration(
@@ -592,7 +613,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         NavigationDestination(icon: Icon(Icons.tune_outlined), selectedIcon: Icon(Icons.tune_rounded), label: 'تنظیمات'),
       ],
     ),
-  );
+  ));
 
   Widget _pageHeader(String eyebrow, String title, String subtitle) => Padding(
     padding: EdgeInsets.fromLTRB(4, 8, 4, 18),
@@ -992,7 +1013,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
 
 
-  Future<void> _toggleDarkMode() async {\n    final next = !_darkMode;\n    final prefs = await SharedPreferences.getInstance();\n    await prefs.setBool('vpn13_dark_mode', next);\n    if (!mounted) return;\n    setState(() { _darkMode = next; _vpn13DarkPalette = next; });\n  }\n\n  Widget _topBar() => Padding(
+  Future<void> _toggleDarkMode() async {
+    final next = !_darkMode;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('vpn13_dark_mode', next);
+    if (!mounted) return;
+    setState(() { _darkMode = next; _vpn13DarkPalette = next; });
+  }
+
+  Widget _topBar() => Padding(
     padding: EdgeInsets.fromLTRB(2, 8, 2, 8),
     child: Row(children: [
       ClipRRect(
@@ -1008,6 +1037,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           Text('اتصال امن و پایدار', style: TextStyle(color: Color(0xFF71808A), fontSize: 10, fontWeight: FontWeight.w600)),
         ],
       )),
+      IconButton(
+        tooltip: _darkMode ? 'فعال‌کردن تم روشن' : 'فعال‌کردن تم تیره',
+        onPressed: _toggleDarkMode,
+        icon: Icon(
+          _darkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+          color: _darkMode ? Color(0xFFFFB45F) : _tone(Color(0xFF71808A)),
+        ),
+      ),
       Container(
         padding: EdgeInsets.symmetric(horizontal: 11, vertical: 8),
         decoration: BoxDecoration(
