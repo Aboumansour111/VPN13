@@ -11,7 +11,7 @@ import 'config.dart';
 import 'flag_asset.dart';
 import 'screens/home.dart';
 
-// Keep the header flag decoded and cached instead of rebuilding it on every state update.
+// Cache the login header flag to prevent visual flicker during widget rebuilds.
 final ImageProvider _loginFlagImage = MemoryImage(base64Decode(vpn13FlagBase64));
 
 class Vpn13ClientApp extends StatelessWidget {
