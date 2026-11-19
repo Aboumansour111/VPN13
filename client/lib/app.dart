@@ -345,7 +345,7 @@ class _LoginScreenState extends State<_LoginScreen> {
       body: Stack(
         children: [
           Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: RadialGradient(
                 center: Alignment.topCenter,
                 radius: 1.15,
@@ -380,7 +380,7 @@ class _LoginScreenState extends State<_LoginScreen> {
                         height: 86,
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(colors: [teal, deepTeal]),
+                          gradient: LinearGradient(colors: [teal, deepTeal]),
                           borderRadius: BorderRadius.circular(27),
                           boxShadow: [BoxShadow(color: deepTeal.withValues(alpha: .24), blurRadius: 26, offset: const Offset(0, 10))],
                         ),
@@ -392,7 +392,7 @@ class _LoginScreenState extends State<_LoginScreen> {
                       const SizedBox(height: 16),
                       Text('VPN13', style: TextStyle(color: ink, fontSize: 27, fontWeight: FontWeight.w900, letterSpacing: -.6)),
                       const SizedBox(height: 4),
-                      const Text('اتصال امن و پایدار', style: TextStyle(color: muted, fontSize: 12, fontWeight: FontWeight.w600)),
+                      Text('اتصال امن و پایدار', style: TextStyle(color: muted, fontSize: 12, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 30),
                       Container(
                         width: double.infinity,
@@ -400,7 +400,7 @@ class _LoginScreenState extends State<_LoginScreen> {
                         decoration: BoxDecoration(
                           color: cardBackground,
                           borderRadius: BorderRadius.circular(28),
-                          border: Border.all(color: const Color(0xFFDCE7E8)),
+                          border: Border.all(color: isDark ? const Color(0xFF2D3B45) : const Color(0xFFDCE7E8)),
                           boxShadow: const [BoxShadow(color: Color(0x190F2A2E), blurRadius: 34, offset: Offset(0, 13))],
                         ),
                         child: Column(
@@ -424,7 +424,7 @@ class _LoginScreenState extends State<_LoginScreen> {
                               decoration: InputDecoration(
                                 hintText: 'کد دسترسی را وارد کنید',
                                 hintStyle: const TextStyle(color: Color(0xFF87969D), fontSize: 12, letterSpacing: 0),
-                                prefixIcon: const Icon(Icons.key_rounded, color: teal, size: 20),
+                                prefixIcon: Icon(Icons.key_rounded, color: teal, size: 20),
                                 suffixIcon: IconButton(
                                   onPressed: () => setState(() => _obscure = !_obscure),
                                   icon: Icon(_obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: muted, size: 19),
@@ -432,9 +432,9 @@ class _LoginScreenState extends State<_LoginScreen> {
                                 filled: true,
                                 fillColor: inputBackground,
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 17),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: const BorderSide(color: Color(0xFFDCE7E8))),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: BorderSide(color: isDark ? const Color(0xFF2D3B45) : const Color(0xFFDCE7E8))),
                                 enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: const BorderSide(color: Color(0xFFDCE7E8))),
-                                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: const BorderSide(color: teal, width: 1.6)),
+                                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: BorderSide(color: teal, width: 1.6)),
                               ),
                             ),
                             if (_error != null) ...[
