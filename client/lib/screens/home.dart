@@ -11,6 +11,7 @@ import '../services/engine_router.dart';
 import '../services/native_xray.dart';
 
 // Dark palette: graphite surfaces with jade and warm orange accents.
+final ValueNotifier<bool> vpn13DarkMode = ValueNotifier<bool>(false);
 bool _vpn13DarkPalette = false;
 Color _tone(Color light) {
   if (!_vpn13DarkPalette) return light;
@@ -262,6 +263,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       dnsAddress = prefs.getString('dnsAddress') ?? '1.1.1.1';
       _darkMode = prefs.getBool('vpn13_dark_mode') ?? false;
       _vpn13DarkPalette = _darkMode;
+      vpn13DarkMode.value = _darkMode;
       excludedApps.addAll(prefs.getStringList('excludedApps') ?? const []);
     });
   }
@@ -556,28 +558,28 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     data: _darkMode
         ? ThemeData.dark(useMaterial3: true).copyWith(
             colorScheme: ColorScheme.fromSeed(
-              seedColor: Color(0xFF39B9A8),
+              seedColor: _tone(Color(0xFF39B9A8)),
               brightness: Brightness.dark,
-              surface: Color(0xFF171F28),
+              surface: _tone(Color(0xFF171F28)),
             ),
-            scaffoldBackgroundColor: Color(0xFF0D1218),
-            dividerColor: Color(0xFF2D3B45),
+            scaffoldBackgroundColor: _tone(Color(0xFF0D1218)),
+            dividerColor: _tone(Color(0xFF2D3B45)),
             inputDecorationTheme: InputDecorationTheme(
               filled: true,
-              fillColor: Color(0xFF202A34),
-              hintStyle: TextStyle(color: Color(0xFF9AA8B3)),
-              labelStyle: TextStyle(color: Color(0xFFE8EEF2)),
+              fillColor: _tone(Color(0xFF202A34)),
+              hintStyle: TextStyle(color: _tone(Color(0xFF9AA8B3))),
+              labelStyle: TextStyle(color: _tone(Color(0xFFE8EEF2))),
             ),
           )
         : Theme.of(context),
     child: Scaffold(
-    backgroundColor: Color(0xFFF4F7F8),
+    backgroundColor: _tone(Color(0xFFF4F7F8)),
     body: Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFFF4F7F8), Color(0xFFF4F7F8), Color(0xFFF4F7F8)],
+          colors: [_tone(Color(0xFFF4F7F8)), _tone(Color(0xFFF4F7F8)), _tone(Color(0xFFF4F7F8))],
         ),
       ),
       child: SafeArea(
@@ -599,8 +601,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     ),
     bottomNavigationBar: NavigationBar(
       height: 72,
-      backgroundColor: Color(0xFFFFFFFF),
-      indicatorColor: Color(0xFFDDF1EE),
+      backgroundColor: _tone(Color(0xFFFFFFFF)),
+      indicatorColor: _tone(Color(0xFFDDF1EE)),
       selectedIndex: _activeTab,
       onDestinationSelected: (index) => setState(() => _activeTab = index),
       destinations: [
@@ -610,16 +612,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         NavigationDestination(icon: Icon(Icons.tune_outlined), selectedIcon: Icon(Icons.tune_rounded), label: 'تنظیمات'),
       ],
     ),
-  ));
+  );
 
   Widget _pageHeader(String eyebrow, String title, String subtitle) => Padding(
     padding: EdgeInsets.fromLTRB(4, 8, 4, 18),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(eyebrow, style: TextStyle(color: Color(0xFF167D86), fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1)),
+      Text(eyebrow, style: TextStyle(color: _tone(Color(0xFF167D86)), fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1)),
       SizedBox(height: 7),
-      Text(title, style: TextStyle(color: Color(0xFF142A30), fontSize: 25, fontWeight: FontWeight.w900)),
+      Text(title, style: TextStyle(color: _tone(Color(0xFF142A30)), fontSize: 25, fontWeight: FontWeight.w900)),
       SizedBox(height: 5),
-      Text(subtitle, style: TextStyle(color: Color(0xFF71808A), fontSize: 12, height: 1.6)),
+      Text(subtitle, style: TextStyle(color: _tone(Color(0xFF71808A)), fontSize: 12, height: 1.6)),
     ]),
   );
 
@@ -631,14 +633,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _topBar(),
       _pageHeader('نقاط دسترسی', 'سرور موردنظرت را انتخاب کن', 'فهرست زنده از مخزن VPN13؛ پینگ با درخواست واقعی از هسته Xray اندازه‌گیری می‌شود.'),
       Container(
-        decoration: BoxDecoration(color: Color(0xFFFFFFFF), borderRadius: BorderRadius.circular(16), border: Border.all(color: Color(0xFFDCE7E8))),
+        decoration: BoxDecoration(color: _tone(Color(0xFFFFFFFF)), borderRadius: BorderRadius.circular(16), border: Border.all(color: _tone(Color(0xFFDCE7E8)))),
         child: TextField(
           onChanged: (value) => setState(() => _serverQuery = value.trim().toLowerCase()),
-          style: TextStyle(color: Color(0xFF142A30), fontSize: 13),
+          style: TextStyle(color: _tone(Color(0xFF142A30)), fontSize: 13),
           decoration: InputDecoration(
             hintText: 'جستجوی کشور یا نام سرور…',
-            hintStyle: TextStyle(color: Color(0xFF71808A), fontSize: 12),
-            prefixIcon: Icon(Icons.search_rounded, color: Color(0xFF167D86)),
+            hintStyle: TextStyle(color: _tone(Color(0xFF71808A)), fontSize: 12),
+            prefixIcon: Icon(Icons.search_rounded, color: _tone(Color(0xFF167D86))),
             border: InputBorder.none,
             contentPadding: EdgeInsets.symmetric(vertical: 15),
           ),
@@ -662,23 +664,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       ),
       SizedBox(height: 8),
       Row(children: [
-        Expanded(child: Text('${servers.length} سرور در فهرست', style: TextStyle(color: Color(0xFF71808A), fontSize: 11, fontWeight: FontWeight.w700))),
+        Expanded(child: Text('${servers.length} سرور در فهرست', style: TextStyle(color: _tone(Color(0xFF71808A)), fontSize: 11, fontWeight: FontWeight.w700))),
         TextButton.icon(
           onPressed: _testingAll || servers.isEmpty ? null : _testAllServers,
           icon: _testingAll ? SizedBox(width: 15, height: 15, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(Icons.speed_rounded, size: 17),
           label: Text('تست همه'),
-          style: TextButton.styleFrom(foregroundColor: Color(0xFF167D86)),
+          style: TextButton.styleFrom(foregroundColor: _tone(Color(0xFF167D86))),
         ),
         IconButton(
           tooltip: 'به‌روزرسانی',
           onPressed: loading ? null : () => loadServers(force: true),
-          icon: Icon(Icons.refresh_rounded, color: Color(0xFF167D86)),
+          icon: Icon(Icons.refresh_rounded, color: _tone(Color(0xFF167D86))),
         ),
       ]),
       if (loading && servers.isEmpty)
         Center(child: Padding(padding: EdgeInsets.all(28), child: CircularProgressIndicator()))
       else if (servers.where((s) => s.name.toLowerCase().contains(_serverQuery) || (s.description ?? '').toLowerCase().contains(_serverQuery)).isEmpty)
-        Padding(padding: EdgeInsets.all(24), child: Center(child: Text('سروری با این عبارت پیدا نشد.', style: TextStyle(color: Color(0xFF71808A)))))
+        Padding(padding: EdgeInsets.all(24), child: Center(child: Text('سروری با این عبارت پیدا نشد.', style: TextStyle(color: _tone(Color(0xFF71808A))))))
       else
         ...servers.where((s) => s.name.toLowerCase().contains(_serverQuery) || (s.description ?? '').toLowerCase().contains(_serverQuery)).map((server) {
           final chosen = server.id == selectedId;
@@ -687,9 +689,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           return Container(
             margin: EdgeInsets.only(bottom: 9),
             decoration: BoxDecoration(
-              color: chosen ? Color(0xFF164B49) : Color(0xFFFFFFFF),
+              color: chosen ? _tone(Color(0xFF164B49)) : _tone(Color(0xFFFFFFFF)),
               borderRadius: BorderRadius.circular(17),
-              border: Border.all(color: chosen ? Color(0xFF43CDB6) : Color(0xFFDCE7E8)),
+              border: Border.all(color: chosen ? _tone(Color(0xFF43CDB6)) : _tone(Color(0xFFDCE7E8))),
             ),
             child: InkWell(
               borderRadius: BorderRadius.circular(17),
@@ -697,19 +699,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 13, vertical: 13),
                 child: Row(children: [
-                  Container(width: 39, height: 39, decoration: BoxDecoration(color: Color(0xFFE6F4F3), borderRadius: BorderRadius.circular(12)), child: Icon(Icons.dns_rounded, color: Color(0xFF167D86))),
+                  Container(width: 39, height: 39, decoration: BoxDecoration(color: _tone(Color(0xFFE6F4F3)), borderRadius: BorderRadius.circular(12)), child: Icon(Icons.dns_rounded, color: _tone(Color(0xFF167D86)))),
                   SizedBox(width: 11),
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(server.name, style: TextStyle(color: chosen ? Color(0xFF142A30) : Color(0xFFD1E0E4), fontSize: 12, fontWeight: FontWeight.w800)),
-                    if (server.description?.isNotEmpty == true) Text(server.description!, style: TextStyle(color: Color(0xFF71808A), fontSize: 10)),
-                    Text(ping == null ? 'پینگ اندازه‌گیری نشده' : ping < 0 ? 'پاسخی دریافت نشد' : 'پینگ واقعی: $ping ms', style: TextStyle(color: Color(0xFF167D86), fontSize: 10)),
+                    Text(server.name, style: TextStyle(color: chosen ? _tone(Color(0xFFF0FFFF)) : _tone(Color(0xFF142A30)), fontSize: 12, fontWeight: FontWeight.w800)),
+                    if (server.description?.isNotEmpty == true) Text(server.description!, style: TextStyle(color: chosen ? _tone(Color(0xFFC5D9DE)) : _tone(Color(0xFF71808A)), fontSize: 10)),
+                    Text(ping == null ? 'پینگ اندازه‌گیری نشده' : ping < 0 ? 'پاسخی دریافت نشد' : 'پینگ واقعی: $ping ms', style: TextStyle(color: chosen ? _tone(Color(0xFFF0FFFF)) : _tone(Color(0xFF167D86)), fontSize: 10)),
                   ])),
                   IconButton(
                     tooltip: 'تست پینگ',
                     onPressed: testing || _testingAll ? null : () => _testServer(server),
-                    icon: testing ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(Icons.speed_rounded, color: Color(0xFF167D86)),
+                    icon: testing ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(Icons.speed_rounded, color: _tone(Color(0xFF167D86))),
                   ),
-                  Icon(chosen ? Icons.check_circle_rounded : Icons.circle_outlined, color: chosen ? Color(0xFF167D86) : Color(0xFF607C86), size: 20),
+                  Icon(chosen ? Icons.check_circle_rounded : Icons.circle_outlined, color: chosen ? _tone(Color(0xFF167D86)) : _tone(Color(0xFF607C86)), size: 20),
                 ]),
               ),
             ),
@@ -728,16 +730,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       Container(
         padding: EdgeInsets.all(18),
         decoration: BoxDecoration(
-          gradient: LinearGradient(begin: Alignment.topRight, end: Alignment.bottomLeft, colors: [Color(0xFF1C4A4D), Color(0xFF17333D), Color(0xFFFFFFFF)]),
+          gradient: LinearGradient(begin: Alignment.topRight, end: Alignment.bottomLeft, colors: [_tone(Color(0xFF1C4A4D)), _tone(Color(0xFF17333D)), _tone(Color(0xFFFFFFFF))]),
           borderRadius: BorderRadius.circular(23),
-          border: Border.all(color: Color(0xFF397A79)),
+          border: Border.all(color: _tone(Color(0xFF397A79))),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('مجموع ترافیک این نشست', style: TextStyle(color: Color(0xFFB5D4D2), fontSize: 11)),
+          Text('مجموع ترافیک این نشست', style: TextStyle(color: _tone(Color(0xFFB5D4D2)), fontSize: 11)),
           SizedBox(height: 7),
-          Text(bytesText(uploadTotal + downloadTotal), style: TextStyle(color: Color(0xFF142A30), fontSize: 29, fontWeight: FontWeight.w900)),
+          Text(bytesText(uploadTotal + downloadTotal), style: TextStyle(color: _tone(Color(0xFF142A30)), fontSize: 29, fontWeight: FontWeight.w900)),
           SizedBox(height: 4),
-          Text(connected ? 'در حال دریافت آمار زنده' : 'برای مشاهده آمار زنده به Xray متصل شوید', style: TextStyle(color: Color(0xFF8FB8B8), fontSize: 10)),
+          Text(connected ? 'در حال دریافت آمار زنده' : 'برای مشاهده آمار زنده به Xray متصل شوید', style: TextStyle(color: _tone(Color(0xFF8FB8B8)), fontSize: 10)),
         ]),
       ),
       SizedBox(height: 12),
@@ -749,15 +751,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       SizedBox(height: 12),
       Container(
         padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Color(0xFFFFFFFF), borderRadius: BorderRadius.circular(19), border: Border.all(color: Color(0xFFDCE7E8))),
+        decoration: BoxDecoration(color: _tone(Color(0xFFFFFFFF)), borderRadius: BorderRadius.circular(19), border: Border.all(color: _tone(Color(0xFFDCE7E8)))),
         child: Column(children: [
-          _statLine('وضعیت تونل', connected ? 'متصل' : status == _VpnStatus.connecting ? 'در حال اتصال' : 'قطع', connected ? Color(0xFF62E0BB) : Color(0xFF71808A)),
-          Divider(color: Color(0xFFDCE7E8), height: 22),
-          _statLine('مدت اتصال', durationText(elapsed), Color(0xFF142A30)),
-          Divider(color: Color(0xFFDCE7E8), height: 22),
-          _statLine('سرور انتخاب‌شده', selected?.name ?? 'انتخاب نشده', Color(0xFF142A30)),
-          Divider(color: Color(0xFFDCE7E8), height: 22),
-          _statLine('پینگ آخرین اتصال', _connectionPingMs == null ? '—' : '$_connectionPingMs ms', Color(0xFF167D86)),
+          _statLine('وضعیت تونل', connected ? 'متصل' : status == _VpnStatus.connecting ? 'در حال اتصال' : 'قطع', connected ? _tone(Color(0xFF62E0BB)) : _tone(Color(0xFF71808A))),
+          Divider(color: _tone(Color(0xFFDCE7E8)), height: 22),
+          _statLine('مدت اتصال', durationText(elapsed), _tone(Color(0xFF142A30))),
+          Divider(color: _tone(Color(0xFFDCE7E8)), height: 22),
+          _statLine('سرور انتخاب‌شده', selected?.name ?? 'انتخاب نشده', _tone(Color(0xFF142A30))),
+          Divider(color: _tone(Color(0xFFDCE7E8)), height: 22),
+          _statLine('پینگ آخرین اتصال', _connectionPingMs == null ? '—' : '$_connectionPingMs ms', _tone(Color(0xFF167D86))),
         ]),
       ),
       SizedBox(height: 12),
@@ -768,19 +770,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Widget _statTile(String title, String speed, String total, IconData icon) => Container(
     padding: EdgeInsets.all(15),
-    decoration: BoxDecoration(color: Color(0xFFFFFFFF), borderRadius: BorderRadius.circular(18), border: Border.all(color: Color(0xFFDCE7E8))),
+    decoration: BoxDecoration(color: _tone(Color(0xFFFFFFFF)), borderRadius: BorderRadius.circular(18), border: Border.all(color: _tone(Color(0xFFDCE7E8)))),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Icon(icon, color: Color(0xFF167D86), size: 21),
+      Icon(icon, color: _tone(Color(0xFF167D86)), size: 21),
       SizedBox(height: 12),
-      Text(title, style: TextStyle(color: Color(0xFF71808A), fontSize: 11)),
+      Text(title, style: TextStyle(color: _tone(Color(0xFF71808A)), fontSize: 11)),
       SizedBox(height: 4),
-      FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight, child: Text(speed, style: TextStyle(color: Color(0xFF142A30), fontSize: 19, fontWeight: FontWeight.w900))),
-      Text('کل: $total', style: TextStyle(color: Color(0xFF167D86), fontSize: 10)),
+      FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight, child: Text(speed, style: TextStyle(color: _tone(Color(0xFF142A30)), fontSize: 19, fontWeight: FontWeight.w900))),
+      Text('کل: $total', style: TextStyle(color: _tone(Color(0xFF167D86)), fontSize: 10)),
     ]),
   );
 
   Widget _statLine(String label, String value, Color valueColor) => Row(children: [
-    Expanded(child: Text(label, style: TextStyle(color: Color(0xFF71808A), fontSize: 11))),
+    Expanded(child: Text(label, style: TextStyle(color: _tone(Color(0xFF71808A)), fontSize: 11))),
     Flexible(child: Text(value, textAlign: TextAlign.end, style: TextStyle(color: valueColor, fontSize: 11, fontWeight: FontWeight.w800))),
   ]);
 
@@ -796,16 +798,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         Container(
           padding: EdgeInsets.symmetric(horizontal: 14, vertical: 11),
           decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [Color(0xFFE6F4F3), Color(0xFFF1FAFF)]),
+            gradient: LinearGradient(colors: [_tone(Color(0xFFE6F4F3)), _tone(Color(0xFFF1FAFF))]),
             borderRadius: BorderRadius.circular(18),
           ),
           child: Row(children: [
-            Icon(Icons.format_quote_rounded, color: Color(0xFF167D86), size: 20),
+            Icon(Icons.format_quote_rounded, color: _tone(Color(0xFF167D86)), size: 20),
             SizedBox(width: 9),
             Expanded(child: Text(
               'اللهم صل علی محمد و آل محمد الائمه و المهدیین و سلم تسلیما',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Color(0xFF2C5A63), fontSize: 10, height: 1.9, fontWeight: FontWeight.w700),
+              style: TextStyle(color: _tone(Color(0xFF2C5A63)), fontSize: 10, height: 1.9, fontWeight: FontWeight.w700),
             )),
           ]),
         ),
@@ -844,21 +846,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           icon: Icon(Icons.sync_rounded, size: 19),
           label: Text('به‌روزرسانی فهرست سرورها'),
           style: OutlinedButton.styleFrom(
-            foregroundColor: Color(0xFF167D86),
-            side: BorderSide(color: Color(0xFFE1E8E7)),
-            backgroundColor: Color(0xFFFFFFFF),
+            foregroundColor: _tone(Color(0xFF167D86)),
+            side: BorderSide(color: _tone(Color(0xFFE1E8E7))),
+            backgroundColor: _tone(Color(0xFFFFFFFF)),
             minimumSize: Size.fromHeight(48),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
         ),
         SizedBox(height: 10),
-        Center(child: Text('VPN13  •  Xray Core', style: TextStyle(color: Color(0xFF71808A), fontSize: 11))),
+        Center(child: Text('VPN13  •  Xray Core', style: TextStyle(color: _tone(Color(0xFF71808A)), fontSize: 11))),
       ],
     ),
   );
 
   Widget _selectedServerCard() => Material(
-    color: Color(0xFFFFFFFF),
+    color: _tone(Color(0xFFFFFFFF)),
     borderRadius: BorderRadius.circular(19),
     child: InkWell(
       borderRadius: BorderRadius.circular(19),
@@ -869,17 +871,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           Container(
             width: 43,
             height: 43,
-            decoration: BoxDecoration(color: Color(0xFFE6F4F3), borderRadius: BorderRadius.circular(13)),
-            child: Icon(Icons.public_rounded, color: Color(0xFF167D86), size: 23),
+            decoration: BoxDecoration(color: _tone(Color(0xFFE6F4F3)), borderRadius: BorderRadius.circular(13)),
+            child: Icon(Icons.public_rounded, color: _tone(Color(0xFF167D86)), size: 23),
           ),
           SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('مسیر اتصال شما', style: TextStyle(color: Color(0xFF71808A), fontSize: 10)),
+            Text('مسیر اتصال شما', style: TextStyle(color: _tone(Color(0xFF71808A)), fontSize: 10)),
             SizedBox(height: 4),
-            Text(selected?.name ?? 'هنوز سروری انتخاب نشده', maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: Color(0xFF142A30), fontSize: 13, fontWeight: FontWeight.w800)),
-            Text(_connectionPingMs == null ? 'برای مشاهده سرورها لمس کنید' : 'پینگ اتصال: $_connectionPingMs ms', style: TextStyle(color: Color(0xFF167D86), fontSize: 10)),
+            Text(selected?.name ?? 'هنوز سروری انتخاب نشده', maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: _tone(Color(0xFF142A30)), fontSize: 13, fontWeight: FontWeight.w800)),
+            Text(_connectionPingMs == null ? 'برای مشاهده سرورها لمس کنید' : 'پینگ اتصال: $_connectionPingMs ms', style: TextStyle(color: _tone(Color(0xFF167D86)), fontSize: 10)),
           ])),
-          Icon(Icons.chevron_left_rounded, color: Color(0xFF167D86)),
+          Icon(Icons.chevron_left_rounded, color: _tone(Color(0xFF167D86))),
         ]),
       ),
     ),
@@ -887,12 +889,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Widget _durationSummary() => Container(
     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-    decoration: BoxDecoration(color: Color(0xFFFFFFFF), borderRadius: BorderRadius.circular(17), border: Border.all(color: Color(0xFFE9EAF2))),
+    decoration: BoxDecoration(color: _tone(Color(0xFFFFFFFF)), borderRadius: BorderRadius.circular(17), border: Border.all(color: _tone(Color(0xFFE9EAF2)))),
     child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-      Icon(Icons.schedule_rounded, color: Color(0xFF167D86), size: 21), SizedBox(width: 10),
+      Icon(Icons.schedule_rounded, color: _tone(Color(0xFF167D86)), size: 21), SizedBox(width: 10),
       Column(children: [
-        Text('مدت زمان اتصال', style: TextStyle(color: Color(0xFF71808A), fontSize: 11)),
-        Text(durationText(elapsed), style: TextStyle(color: Color(0xFF142A30), fontSize: 17, fontWeight: FontWeight.w900, fontFeatures: [FontFeature.tabularFigures()])),
+        Text('مدت زمان اتصال', style: TextStyle(color: _tone(Color(0xFF71808A)), fontSize: 11)),
+        Text(durationText(elapsed), style: TextStyle(color: _tone(Color(0xFF142A30)), fontSize: 17, fontWeight: FontWeight.w900, fontFeatures: [FontFeature.tabularFigures()])),
       ]),
     ]),
   );
@@ -979,11 +981,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget _settingsPage() => ListView(primary: false, padding: EdgeInsets.fromLTRB(18, 12, 18, 24), children: [
     _EntranceMotion(child: _topBar()),
     SizedBox(height: 20),
-    _EntranceMotion(delay: Duration(milliseconds: 70), child: Text('تنظیمات اتصال', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF142A30), fontSize: 21, fontWeight: FontWeight.w900))),
+    _EntranceMotion(delay: Duration(milliseconds: 70), child: Text('تنظیمات اتصال', textAlign: TextAlign.center, style: TextStyle(color: _tone(Color(0xFF142A30)), fontSize: 21, fontWeight: FontWeight.w900))),
     SizedBox(height: 18),
-    _EntranceMotion(delay: Duration(milliseconds: 140), child: Container(padding: EdgeInsets.all(16), decoration: BoxDecoration(color: Color(0xFFFFFFFF), borderRadius: BorderRadius.circular(20), border: Border.all(color: Color(0xFFE9EAF2))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text('Remote DNS (Xray)', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF142A30))),
-      SizedBox(height: 8), Text('درخواست‌های DNS پورت 53 از داخل تونل Xray و با TCP به این سرور ارسال می‌شوند. برای اعمال، اتصال را دوباره برقرار کنید.', style: TextStyle(fontSize: 11, color: Color(0xFF71808A))),
+    _EntranceMotion(delay: Duration(milliseconds: 140), child: Container(padding: EdgeInsets.all(16), decoration: BoxDecoration(color: _tone(Color(0xFFFFFFFF)), borderRadius: BorderRadius.circular(20), border: Border.all(color: _tone(Color(0xFFE9EAF2)))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text('Remote DNS (Xray)', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: _tone(Color(0xFF142A30)))),
+      SizedBox(height: 8), Text('درخواست‌های DNS پورت 53 از داخل تونل Xray و با TCP به این سرور ارسال می‌شوند. برای اعمال، اتصال را دوباره برقرار کنید.', style: TextStyle(fontSize: 11, color: _tone(Color(0xFF71808A)))),
       SizedBox(height: 12), DropdownButtonFormField<String>(key: ValueKey(dnsAddress), initialValue: dnsAddress, decoration: InputDecoration(labelText: 'سرور DNS', border: OutlineInputBorder()), items: [
         DropdownMenuItem(value: '1.1.1.1', child: Text('Cloudflare — 1.1.1.1')),
         DropdownMenuItem(value: '1.0.0.1', child: Text('Cloudflare — 1.0.0.1')),
@@ -998,14 +1000,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       }),
     ]))),
     SizedBox(height: 12),
-    _EntranceMotion(delay: Duration(milliseconds: 230), child: Container(padding: EdgeInsets.all(16), decoration: BoxDecoration(color: Color(0xFFFFFFFF), borderRadius: BorderRadius.circular(20), border: Border.all(color: Color(0xFFE9EAF2))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text('برنامه‌های خارج از VPN', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF142A30))),
-      SizedBox(height: 8), Text('ترافیک این برنامه‌ها از تونل VPN عبور نمی‌کند.', style: TextStyle(fontSize: 11, color: Color(0xFF71808A))),
+    _EntranceMotion(delay: Duration(milliseconds: 230), child: Container(padding: EdgeInsets.all(16), decoration: BoxDecoration(color: _tone(Color(0xFFFFFFFF)), borderRadius: BorderRadius.circular(20), border: Border.all(color: _tone(Color(0xFFE9EAF2)))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text('برنامه‌های خارج از VPN', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: _tone(Color(0xFF142A30)))),
+      SizedBox(height: 8), Text('ترافیک این برنامه‌ها از تونل VPN عبور نمی‌کند.', style: TextStyle(fontSize: 11, color: _tone(Color(0xFF71808A)))),
       SizedBox(height: 12), OutlinedButton.icon(onPressed: _chooseExcludedApps, icon: Icon(Icons.apps_rounded), label: Text('انتخاب برنامه‌ها (${excludedApps.length})'), style: OutlinedButton.styleFrom(minimumSize: Size.fromHeight(48))),
-      if (excludedApps.isNotEmpty) ...[SizedBox(height: 8), Text(excludedApps.map((p) => installedApps.firstWhere((a) => a['package'] == p, orElse: () => {'label': p})['label']).join('، '), style: TextStyle(fontSize: 12, color: Color(0xFF71808A)))],
+      if (excludedApps.isNotEmpty) ...[SizedBox(height: 8), Text(excludedApps.map((p) => installedApps.firstWhere((a) => a['package'] == p, orElse: () => {'label': p})['label']).join('، '), style: TextStyle(fontSize: 12, color: _tone(Color(0xFF71808A))))],
     ]))),
     SizedBox(height: 14),
-    _EntranceMotion(delay: Duration(milliseconds: 310), child: Text('برای اعمال DNS و فهرست استثناها، اتصال فعلی را قطع و دوباره وصل کنید.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF71808A), fontSize: 11))),
+    _EntranceMotion(delay: Duration(milliseconds: 310), child: Text('برای اعمال DNS و فهرست استثناها، اتصال فعلی را قطع و دوباره وصل کنید.', textAlign: TextAlign.center, style: TextStyle(color: _tone(Color(0xFF71808A)), fontSize: 11))),
   ]);
 
 
@@ -1014,6 +1016,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final next = !_darkMode;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('vpn13_dark_mode', next);
+    vpn13DarkMode.value = next;
     if (!mounted) return;
     setState(() { _darkMode = next; _vpn13DarkPalette = next; });
   }
@@ -1029,9 +1032,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       Expanded(child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('VPN13', style: TextStyle(color: Color(0xFF142A30), fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: -.5)),
+          Text('VPN13', style: TextStyle(color: _tone(Color(0xFF142A30)), fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: -.5)),
           SizedBox(height: 2),
-          Text('اتصال امن و پایدار', style: TextStyle(color: Color(0xFF71808A), fontSize: 10, fontWeight: FontWeight.w600)),
+          Text('اتصال امن و پایدار', style: TextStyle(color: _tone(Color(0xFF71808A)), fontSize: 10, fontWeight: FontWeight.w600)),
         ],
       )),
       IconButton(
@@ -1039,22 +1042,22 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         onPressed: _toggleDarkMode,
         icon: Icon(
           _darkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-          color: _darkMode ? Color(0xFFFFB45F) : _tone(Color(0xFF71808A)),
+          color: _darkMode ? _tone(Color(0xFFFFB45F)) : _tone(Color(0xFF71808A)),
         ),
       ),
       Container(
         padding: EdgeInsets.symmetric(horizontal: 11, vertical: 8),
         decoration: BoxDecoration(
-          color: connected ? Color(0xFFE6F4F3) : Colors.white,
+          color: connected ? _tone(Color(0xFFE6F4F3)) : _tone(Colors.white),
           borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Color(0xFFE9EAF2)),
+          border: Border.all(color: _tone(Color(0xFFE9EAF2))),
         ),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.circle, size: 7, color: connected ? Color(0xFF32B68A) : status == _VpnStatus.connecting || status == _VpnStatus.disconnecting ? Color(0xFFFFC66D) : Color(0xFF9AA5AD)),
+          Icon(Icons.circle, size: 7, color: connected ? _tone(Color(0xFF32B68A)) : status == _VpnStatus.connecting || status == _VpnStatus.disconnecting ? _tone(Color(0xFFFFC66D)) : _tone(Color(0xFF9AA5AD))),
           SizedBox(width: 6),
           Text(
             connected ? 'آنلاین' : status == _VpnStatus.connecting ? 'در حال اتصال' : status == _VpnStatus.disconnecting ? 'در حال قطع' : 'آفلاین',
-            style: TextStyle(color: Color(0xFF142A30), fontSize: 10, fontWeight: FontWeight.w800),
+            style: TextStyle(color: _tone(Color(0xFF142A30)), fontSize: 10, fontWeight: FontWeight.w800),
           ),
         ]),
       ),
@@ -1063,7 +1066,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         tooltip: _darkMode ? 'فعال‌کردن تم روشن' : 'فعال‌کردن تم تیره',
         onPressed: _toggleDarkMode,
         icon: Icon(_darkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-          color: _darkMode ? Color(0xFFFFB45F) : _tone(Color(0xFF71808A))),
+          color: _darkMode ? _tone(Color(0xFFFFB45F)) : _tone(Color(0xFF71808A))),
       ),
       RepaintBoundary(
         child: ClipRRect(
@@ -1077,7 +1080,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget _connectionPanel() {
     final active = connected;
     final waiting = busy || status == _VpnStatus.connecting || status == _VpnStatus.disconnecting;
-    final accent = active ? Color(0xFF32B68A) : Color(0xFF20A39A);
+    final accent = active ? _tone(Color(0xFF32B68A)) : _tone(Color(0xFF20A39A));
     final statusLabel = active
         ? 'اتصال برقرار است'
         : _checkingHandshake
@@ -1093,22 +1096,22 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF164B50), Color(0xFF102F38), Color(0xFF174B46)],
+          colors: [_tone(Color(0xFF164B50)), _tone(Color(0xFF102F38)), _tone(Color(0xFF174B46))],
         ),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Color(0xFF3C7880).withValues(alpha: .55)),
+        border: Border.all(color: _tone(Color(0xFF3C7880)).withValues(alpha: .55)),
         boxShadow: [
           BoxShadow(color: accent.withValues(alpha: .09), blurRadius: 28, spreadRadius: 1),
-          BoxShadow(color: Color(0x99000000), blurRadius: 18, offset: Offset(0, 10)),
+          BoxShadow(color: _tone(Color(0x99000000)), blurRadius: 18, offset: Offset(0, 10)),
         ],
       ),
       child: Column(children: [
         Row(children: [
           Icon(Icons.shield_outlined, color: accent, size: 19),
           SizedBox(width: 8),
-          Text('وضعیت امنیت اتصال', style: TextStyle(color: Color(0xFFC5D9DE), fontSize: 12, fontWeight: FontWeight.w700)),
+          Text('وضعیت امنیت اتصال', style: TextStyle(color: _tone(Color(0xFFC5D9DE)), fontSize: 12, fontWeight: FontWeight.w700)),
           Spacer(),
-          if (active) Text(durationText(elapsed), style: TextStyle(color: Color(0xFFE9FFFF), fontSize: 12, fontWeight: FontWeight.w800, fontFeatures: [FontFeature.tabularFigures()])),
+          if (active) Text(durationText(elapsed), style: TextStyle(color: _tone(Color(0xFFE9FFFF)), fontSize: 12, fontWeight: FontWeight.w800, fontFeatures: [FontFeature.tabularFigures()])),
         ]),
         SizedBox(height: 19),
         _ConnectionPulse(
@@ -1131,17 +1134,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   width: 138, height: 138,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: RadialGradient(colors: [accent.withValues(alpha: .28), Color(0xFF17343D), Color(0xFF102832)]),
+                    gradient: RadialGradient(colors: [accent.withValues(alpha: .28), _tone(Color(0xFF17343D)), _tone(Color(0xFF102832))]),
                     border: Border.all(color: accent.withValues(alpha: .75), width: 1.5),
                     boxShadow: [BoxShadow(color: accent.withValues(alpha: .22), blurRadius: 22, spreadRadius: 2)],
                   ),
                   child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                     if (waiting)
-                      SizedBox(width: 43, height: 43, child: CircularProgressIndicator(strokeWidth: 3, color: Color(0xFF20A39A)))
+                      SizedBox(width: 43, height: 43, child: CircularProgressIndicator(strokeWidth: 3, color: _tone(Color(0xFF20A39A))))
                     else
-                      Icon(active ? Icons.shield_rounded : Icons.power_settings_new_rounded, color: Color(0xFF9DE8D2), size: 49),
+                      Icon(active ? Icons.shield_rounded : Icons.power_settings_new_rounded, color: _tone(Color(0xFF9DE8D2)), size: 49),
                     SizedBox(height: 9),
-                    Text(active ? durationText(elapsed) : 'VPN13', style: TextStyle(color: Color(0xFFF0FFFF), fontSize: 17, fontWeight: FontWeight.w900, fontFeatures: [FontFeature.tabularFigures()])),
+                    Text(active ? durationText(elapsed) : 'VPN13', style: TextStyle(color: _tone(Color(0xFFF0FFFF)), fontSize: 17, fontWeight: FontWeight.w900, fontFeatures: [FontFeature.tabularFigures()])),
                   ]),
                 ),
                 Positioned(top: 11, right: 39, child: Icon(Icons.circle, size: 5, color: accent.withValues(alpha: .8))),
@@ -1153,16 +1156,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         SizedBox(height: 12),
         AnimatedSwitcher(
           duration: Duration(milliseconds: 250),
-          child: Text(statusLabel, key: ValueKey(statusLabel), style: TextStyle(color: Color(0xFFF0FFFF), fontSize: 20, fontWeight: FontWeight.w900)),
+          child: Text(statusLabel, key: ValueKey(statusLabel), style: TextStyle(color: _tone(Color(0xFFF0FFFF)), fontSize: 20, fontWeight: FontWeight.w900)),
         ),
         if (_connectionPingMs != null) ...[
           SizedBox(height: 5),
-          Text('پینگ اتصال: $_connectionPingMs ms', style: TextStyle(color: Color(0xFF9DE8D2), fontSize: 11, fontWeight: FontWeight.w700)),
+          Text('پینگ اتصال: $_connectionPingMs ms', style: TextStyle(color: _tone(Color(0xFF9DE8D2)), fontSize: 11, fontWeight: FontWeight.w700)),
         ],
         SizedBox(height: 8),
         Text(selected == null ? 'ابتدا سرور را انتخاب کنید' : 'برای اتصال یا قطع، آیکون مرکزی را لمس کنید',
           textAlign: TextAlign.center,
-          style: TextStyle(color: Color(0xFFC5D9DE), fontSize: 10)),
+          style: TextStyle(color: _tone(Color(0xFFC5D9DE)), fontSize: 10)),
       ]),
     );
   }
@@ -1171,21 +1174,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget _errorPanel(String details) => Container(
         padding: EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Color(0xFFFFF0F4),
+          color: _tone(Color(0xFFFFF0F4)),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Color(0xFFFFC5D0)),
+          border: Border.all(color: _tone(Color(0xFFFFC5D0))),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(Icons.error_outline_rounded,
-                color: Color(0xFFD9485F), size: 20),
+                color: _tone(Color(0xFFD9485F)), size: 20),
             SizedBox(width: 9),
             Expanded(
               child: SelectableText(
                 details,
                 style: TextStyle(
-                  color: Color(0xFFD9485F),
+                  color: _tone(Color(0xFFD9485F)),
                   fontSize: 11,
                   height: 1.6,
                 ),
