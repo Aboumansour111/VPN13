@@ -37,7 +37,12 @@ Color _tone(Color light) {
     0xFFF0FFFF: 0xFFEAFBF6, 0xFFFFF0F4: 0xFF3A2228,
     0xFFFFC5D0: 0xFF75404B, 0xFFD9485F: 0xFFFF8795,
   };
-  return Color(dark[light.toARGB32()] ?? light.toARGB32());
+  final mapped = dark[light.toARGB32()];
+  if (mapped != null) return Color(mapped);
+  final luminance = light.computeLuminance();
+  if (luminance > .72) return const Color(0xFF202A34);
+  if (luminance < .12) return const Color(0xFFE8EEF2);
+  return light;
 }
 
 enum _VpnStatus { disconnected, connecting, connected, disconnecting }
