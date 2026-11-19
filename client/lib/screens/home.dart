@@ -6,7 +6,6 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config.dart';
-import '../flag_asset.dart';
 import '../services/engine_router.dart';
 import '../services/native_xray.dart';
 
@@ -46,9 +45,6 @@ Color _tone(Color light) {
 }
 
 enum _VpnStatus { disconnected, connecting, connected, disconnecting }
-
-// Reuse one decoded image provider; HomeScreen rebuilds frequently for live stats.
-final ImageProvider _vpn13FlagImage = MemoryImage(base64Decode(vpn13FlagBase64));
 
 // Entrance motion is deliberately visible but runs only when a section is
 // inserted, not on every parent rebuild (such as live traffic updates).
@@ -792,7 +788,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             Icon(Icons.format_quote_rounded, color: _tone(Color(0xFF167D86)), size: 20),
             SizedBox(width: 9),
             Expanded(child: Text(
-              'اللهم صل علی محمد و آل محمد الائمه و المهدیین و سلم تسلیما',
+              'اللهم صل علی محمد و آل محمد',
               textAlign: TextAlign.center,
               style: TextStyle(color: _tone(Color(0xFF2C5A63)), fontSize: 10, height: 1.9, fontWeight: FontWeight.w700),
             )),
@@ -1049,12 +1045,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ]),
       ),
       SizedBox(width: 9),
-      RepaintBoundary(
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(5),
-          child: Image(image: _vpn13FlagImage, width: 39, height: 24, fit: BoxFit.cover, gaplessPlayback: true),
-        ),
-      ),
     ]),
   );
 
