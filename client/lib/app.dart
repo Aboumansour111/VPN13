@@ -332,12 +332,16 @@ class _LoginScreenState extends State<_LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const ink = Color(0xFF142A30);
-    const muted = Color(0xFF7B8790);
-    const teal = Color(0xFF20A39A);
-    const deepTeal = Color(0xFF155F68);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final ink = isDark ? const Color(0xFFE8EEF2) : const Color(0xFF142A30);
+    final muted = isDark ? const Color(0xFF9AA8B3) : const Color(0xFF7B8790);
+    final teal = isDark ? const Color(0xFF39B9A8) : const Color(0xFF20A39A);
+    final deepTeal = isDark ? const Color(0xFF203B36) : const Color(0xFF155F68);
+    final pageBackground = isDark ? const Color(0xFF0D1218) : const Color(0xFFF4F7F8);
+    final cardBackground = isDark ? const Color(0xFF171F28) : Colors.white;
+    final inputBackground = isDark ? const Color(0xFF202A34) : const Color(0xFFF7FAFA);
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7F8),
+      backgroundColor: pageBackground,
       body: Stack(
         children: [
           Container(
@@ -345,7 +349,7 @@ class _LoginScreenState extends State<_LoginScreen> {
               gradient: RadialGradient(
                 center: Alignment.topCenter,
                 radius: 1.15,
-                colors: [Color(0xFFD8F0EC), Color(0xFFF4F7F8), Color(0xFFF4F7F8)],
+                colors: isDark ? [Color(0xFF203B36), pageBackground, pageBackground] : [Color(0xFFD8F0EC), pageBackground, pageBackground],
                 stops: [0, .48, 1],
               ),
             ),
@@ -386,7 +390,7 @@ class _LoginScreenState extends State<_LoginScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      const Text('VPN13', style: TextStyle(color: ink, fontSize: 27, fontWeight: FontWeight.w900, letterSpacing: -.6)),
+                      Text('VPN13', style: TextStyle(color: ink, fontSize: 27, fontWeight: FontWeight.w900, letterSpacing: -.6)),
                       const SizedBox(height: 4),
                       const Text('اتصال امن و پایدار', style: TextStyle(color: muted, fontSize: 12, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 30),
@@ -394,7 +398,7 @@ class _LoginScreenState extends State<_LoginScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.fromLTRB(20, 23, 20, 22),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: cardBackground,
                           borderRadius: BorderRadius.circular(28),
                           border: Border.all(color: const Color(0xFFDCE7E8)),
                           boxShadow: const [BoxShadow(color: Color(0x190F2A2E), blurRadius: 34, offset: Offset(0, 13))],
@@ -402,11 +406,11 @@ class _LoginScreenState extends State<_LoginScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const Text('ورود به برنامه', textAlign: TextAlign.center, style: TextStyle(color: ink, fontSize: 19, fontWeight: FontWeight.w900)),
+                            Text('ورود به برنامه', textAlign: TextAlign.center, style: TextStyle(color: ink, fontSize: 19, fontWeight: FontWeight.w900)),
                             const SizedBox(height: 7),
-                            const Text('برای ادامه، کد دسترسی خود را وارد کنید', textAlign: TextAlign.center, style: TextStyle(color: muted, fontSize: 11, height: 1.8)),
+                            Text('برای ادامه، کد دسترسی خود را وارد کنید', textAlign: TextAlign.center, style: TextStyle(color: muted, fontSize: 11, height: 1.8)),
                             const SizedBox(height: 23),
-                            const Text('کد ورود', style: TextStyle(color: ink, fontSize: 12, fontWeight: FontWeight.w800)),
+                            Text('کد ورود', style: TextStyle(color: ink, fontSize: 12, fontWeight: FontWeight.w800)),
                             const SizedBox(height: 9),
                             TextField(
                               controller: _controller,
@@ -416,7 +420,7 @@ class _LoginScreenState extends State<_LoginScreen> {
                               textDirection: TextDirection.ltr,
                               textAlign: TextAlign.center,
                               onSubmitted: (_) => _submit(),
-                              style: const TextStyle(color: ink, fontSize: 16, letterSpacing: 2),
+                              style: TextStyle(color: ink, fontSize: 16, letterSpacing: 2),
                               decoration: InputDecoration(
                                 hintText: 'کد دسترسی را وارد کنید',
                                 hintStyle: const TextStyle(color: Color(0xFF87969D), fontSize: 12, letterSpacing: 0),
@@ -426,7 +430,7 @@ class _LoginScreenState extends State<_LoginScreen> {
                                   icon: Icon(_obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: muted, size: 19),
                                 ),
                                 filled: true,
-                                fillColor: const Color(0xFFF7FAFA),
+                                fillColor: inputBackground,
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 17),
                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: const BorderSide(color: Color(0xFFDCE7E8))),
                                 enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(18), borderSide: const BorderSide(color: Color(0xFFDCE7E8))),
@@ -464,7 +468,7 @@ class _LoginScreenState extends State<_LoginScreen> {
                         style: TextStyle(color: Color(0xFF167D86), fontSize: 12, fontWeight: FontWeight.w800, height: 2),
                       ),
                       const SizedBox(height: 8),
-                      const Text('دسترسی خصوصی  •  VPN13', style: TextStyle(color: Color(0xFF87969D), fontSize: 10)),
+                      Text('دسترسی خصوصی  •  VPN13', style: TextStyle(color: muted, fontSize: 10)),
                     ],
                   ),
                 ),
