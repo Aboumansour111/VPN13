@@ -554,25 +554,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   String speedText(num n) => '${bytesText(n)}/s';
 
   @override
-  Widget build(BuildContext context) => Theme(
-    data: _darkMode
-        ? ThemeData.dark(useMaterial3: true).copyWith(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: _tone(Color(0xFF39B9A8)),
-              brightness: Brightness.dark,
-              surface: _tone(Color(0xFF171F28)),
-            ),
-            scaffoldBackgroundColor: _tone(Color(0xFF0D1218)),
-            dividerColor: _tone(Color(0xFF2D3B45)),
-            inputDecorationTheme: InputDecorationTheme(
-              filled: true,
-              fillColor: _tone(Color(0xFF202A34)),
-              hintStyle: TextStyle(color: _tone(Color(0xFF9AA8B3))),
-              labelStyle: TextStyle(color: _tone(Color(0xFFE8EEF2))),
-            ),
-          )
-        : Theme.of(context),
-    child: Scaffold(
+  Widget build(BuildContext context) => Scaffold(
     backgroundColor: _tone(Color(0xFFF4F7F8)),
     body: Container(
       decoration: BoxDecoration(
@@ -1062,12 +1044,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ]),
       ),
       SizedBox(width: 9),
-      IconButton(
-        tooltip: _darkMode ? 'فعال‌کردن تم روشن' : 'فعال‌کردن تم تیره',
-        onPressed: _toggleDarkMode,
-        icon: Icon(_darkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-          color: _darkMode ? _tone(Color(0xFFFFB45F)) : _tone(Color(0xFF71808A))),
-      ),
       RepaintBoundary(
         child: ClipRRect(
           borderRadius: BorderRadius.circular(5),
