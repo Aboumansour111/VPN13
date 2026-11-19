@@ -433,4 +433,3 @@ class _LoginScreenState extends State<_LoginScreen> {
     );
   }
 }
-}
