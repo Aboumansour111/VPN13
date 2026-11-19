@@ -44,6 +44,7 @@ Color _tone(Color light) {
   return light;
 }
 
+// Side edition: no flag; concise salawat on the home screen.
 enum _VpnStatus { disconnected, connecting, connected, disconnecting }
 
 // Entrance motion is deliberately visible but runs only when a section is
